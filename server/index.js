@@ -13,7 +13,7 @@ const app = express();
 
 // Configure CORS with options
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3000' || "https://fortigatex-1.onrender.com/",
   credentials: true,
   optionsSuccessStatus: 200
 };

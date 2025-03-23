@@ -1,0 +1,9 @@
+[2025-03-23T17:56:27.052Z] [USER_ACTION] ORDER_ATTEMPT - {"orderDate":"2025-03-23T17:56:26.674Z","firstName":"Jessica","lastName":"Elisa","sessionId":"hshqqrmps059ri7n4pcn57","state":"CA"}
+[2025-03-23T17:56:27.053Z] [INFO] Radius API request for user 67e007f14ca04a8eaf9f9694: {"sessionId":"hshqqrmps059ri7n4pcn57","name":"Elisa","address":"2115 Ellington Pl","state":"CA","zip":"94533","bin":"432143****"}
+[2025-03-23T17:56:28.489Z] [INFO] Radius API response for user 67e007f14ca04a8eaf9f9694: "<results status=\"1\" message=\"true\"></results>"
+[2025-03-23T17:56:28.534Z] [USER_ACTION] ORDER_CREATED - {"orderId":"67e04b4c6617cbe67808ee85","sessionId":"hshqqrmps059ri7n4pcn57","validationStatus":false,"validationMessage":"Unknown response format from validation service"}
+[2025-03-23T18:00:15.224Z] [USER_ACTION] ORDER_ATTEMPT - {"orderDate":"2025-03-23T18:00:15.118Z","firstName":"TungHuei","lastName":"Chen","sessionId":"871ycj11ijfixqiqn8lx5a","state":"CA"}
+[2025-03-23T18:00:15.227Z] [INFO] Radius API request for user 67e007f14ca04a8eaf9f9694: {"sessionId":"871ycj11ijfixqiqn8lx5a","name":"Chen","address":"2115 Ellington Pl","state":"CA","zip":"94533","bin":"434558****"}
+[2025-03-23T18:00:16.617Z] [INFO] Radius API raw response for user 67e007f14ca04a8eaf9f9694: "<results status=\"1\" message=\"true\"></results>"
+[2025-03-23T18:00:16.621Z] [INFO] Radius API structured response for user 67e007f14ca04a8eaf9f9694: {"status":1,"message":"true"}
+[2025-03-23T18:00:16.661Z] [USER_ACTION] ORDER_CREATED - {"orderId":"67e04c30ee3b3bb5aa7dd78c","sessionId":"871ycj11ijfixqiqn8lx5a","validationStatus":true,"validationMessage":null}

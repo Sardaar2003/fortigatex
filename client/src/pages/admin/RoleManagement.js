@@ -20,7 +20,7 @@ import {
   Alert,
   Grid
 } from '@mui/material';
-import { Add, Edit, Delete } from '@mui/icons-material';
+import { Add, Edit, Delete, Security } from '@mui/icons-material';
 import AddRoleDialog from '../../components/AddRoleDialog';
 import EditRoleDialog from '../../components/EditRoleDialog';
 
@@ -34,18 +34,18 @@ const categorizePermissions = (permissions) => {
     'Admin': [],
     'Other': []
   };
-  
+
   permissions.forEach(permission => {
     const prefix = permission.split(':')[0];
     const category = prefix.charAt(0).toUpperCase() + prefix.slice(1);
-    
+
     if (categories[category] !== undefined) {
       categories[category].push(permission);
     } else {
       categories['Other'].push(permission);
     }
   });
-  
+
   // Filter out empty categories
   return Object.entries(categories)
     .filter(([_, perms]) => perms.length > 0)
@@ -122,22 +122,27 @@ const RoleManagement = () => {
       <Paper
         sx={{
           p: 3,
-          background: 'rgba(255, 255, 255, 0.25)',
+          background: 'rgba(26, 32, 44, 0.95)',
           backdropFilter: 'blur(10px)',
           borderRadius: '10px',
-          border: '1px solid rgba(255, 255, 255, 0.18)',
-          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1">
+          <Typography variant="h4" component="h1" sx={{ color: 'white' }}>
             Role Management
           </Typography>
           <Button
             variant="contained"
-            startIcon={<Add />}
-            className="glass-button"
+            startIcon={<Security />}
             onClick={handleAddClick}
+            sx={{
+              background: 'linear-gradient(135deg, #6F4CFF 0%, #402AD5 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #8266FF 0%, #4F35FF 100%)',
+              }
+            }}
           >
             Add Role
           </Button>
@@ -149,11 +154,11 @@ const RoleManagement = () => {
 
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-            <CircularProgress />
+            <CircularProgress sx={{ color: '#6F4CFF' }} />
           </Box>
         ) : (
-          <TableContainer component={Paper} sx={{ 
-            background: 'rgba(255, 255, 255, 0.15)', 
+          <TableContainer component={Paper} sx={{
+            background: 'rgba(26, 32, 44, 0.95)',
             backdropFilter: 'blur(5px)',
             borderRadius: '10px',
             border: '1px solid rgba(255, 255, 255, 0.1)'
@@ -161,79 +166,71 @@ const RoleManagement = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Role Name</TableCell>
-                  <TableCell>Description</TableCell>
-                  <TableCell>Permissions</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  <TableCell sx={{ color: 'white' }}>Name</TableCell>
+                  <TableCell sx={{ color: 'white' }}>Description</TableCell>
+                  <TableCell sx={{ color: 'white' }}>Permissions</TableCell>
+                  <TableCell align="right" sx={{ color: 'white' }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {roles.map((role) => (
-                  <TableRow key={role._id}>
+                  <TableRow
+                    key={role._id}
+                    sx={{
+                      '&:hover': {
+                        backgroundColor: 'rgba(111, 76, 255, 0.1)',
+                        transition: 'background-color 0.2s ease-in-out'
+                      }
+                    }}
+                  >
+                    <TableCell sx={{ color: 'white' }}>{role.name}</TableCell>
+                    <TableCell sx={{ color: 'white' }}>{role.description}</TableCell>
                     <TableCell>
-                      <Chip 
-                        label={role.name} 
-                        size="small"
-                        sx={{ 
-                          background: role.name === 'admin' 
-                            ? 'rgba(25, 118, 210, 0.2)' 
-                            : role.name === 'moderator'
-                              ? 'rgba(156, 39, 176, 0.2)'
-                              : 'rgba(76, 175, 80, 0.2)',
-                          color: role.name === 'admin' 
-                            ? 'primary.main' 
-                            : role.name === 'moderator'
-                              ? 'secondary.main'
-                              : 'success.main',
-                          backdropFilter: 'blur(5px)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)'
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>{role.description}</TableCell>
-                    <TableCell>
-                      {Object.entries(categorizePermissions(role.permissions)).map(([category, perms]) => (
-                        <Box key={category} sx={{ mb: 1 }}>
-                          <Typography variant="caption" component="div" color="text.secondary" sx={{ fontWeight: 'bold' }}>
-                            {category}:
-                          </Typography>
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                            {perms.map((permission, index) => (
-                              <Chip
-                                key={index}
-                                label={permission.split(':')[1]}
-                                size="small"
-                                sx={{
-                                  background: 'rgba(255, 255, 255, 0.15)',
-                                  backdropFilter: 'blur(5px)',
-                                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                                  fontSize: '0.7rem'
-                                }}
-                              />
-                            ))}
-                          </Box>
-                        </Box>
-                      ))}
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {role.permissions.map((permission) => (
+                          <Chip
+                            key={permission}
+                            label={permission}
+                            size="small"
+                            sx={{
+                              background: 'rgba(111, 76, 255, 0.2)',
+                              color: '#6F4CFF',
+                              backdropFilter: 'blur(5px)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)'
+                            }}
+                          />
+                        ))}
+                      </Box>
                     </TableCell>
                     <TableCell align="right">
                       <Button
                         size="small"
                         startIcon={<Edit />}
-                        sx={{ mr: 1 }}
+                        sx={{
+                          mr: 1,
+                          color: '#6F4CFF',
+                          '&:hover': {
+                            backgroundColor: 'rgba(111, 76, 255, 0.1)',
+                            color: '#8266FF'
+                          }
+                        }}
                         onClick={() => handleEditClick(role)}
                       >
                         Edit
                       </Button>
-                      {role.name !== 'admin' && role.name !== 'user' && role.name !== 'moderator' && (
-                        <Button
-                          size="small"
-                          color="error"
-                          startIcon={<Delete />}
-                          onClick={() => handleDeleteClick(role._id)}
-                        >
-                          Delete
-                        </Button>
-                      )}
+                      <Button
+                        size="small"
+                        color="error"
+                        startIcon={<Delete />}
+                        sx={{
+                          '&:hover': {
+                            backgroundColor: 'rgba(211, 47, 47, 0.1)'
+                          }
+                        }}
+                        onClick={() => handleDeleteClick(role._id)}
+                      >
+                        Delete
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -264,7 +261,7 @@ const RoleManagement = () => {
                 </ListItem>
               </List>
             </Grid>
-            
+
             <Grid item xs={12} md={4}>
               <Typography variant="subtitle2" color="primary" gutterBottom>Create Permissions</Typography>
               <List dense>
@@ -282,7 +279,7 @@ const RoleManagement = () => {
                 </ListItem>
               </List>
             </Grid>
-            
+
             <Grid item xs={12} md={4}>
               <Typography variant="subtitle2" color="primary" gutterBottom>Update Permissions</Typography>
               <List dense>
@@ -300,7 +297,7 @@ const RoleManagement = () => {
                 </ListItem>
               </List>
             </Grid>
-            
+
             <Grid item xs={12} md={4}>
               <Typography variant="subtitle2" color="primary" gutterBottom>Delete Permissions</Typography>
               <List dense>
@@ -318,7 +315,7 @@ const RoleManagement = () => {
                 </ListItem>
               </List>
             </Grid>
-            
+
             <Grid item xs={12} md={4}>
               <Typography variant="subtitle2" color="primary" gutterBottom>Admin Permissions</Typography>
               <List dense>
@@ -333,19 +330,19 @@ const RoleManagement = () => {
           </Grid>
         </Box>
 
-        {/* Add Role Dialog */}
-        <AddRoleDialog 
-          open={addDialogOpen}
-          handleClose={handleDialogClose}
-          onRoleAdded={handleRoleUpdated}
-        />
-
         {/* Edit Role Dialog */}
-        <EditRoleDialog 
+        <EditRoleDialog
           open={editDialogOpen}
           handleClose={handleDialogClose}
           role={selectedRole}
           onRoleUpdated={handleRoleUpdated}
+        />
+
+        {/* Add Role Dialog */}
+        <AddRoleDialog
+          open={addDialogOpen}
+          handleClose={handleDialogClose}
+          onRoleAdded={handleRoleUpdated}
         />
       </Paper>
     </Container>

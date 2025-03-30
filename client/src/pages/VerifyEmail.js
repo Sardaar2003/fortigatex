@@ -7,7 +7,7 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material';
-import AuthContext from '../context/AuthContext';
+import { AuthContext } from '../context/AuthContext';
 import GlassCard from '../components/GlassCard';
 
 const VerifyEmail = () => {

@@ -25,7 +25,7 @@ exports.protect = async (req, res, next) => {
 
     // Find user in database
     req.user = await User.findById(decoded.id).populate('role');
-    
+
     if (!req.user) {
       return res.status(401).json({ message: 'User no longer exists' });
     }
@@ -46,7 +46,7 @@ exports.authorize = (...roles) => {
     if (!roles.includes(req.user.role.name)) {
       return res.status(403).json({ message: `Role ${req.user.role.name} is not authorized to access this route` });
     }
-    
+
     next();
   };
 };
@@ -61,7 +61,7 @@ exports.hasPermission = (permission) => {
     if (!req.user.role.permissions.includes(permission)) {
       return res.status(403).json({ message: 'You do not have permission to perform this action' });
     }
-    
+
     next();
   };
 }; 

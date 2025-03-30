@@ -6,7 +6,7 @@ const Role = require('../models/Role');
 const seedRoles = async () => {
   try {
     console.log('Checking default roles...');
-    
+
     // Default roles with permissions
     const defaultRoles = [
       {
@@ -25,11 +25,11 @@ const seedRoles = async () => {
         description: 'Administrator with full system access'
       }
     ];
-    
+
     for (const role of defaultRoles) {
       // Check if role exists
       const existingRole = await Role.findOne({ name: role.name });
-      
+
       if (!existingRole) {
         // Create role if it doesn't exist
         await Role.create(role);
@@ -42,7 +42,7 @@ const seedRoles = async () => {
         console.log(`Updated ${role.name} role`);
       }
     }
-    
+
     console.log('Default roles have been seeded');
   } catch (error) {
     console.error('Error seeding roles:', error);

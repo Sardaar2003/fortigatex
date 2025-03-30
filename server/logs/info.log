@@ -7,3 +7,16 @@
 [2025-03-23T18:00:16.617Z] [INFO] Radius API raw response for user 67e007f14ca04a8eaf9f9694: "<results status=\"1\" message=\"true\"></results>"
 [2025-03-23T18:00:16.621Z] [INFO] Radius API structured response for user 67e007f14ca04a8eaf9f9694: {"status":1,"message":"true"}
 [2025-03-23T18:00:16.661Z] [USER_ACTION] ORDER_CREATED - {"orderId":"67e04c30ee3b3bb5aa7dd78c","sessionId":"871ycj11ijfixqiqn8lx5a","validationStatus":true,"validationMessage":null}
+[2025-03-30T15:46:00.267Z] [USER_ACTION] ORDER_ATTEMPT - {"firstName":"Barbara","lastName":"newschaser","sessionId":"xx707qhvemd","state":"FL","project":"Radius Project"}
+[2025-03-30T15:46:00.287Z] [INFO] Radius API request for user 67e007f14ca04a8eaf9f9694: {"sessionId":"xx707qhvemd","name":"newschaser","address":"275 Randle Ave","state":"FL","zip":"32759","bin":"552132****"}
+[2025-03-30T15:46:03.834Z] [INFO] Radius API raw response for user 67e007f14ca04a8eaf9f9694: "<results status=\"1\" message=\"true\"></results>"
+[2025-03-30T15:46:03.896Z] [INFO] Radius API structured response for user 67e007f14ca04a8eaf9f9694: {"status":1,"message":"true"}
+[2025-03-30T15:46:04.131Z] [USER_ACTION] ORDER_CREATED - {"orderId":"67e9673b7ba85fc4b60c9ee5","sessionId":"xx707qhvemd","validationStatus":true,"validationMessage":null,"project":"Radius Project"}
+[2025-03-30T16:04:46.441Z] [USER_ACTION] ORDER_ATTEMPT - {"firstName":"SANDRA","lastName":"EDRUPT","sessionId":"gkosi4drwi","state":"LA","project":"Sempris Project"}
+[2025-03-30T16:04:46.453Z] [USER_ACTION] SEMPRIS_API_CALL - {"sessionId":"gkosi4drwi","vendorId":"01"}
+[2025-03-30T16:04:48.101Z] [USER_ACTION] ORDER_CREATED - {"orderId":"67e96ba07ba85fc4b60c9f1f","sessionId":"gkosi4drwi","validationStatus":false,"validationMessage":"API validation failed","project":"Sempris Project"}
+[2025-03-30T16:14:04.719Z] [USER_ACTION] ORDER_ATTEMPT - {"firstName":"SANDRA","lastName":"EDRUPT","sessionId":"rolxf6xyp2","state":"LA","project":"Radius Project"}
+[2025-03-30T16:14:04.726Z] [INFO] Radius API request for user 67e007f14ca04a8eaf9f9694: {"sessionId":"rolxf6xyp2","name":"EDRUPT","address":"3137 Metal St","state":"LA","zip":"71103","bin":"434345****"}
+[2025-03-30T16:14:06.015Z] [INFO] Radius API raw response for user 67e007f14ca04a8eaf9f9694: "<results status=\"1\" message=\"true\"></results>"
+[2025-03-30T16:14:06.022Z] [INFO] Radius API structured response for user 67e007f14ca04a8eaf9f9694: {"status":1,"message":"true"}
+[2025-03-30T16:14:06.070Z] [USER_ACTION] ORDER_CREATED - {"orderId":"67e96dce7ba85fc4b60c9f2b","sessionId":"rolxf6xyp2","validationStatus":true,"validationMessage":null,"project":"Radius Project"}

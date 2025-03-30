@@ -102,14 +102,14 @@ exports.login = async (req, res) => {
 
     // Check for user
     const user = await User.findOne({ email }).select('+password').populate('role');
-    
+
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     // Check if password matches
     const isMatch = await user.matchPassword(password);
-    
+
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -128,7 +128,7 @@ exports.login = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).populate('role');
-    
+
     res.status(200).json({
       success: true,
       data: user
@@ -185,10 +185,10 @@ exports.forgotPassword = async (req, res) => {
       res.status(200).json({ success: true, message: 'Email sent' });
     } catch (error) {
       console.error(error);
-      
+
       user.resetPasswordToken = undefined;
       user.resetPasswordExpire = undefined;
-      
+
       await user.save({ validateBeforeSave: false });
 
       return res.status(500).json({ message: 'Email could not be sent' });
@@ -223,7 +223,7 @@ exports.resetPassword = async (req, res) => {
     user.password = req.body.password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
-    
+
     await user.save();
 
     res.status(200).json({

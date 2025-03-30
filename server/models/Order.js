@@ -9,58 +9,67 @@ const OrderSchema = new mongoose.Schema({
   firstName: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    maxlength: 30
   },
   lastName: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    maxlength: 30
   },
   address1: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    maxlength: 50
   },
   address2: {
     type: String,
-    trim: true
+    trim: true,
+    maxlength: 50
   },
   city: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    maxlength: 30
   },
   state: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    maxlength: 2
   },
   zipCode: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    match: [/^\d{5}(-\d{4})?$/, 'Please enter a valid ZIP code']
   },
   phoneNumber: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    match: [/^\d{10}$/, 'Please enter a valid 10-digit phone number']
   },
   email: {
     type: String,
     trim: true,
-    lowercase: true
+    lowercase: true,
+    maxlength: 512
   },
   sourceCode: {
     type: String,
     required: true,
-    default: 'R4N',
-    trim: true
+    trim: true,
+    maxlength: 6
   },
   sku: {
     type: String,
     required: true,
-    default: 'F11',
-    trim: true
+    trim: true,
+    maxlength: 7
   },
   productName: {
     type: String,
@@ -70,7 +79,8 @@ const OrderSchema = new mongoose.Schema({
   sessionId: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    maxlength: 36
   },
   status: {
     type: String,
@@ -86,7 +96,23 @@ const OrderSchema = new mongoose.Schema({
   creditCardExpiration: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    match: [/^\d{4}$/, 'Please enter a valid expiration date (MMYY)']
+  },
+  creditCardCVV: {
+    type: String,
+    required: function() {
+      return this.project === 'Sempris Project';
+    },
+    trim: true,
+    match: [/^\d{3,4}$/, 'Please enter a valid CVV']
+  },
+  cardIssuer: {
+    type: String,
+    required: function() {
+      return this.project === 'Sempris Project';
+    },
+    enum: ['diners-club', 'discover', 'jcb', 'visa', 'mastercard', 'american-express']
   },
   voiceRecordingId: {
     type: String,
@@ -97,7 +123,7 @@ const OrderSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  // Radius API validation fields
+  // Project-specific validation fields
   validationStatus: {
     type: Boolean,
     default: false
@@ -111,6 +137,36 @@ const OrderSchema = new mongoose.Schema({
   },
   validationDate: {
     type: Date
+  },
+  project: {
+    type: String,
+    required: true,
+    default: 'Radius Project',
+    enum: ['Radius Project', 'Sempris Project', 'Project 3']
+  },
+  // Sempris-specific fields
+  vendorId: {
+    type: String,
+    required: function() {
+      return this.project === 'Sempris Project';
+    },
+    trim: true,
+    maxlength: 4
+  },
+  clientOrderNumber: {
+    type: String,
+    trim: true,
+    maxlength: 10
+  },
+  clientData: {
+    type: String,
+    trim: true,
+    maxlength: 64
+  },
+  pitchId: {
+    type: String,
+    trim: true,
+    maxlength: 11
   }
 }, {
   timestamps: true

@@ -7,7 +7,7 @@ const Role = require('../models/Role');
 exports.getUsers = async (req, res) => {
   try {
     const users = await User.find().populate('role');
-    
+
     res.status(200).json({
       success: true,
       count: users.length,
@@ -25,11 +25,11 @@ exports.getUsers = async (req, res) => {
 exports.getUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).populate('role');
-    
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     res.status(200).json({
       success: true,
       data: user
@@ -46,19 +46,19 @@ exports.getUser = async (req, res) => {
 exports.createUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
-    
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
-    
+
     // Validate role
     const roleExists = await Role.findById(role);
     if (!roleExists) {
       return res.status(400).json({ message: 'Invalid role' });
     }
-    
+
     // Create user
     const user = await User.create({
       name,
@@ -67,7 +67,7 @@ exports.createUser = async (req, res) => {
       role,
       isVerified: true // Admin created users are verified by default
     });
-    
+
     res.status(201).json({
       success: true,
       data: user
@@ -84,14 +84,14 @@ exports.createUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { name, email, role } = req.body;
-    
+
     // Find user
     let user = await User.findById(req.params.id);
-    
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     // Check if email already exists (if changing email)
     if (email && email !== user.email) {
       const existingUser = await User.findOne({ email });
@@ -99,7 +99,7 @@ exports.updateUser = async (req, res) => {
         return res.status(400).json({ message: 'Email already in use' });
       }
     }
-    
+
     // Validate role if provided
     if (role) {
       const roleExists = await Role.findById(role);
@@ -107,14 +107,14 @@ exports.updateUser = async (req, res) => {
         return res.status(400).json({ message: 'Invalid role' });
       }
     }
-    
+
     // Update user
     user = await User.findByIdAndUpdate(
       req.params.id,
       { name, email, role },
       { new: true, runValidators: true }
     ).populate('role');
-    
+
     res.status(200).json({
       success: true,
       data: user
@@ -131,18 +131,18 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     // Check if user is trying to delete themselves
     if (req.user.id === req.params.id) {
       return res.status(400).json({ message: 'You cannot delete your own account' });
     }
-    
+
     await user.deleteOne();
-    
+
     res.status(200).json({
       success: true,
       data: {}
@@ -159,27 +159,27 @@ exports.deleteUser = async (req, res) => {
 exports.updateUserRole = async (req, res) => {
   try {
     const { role } = req.body;
-    
+
     // Find user
     let user = await User.findById(req.params.id);
-    
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     // Validate role
     const roleExists = await Role.findById(role);
     if (!roleExists) {
       return res.status(400).json({ message: 'Invalid role' });
     }
-    
+
     // Update user role
     user = await User.findByIdAndUpdate(
       req.params.id,
       { role },
       { new: true, runValidators: true }
     ).populate('role');
-    
+
     res.status(200).json({
       success: true,
       data: user

@@ -1,8 +1,16 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 // Create context
-export const AuthContext = createContext();
+const AuthContext = createContext(null);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -26,10 +34,10 @@ export const AuthProvider = ({ children }) => {
   const loadUser = useCallback(async () => {
     if (token) {
       setAuthToken(token);
-      
+
       try {
         const res = await axios.get('/api/auth/me');
-        
+
         setUser(res.data.data);
         setIsAuthenticated(true);
         setLoading(false);
@@ -52,7 +60,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (formData) => {
     try {
       const res = await axios.post('/api/auth/register', formData);
-      
+
       // If registration is successful and includes a token, set up authentication
       if (res.data.success && res.data.token) {
         setToken(res.data.token);
@@ -61,7 +69,7 @@ export const AuthProvider = ({ children }) => {
         setError(null);
         setAuthToken(res.data.token);
       }
-      
+
       return res.data;
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
@@ -73,7 +81,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (formData) => {
     try {
       const res = await axios.post('/api/auth/login', formData);
-      
+
       if (res.data.success && res.data.token) {
         setToken(res.data.token);
         setUser(res.data.user);
@@ -81,7 +89,7 @@ export const AuthProvider = ({ children }) => {
         setError(null);
         setAuthToken(res.data.token);
       }
-      
+
       return res.data;
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
@@ -101,7 +109,7 @@ export const AuthProvider = ({ children }) => {
   const forgotPassword = async (email) => {
     try {
       const res = await axios.post('/api/auth/forgot-password', { email });
-      
+
       setError(null);
       return res.data;
     } catch (err) {
@@ -114,7 +122,7 @@ export const AuthProvider = ({ children }) => {
   const resetPassword = async (token, password) => {
     try {
       const res = await axios.put(`/api/auth/reset-password/${token}`, { password });
-      
+
       setError(null);
       return res.data;
     } catch (err) {
@@ -127,7 +135,7 @@ export const AuthProvider = ({ children }) => {
   const verifyEmail = async (token) => {
     try {
       const res = await axios.get(`/api/auth/verify-email/${token}`);
-      
+
       setError(null);
       return res.data;
     } catch (err) {
@@ -144,26 +152,26 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, [loadUser]);
 
+  const value = {
+    user,
+    token,
+    isAuthenticated,
+    loading,
+    error,
+    register,
+    login,
+    logout,
+    forgotPassword,
+    resetPassword,
+    verifyEmail,
+    clearError
+  };
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        isAuthenticated,
-        loading,
-        error,
-        register,
-        login,
-        logout,
-        forgotPassword,
-        resetPassword,
-        verifyEmail,
-        clearError
-      }}
-    >
-      {children}
+    <AuthContext.Provider value={value}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
 
-export default AuthContext; 
+export { AuthContext }; 

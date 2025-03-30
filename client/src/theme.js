@@ -1,105 +1,221 @@
 import { createTheme } from '@mui/material/styles';
 
+// Enhanced dark glassmorphism styles with depth levels
+const createGlassEffect = (depth = 1) => ({
+  background: `rgba(17, 25, 40, ${0.6 + (depth * 0.1)})`,
+  backdropFilter: `blur(${12 + (depth * 4)}px)`,
+  border: '1px solid rgba(255, 255, 255, 0.08)',
+  boxShadow: `
+    0 8px 32px 0 rgba(0, 0, 0, ${0.2 + (depth * 0.05)}),
+    0 2px 4px 0 rgba(0, 0, 0, 0.15),
+    inset 0 2px 4px 0 rgba(255, 255, 255, 0.05)
+  `,
+});
+
+const gradients = {
+  primary: 'linear-gradient(135deg, rgba(111, 76, 255, 0.9) 0%, rgba(64, 42, 213, 0.9) 100%)',
+  secondary: 'linear-gradient(135deg, rgba(88, 86, 245, 0.9) 0%, rgba(155, 107, 254, 0.9) 100%)',
+  success: 'linear-gradient(135deg, rgba(56, 229, 177, 0.9) 0%, rgba(11, 156, 123, 0.9) 100%)',
+  error: 'linear-gradient(135deg, rgba(255, 91, 91, 0.9) 0%, rgba(204, 33, 33, 0.9) 100%)',
+  warning: 'linear-gradient(135deg, rgba(255, 186, 73, 0.9) 0%, rgba(255, 146, 43, 0.9) 100%)',
+  subtle: 'linear-gradient(135deg, rgba(45, 55, 72, 0.5) 0%, rgba(17, 25, 40, 0.5) 100%)',
+  card: 'linear-gradient(135deg, rgba(26, 32, 44, 0.9) 0%, rgba(17, 25, 40, 0.9) 100%)',
+  highlight: 'linear-gradient(135deg, rgba(111, 76, 255, 0.15) 0%, rgba(64, 42, 213, 0.15) 100%)',
+};
+
 const theme = createTheme({
   palette: {
+    mode: 'dark',
     primary: {
-      main: '#7371FC',
-      light: '#9896FF',
-      dark: '#5755C8',
-      contrastText: '#fff',
+      main: '#6F4CFF',
+      light: '#8B6FFF',
+      dark: '#402AD5',
     },
     secondary: {
-      main: '#49BEAA',
-      light: '#6FD4C2',
-      dark: '#2F9683',
-      contrastText: '#fff',
-    },
-    error: {
-      main: '#FF6B6B',
-      light: '#FF9F9F',
-      dark: '#CF4B4B',
-    },
-    warning: {
-      main: '#FFB169',
-      light: '#FFC896',
-      dark: '#D98F4E',
-    },
-    info: {
-      main: '#64B5F6',
-      light: '#90CAF9',
-      dark: '#42A5F5',
-    },
-    success: {
-      main: '#66BB6A',
-      light: '#81C784',
-      dark: '#43A047',
+      main: '#9B6BFE',
+      light: '#B18DFF',
+      dark: '#7B4FE0',
     },
     background: {
-      default: '#F5F9FC',
-      paper: 'rgba(255, 255, 255, 0.85)',
+      default: '#0B1121',
+      paper: 'rgba(17, 25, 40, 0.7)',
     },
     text: {
-      primary: '#293241',
-      secondary: '#546A7B',
+      primary: '#E2E8F0',
+      secondary: '#A0AEC0',
     },
+    error: {
+      main: '#FF5B5B',
+      light: '#FF7A7A',
+      dark: '#CC2121',
+    },
+    success: {
+      main: '#38E5B1',
+      light: '#5CEBC1',
+      dark: '#0B9C7B',
+    },
+    warning: {
+      main: '#FFBA49',
+      light: '#FFC970',
+      dark: '#FF922B',
+    },
+    info: {
+      main: '#63B3ED',
+      light: '#7CC4F1',
+      dark: '#3182CE',
+    },
+    divider: 'rgba(255, 255, 255, 0.08)',
   },
   typography: {
-    fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
       fontWeight: 700,
+      letterSpacing: '-0.025em',
+      background: gradients.primary,
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      filter: 'drop-shadow(0 2px 4px rgba(111, 76, 255, 0.3))',
     },
     h2: {
-      fontWeight: 600,
+      fontWeight: 700,
+      letterSpacing: '-0.025em',
+      background: gradients.primary,
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      filter: 'drop-shadow(0 2px 4px rgba(111, 76, 255, 0.3))',
     },
     h3: {
       fontWeight: 600,
+      letterSpacing: '-0.025em',
+      color: '#E2E8F0',
     },
     h4: {
       fontWeight: 600,
+      letterSpacing: '-0.025em',
+      color: '#E2E8F0',
     },
     h5: {
-      fontWeight: 500,
+      fontWeight: 600,
+      color: '#E2E8F0',
     },
     h6: {
-      fontWeight: 500,
+      fontWeight: 600,
+      color: '#E2E8F0',
+    },
+    body1: {
+      fontSize: '1rem',
+      lineHeight: 1.5,
+      color: '#A0AEC0',
+    },
+    body2: {
+      fontSize: '0.875rem',
+      lineHeight: 1.5,
+      color: '#A0AEC0',
     },
     button: {
-      fontWeight: 500,
       textTransform: 'none',
+      fontWeight: 500,
     },
   },
   shape: {
-    borderRadius: 10,
+    borderRadius: 12,
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          background: 'linear-gradient(135deg, #0B1121 0%, #151C2C 50%, #1A202C 100%)',
+          minHeight: '100vh',
+          '&:before': {
+            content: '""',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'radial-gradient(circle at 50% 50%, rgba(111, 76, 255, 0.15) 0%, rgba(17, 25, 40, 0.15) 100%)',
+            pointerEvents: 'none',
+            zIndex: 1,
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          ...createGlassEffect(1),
+          backgroundImage: 'none',
+          '&:hover': {
+            ...createGlassEffect(2),
+          },
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          ...createGlassEffect(2),
+          background: gradients.card,
+          transition: 'all 0.3s ease-in-out',
+          '&:hover': {
+            ...createGlassEffect(3),
+            transform: 'translateY(-5px)',
+          },
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          background: 'rgba(11, 17, 33, 0.8)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+          boxShadow: '0 4px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 10,
-          padding: '8px 16px',
-          boxShadow: 'none',
+          borderRadius: '12px',
+          padding: '10px 20px',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          position: 'relative',
+          overflow: 'hidden',
+          '&:before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(255, 255, 255, 0.1)',
+            transform: 'translateX(-100%) rotate(45deg)',
+            transition: 'transform 0.5s',
+          },
           '&:hover': {
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
             transform: 'translateY(-2px)',
-          },
-          transition: 'all 0.2s ease',
-        },
-        containedPrimary: {
-          background: 'linear-gradient(135deg, #7371FC, #9381FF)',
-          '&:hover': {
-            background: 'linear-gradient(135deg, #6261E8, #8271EF)',
+            '&:before': {
+              transform: 'translateX(100%) rotate(45deg)',
+            },
           },
         },
-        containedSecondary: {
-          background: 'linear-gradient(135deg, #49BEAA, #3EC1B0)',
+        contained: {
+          background: gradients.primary,
+          boxShadow: '0 4px 15px rgba(111, 76, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
           '&:hover': {
-            background: 'linear-gradient(135deg, #40A595, #35B4A3)',
+            background: gradients.secondary,
+            boxShadow: '0 8px 25px rgba(111, 76, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
           },
         },
         outlined: {
-          borderWidth: '2px',
+          borderColor: 'rgba(111, 76, 255, 0.5)',
+          backgroundColor: 'rgba(111, 76, 255, 0.05)',
+          backdropFilter: 'blur(5px)',
           '&:hover': {
-            borderWidth: '2px',
+            borderColor: '#6F4CFF',
+            backgroundColor: 'rgba(111, 76, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
           },
         },
       },
@@ -108,63 +224,138 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: 10,
+            ...createGlassEffect(1),
+            borderRadius: '12px',
+            '&:hover': {
+              ...createGlassEffect(2),
+            },
+            '&.Mui-focused': {
+              ...createGlassEffect(3),
+            },
+            '& fieldset': {
+              borderColor: 'rgba(111, 76, 255, 0.2)',
+              transition: 'all 0.3s ease',
+            },
+            '&:hover fieldset': {
+              borderColor: 'rgba(111, 76, 255, 0.3)',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: '#6F4CFF',
+              borderWidth: '2px',
+            },
           },
         },
       },
     },
-    MuiCard: {
+    MuiSelect: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
-          background: 'rgba(255, 255, 255, 0.85)',
-          backdropFilter: 'blur(8px)',
+          ...createGlassEffect(1),
+          borderRadius: '12px',
+          '&:hover': {
+            ...createGlassEffect(2),
+          },
         },
       },
     },
-    MuiPaper: {
+    MuiDialog: {
       styleOverrides: {
-        rounded: {
-          borderRadius: 16,
+        paper: {
+          ...createGlassEffect(3),
+          background: gradients.card,
+          borderRadius: '24px',
+        },
+      },
+    },
+    MuiTableContainer: {
+      styleOverrides: {
+        root: {
+          ...createGlassEffect(2),
+          background: gradients.card,
+          borderRadius: '16px',
+          overflow: 'hidden',
+        },
+      },
+    },
+    MuiTableHead: {
+      styleOverrides: {
+        root: {
+          '& .MuiTableCell-root': {
+            background: gradients.subtle,
+            backdropFilter: 'blur(10px)',
+            fontWeight: 600,
+            color: '#6F4CFF',
+            borderBottom: '2px solid rgba(111, 76, 255, 0.2)',
+          },
+        },
+      },
+    },
+    MuiTableRow: {
+      styleOverrides: {
+        root: {
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            backgroundColor: 'rgba(111, 76, 255, 0.1)',
+            backdropFilter: 'blur(15px)',
+          },
         },
       },
     },
     MuiChip: {
       styleOverrides: {
         root: {
-          fontWeight: 500,
+          ...createGlassEffect(2),
+          borderRadius: '8px',
+          border: 'none',
+          '&:hover': {
+            ...createGlassEffect(3),
+          },
         },
-        colorPrimary: {
-          backgroundColor: 'rgba(115, 113, 252, 0.12)',
-          color: '#5755C8',
-        },
-        colorSecondary: {
-          backgroundColor: 'rgba(73, 190, 170, 0.12)',
-          color: '#2F9683',
-        },
-        colorError: {
-          backgroundColor: 'rgba(255, 107, 107, 0.12)',
-          color: '#CF4B4B',
-        },
-        colorWarning: {
-          backgroundColor: 'rgba(255, 177, 105, 0.12)',
-          color: '#D98F4E',
-        },
-        colorSuccess: {
-          backgroundColor: 'rgba(102, 187, 106, 0.12)',
-          color: '#43A047',
+        filled: {
+          background: gradients.primary,
+          color: '#E2E8F0',
         },
       },
     },
-    MuiTableCell: {
+    MuiMenu: {
+      styleOverrides: {
+        paper: {
+          ...createGlassEffect(3),
+          background: gradients.card,
+          borderRadius: '16px',
+          marginTop: '8px',
+        },
+      },
+    },
+    MuiMenuItem: {
       styleOverrides: {
         root: {
-          borderBottom: '1px solid rgba(224, 224, 224, 0.5)',
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            backgroundColor: 'rgba(111, 76, 255, 0.1)',
+            backdropFilter: 'blur(15px)',
+          },
         },
-        head: {
-          fontWeight: 600,
-          color: '#293241',
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            backgroundColor: 'rgba(111, 76, 255, 0.1)',
+            transform: 'translateY(-2px)',
+          },
+        },
+      },
+    },
+    MuiTooltip: {
+      styleOverrides: {
+        tooltip: {
+          ...createGlassEffect(3),
+          background: gradients.card,
+          color: '#E2E8F0',
+          fontSize: '0.875rem',
         },
       },
     },

@@ -35,7 +35,11 @@ body::before {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 10%, transparent 80%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.1) 10%,
+    transparent 80%
+  );
   transform: rotate(30deg);
   z-index: -1;
   pointer-events: none;
@@ -72,6 +76,7 @@ code {
   border-radius: 8px !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   backdrop-filter: blur(5px) !important;
+  -webkit-backdrop-filter: blur(5px) !important;
 }
 
 .glass-input .MuiInputBase-input {
@@ -90,6 +95,7 @@ code {
 .glass-button {
   background: rgba(255, 255, 255, 0.2) !important;
   backdrop-filter: blur(5px) !important;
+  -webkit-backdrop-filter: blur(5px) !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   color: rgba(0, 0, 0, 0.8) !important;
   font-weight: 600 !important;
@@ -116,4 +122,4 @@ code {
 .content-container {
   padding-top: 80px;
   min-height: calc(100vh - 80px);
-} 
+}

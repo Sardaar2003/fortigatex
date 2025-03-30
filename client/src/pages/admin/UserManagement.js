@@ -87,22 +87,27 @@ const UserManagement = () => {
       <Paper
         sx={{
           p: 3,
-          background: 'rgba(255, 255, 255, 0.25)',
+          background: 'rgba(26, 32, 44, 0.95)',
           backdropFilter: 'blur(10px)',
           borderRadius: '10px',
-          border: '1px solid rgba(255, 255, 255, 0.18)',
-          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1">
+          <Typography variant="h4" component="h1" sx={{ color: 'white' }}>
             User Management
           </Typography>
           <Button
             variant="contained"
             startIcon={<Person />}
-            className="glass-button"
             onClick={handleAddClick}
+            sx={{
+              background: 'linear-gradient(135deg, #6F4CFF 0%, #402AD5 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #8266FF 0%, #4F35FF 100%)',
+              }
+            }}
           >
             Add User
           </Button>
@@ -114,11 +119,11 @@ const UserManagement = () => {
 
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-            <CircularProgress />
+            <CircularProgress sx={{ color: '#6F4CFF' }} />
           </Box>
         ) : (
           <TableContainer component={Paper} sx={{
-            background: 'rgba(255, 255, 255, 0.15)',
+            background: 'rgba(26, 32, 44, 0.95)',
             backdropFilter: 'blur(5px)',
             borderRadius: '10px',
             border: '1px solid rgba(255, 255, 255, 0.1)'
@@ -126,33 +131,41 @@ const UserManagement = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Role</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  <TableCell sx={{ color: 'white' }}>Name</TableCell>
+                  <TableCell sx={{ color: 'white' }}>Email</TableCell>
+                  <TableCell sx={{ color: 'white' }}>Role</TableCell>
+                  <TableCell sx={{ color: 'white' }}>Status</TableCell>
+                  <TableCell align="right" sx={{ color: 'white' }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {users.map((user) => (
-                  <TableRow key={user._id}>
-                    <TableCell>{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
+                  <TableRow
+                    key={user._id}
+                    sx={{
+                      '&:hover': {
+                        backgroundColor: 'rgba(111, 76, 255, 0.1)',
+                        transition: 'background-color 0.2s ease-in-out'
+                      }
+                    }}
+                  >
+                    <TableCell sx={{ color: 'white' }}>{user.name}</TableCell>
+                    <TableCell sx={{ color: 'white' }}>{user.email}</TableCell>
                     <TableCell>
                       <Chip
                         label={user.role.name}
                         size="small"
                         sx={{
                           background: user.role.name === 'admin'
-                            ? 'rgba(25, 118, 210, 0.2)'
+                            ? 'rgba(111, 76, 255, 0.2)'
                             : user.role.name === 'moderator'
                               ? 'rgba(156, 39, 176, 0.2)'
                               : 'rgba(76, 175, 80, 0.2)',
                           color: user.role.name === 'admin'
-                            ? 'primary.main'
+                            ? '#6F4CFF'
                             : user.role.name === 'moderator'
-                              ? 'secondary.main'
-                              : 'success.main',
+                              ? '#9C27B0'
+                              : '#4CAF50',
                           backdropFilter: 'blur(5px)',
                           border: '1px solid rgba(255, 255, 255, 0.1)'
                         }}
@@ -166,7 +179,7 @@ const UserManagement = () => {
                           background: user.isVerified
                             ? 'rgba(76, 175, 80, 0.2)'
                             : 'rgba(211, 47, 47, 0.2)',
-                          color: user.isVerified ? 'success.main' : 'error.main',
+                          color: user.isVerified ? '#4CAF50' : '#D32F2F',
                           backdropFilter: 'blur(5px)',
                           border: '1px solid rgba(255, 255, 255, 0.1)'
                         }}
@@ -176,7 +189,14 @@ const UserManagement = () => {
                       <Button
                         size="small"
                         startIcon={<Edit />}
-                        sx={{ mr: 1 }}
+                        sx={{
+                          mr: 1,
+                          color: '#6F4CFF',
+                          '&:hover': {
+                            backgroundColor: 'rgba(111, 76, 255, 0.1)',
+                            color: '#8266FF'
+                          }
+                        }}
                         onClick={() => handleEditClick(user)}
                       >
                         Edit
@@ -185,6 +205,11 @@ const UserManagement = () => {
                         size="small"
                         color="error"
                         startIcon={<Delete />}
+                        sx={{
+                          '&:hover': {
+                            backgroundColor: 'rgba(211, 47, 47, 0.1)'
+                          }
+                        }}
                         onClick={() => handleDeleteClick(user._id)}
                       >
                         Delete

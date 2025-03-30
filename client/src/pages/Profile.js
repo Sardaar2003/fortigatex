@@ -10,7 +10,7 @@ import {
   Avatar,
   Alert
 } from '@mui/material';
-import AuthContext from '../context/AuthContext';
+import { AuthContext } from '../context/AuthContext';
 
 const Profile = () => {
   const { user } = useContext(AuthContext);
@@ -28,11 +28,11 @@ const Profile = () => {
       <Paper
         sx={{
           p: 3,
-          background: 'rgba(255, 255, 255, 0.25)',
+          background: 'rgba(26, 32, 44, 0.95)',
           backdropFilter: 'blur(10px)',
           borderRadius: '10px',
-          border: '1px solid rgba(255, 255, 255, 0.18)',
-          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
         }}
       >
         <Box sx={{ mb: 4, display: 'flex', alignItems: 'center' }}>
@@ -41,25 +41,33 @@ const Profile = () => {
               width: 80,
               height: 80,
               mr: 3,
-              background: 'rgba(255, 255, 255, 0.3)',
-              backdropFilter: 'blur(5px)',
-              border: '1px solid rgba(255, 255, 255, 0.5)',
+              background: 'rgba(111, 76, 255, 0.2)',
+              color: '#6F4CFF',
+              border: '4px solid rgba(111, 76, 255, 0.3)',
             }}
           >
             {user?.name?.charAt(0) || 'U'}
           </Avatar>
           <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
+            <Typography variant="h4" component="h1" gutterBottom sx={{ color: 'white' }}>
               My Profile
             </Typography>
-            <Typography variant="body1">
+            <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
               Manage your personal information
             </Typography>
           </Box>
         </Box>
 
         {message && (
-          <Alert severity="success" sx={{ mb: 3 }} onClose={() => setMessage('')}>
+          <Alert 
+            severity="success" 
+            sx={{ 
+              mb: 3,
+              backgroundColor: 'rgba(56, 229, 177, 0.1)',
+              color: '#38E5B1'
+            }} 
+            onClose={() => setMessage('')}
+          >
             {message}
           </Alert>
         )}
@@ -67,7 +75,7 @@ const Profile = () => {
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
             <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
                 Personal Information
               </Typography>
             </Grid>
@@ -78,7 +86,27 @@ const Profile = () => {
                 label="Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="glass-input"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    height: '56px',
+                    color: 'white',
+                    '& fieldset': {
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(111, 76, 255, 0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#6F4CFF',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    '&.Mui-focused': {
+                      color: '#6F4CFF',
+                    },
+                  },
+                }}
               />
             </Grid>
 
@@ -88,7 +116,27 @@ const Profile = () => {
                 label="Email"
                 value={user?.email || ''}
                 disabled
-                className="glass-input"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    height: '56px',
+                    color: 'white',
+                    '& fieldset': {
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(111, 76, 255, 0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#6F4CFF',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    '&.Mui-focused': {
+                      color: '#6F4CFF',
+                    },
+                  },
+                }}
               />
             </Grid>
 
@@ -98,7 +146,27 @@ const Profile = () => {
                 label="Role"
                 value={user?.role?.name || ''}
                 disabled
-                className="glass-input"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    height: '56px',
+                    color: 'white',
+                    '& fieldset': {
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(111, 76, 255, 0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#6F4CFF',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    '&.Mui-focused': {
+                      color: '#6F4CFF',
+                    },
+                  },
+                }}
               />
             </Grid>
 
@@ -108,7 +176,27 @@ const Profile = () => {
                 label="Account Created"
                 value={user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : ''}
                 disabled
-                className="glass-input"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    height: '56px',
+                    color: 'white',
+                    '& fieldset': {
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(111, 76, 255, 0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#6F4CFF',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    '&.Mui-focused': {
+                      color: '#6F4CFF',
+                    },
+                  },
+                }}
               />
             </Grid>
 
@@ -116,8 +204,13 @@ const Profile = () => {
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                 <Button
                   type="submit"
-                  variant="contained"
-                  className="glass-button"
+                  sx={{
+                    background: 'rgba(111, 76, 255, 0.2)',
+                    color: '#6F4CFF',
+                    '&:hover': {
+                      background: 'rgba(111, 76, 255, 0.3)',
+                    },
+                  }}
                 >
                   Save Changes
                 </Button>

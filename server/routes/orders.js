@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { 
-  createOrder, 
-  getOrders, 
-  getOrderById, 
-  updateOrder, 
-  deleteOrder, 
-  getMyOrders 
+const {
+  createOrder,
+  getOrders,
+  getOrderById,
+  updateOrder,
+  deleteOrder,
+  getMyOrders
 } = require('../controllers/orderController');
 const { protect, authorize } = require('../middleware/auth');
 

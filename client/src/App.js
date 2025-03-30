@@ -1,33 +1,123 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import axios from 'axios';
-import { Container, CssBaseline, ThemeProvider } from '@mui/material';
-import { AuthProvider } from './context/AuthContext';
-import PrivateRoute from './components/routing/PrivateRoute';
-import AdminRoute from './components/routing/AdminRoute';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { Box } from '@mui/material';
 import theme from './theme';
-
-// Pages
+import Navigation from './components/Navigation';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import VerifyEmail from './pages/VerifyEmail';
-import NotFound from './pages/NotFound';
-import UserManagement from './pages/admin/UserManagement';
-import RoleManagement from './pages/admin/RoleManagement';
+import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
 import OrderManagement from './pages/admin/OrderManagement';
+import RoleManagement from './pages/admin/RoleManagement';
+import UserManagement from './pages/admin/UserManagement';
+import PrivateRoute from './components/PrivateRoute';
+import { AuthProvider } from './context/AuthContext';
 
-// Components
-import Navigation from './components/Navigation';
-import CreateOrder from './pages/CreateOrder';
-
-// Configure axios defaults
-const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-axios.defaults.baseURL = apiUrl;
-console.log('API URL configured as:', apiUrl);
+const BackgroundGradient = () => (
+  <>
+    <Box
+      sx={{
+        position: 'fixed',
+        top: '-50%',
+        left: '-50%',
+        width: '200%',
+        height: '200%',
+        background: 'radial-gradient(circle at center, rgba(111, 76, 255, 0.15) 0%, rgba(64, 42, 213, 0.1) 25%, rgba(155, 107, 254, 0.05) 50%, transparent 70%)',
+        transform: 'rotate(-12deg)',
+        zIndex: 0,
+        pointerEvents: 'none',
+      }}
+    />
+    <Box
+      sx={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'linear-gradient(135deg, rgba(17, 25, 40, 0.95) 0%, rgba(26, 32, 44, 0.95) 100%)',
+        zIndex: 0,
+        pointerEvents: 'none',
+      }}
+    />
+    <Box
+      sx={{
+        position: 'fixed',
+        top: '10%',
+        right: '-15%',
+        width: '500px',
+        height: '500px',
+        background: 'radial-gradient(circle, rgba(111, 76, 255, 0.3) 0%, rgba(111, 76, 255, 0) 70%)',
+        borderRadius: '50%',
+        filter: 'blur(60px)',
+        animation: 'float 8s ease-in-out infinite',
+        zIndex: 0,
+        pointerEvents: 'none',
+        '@keyframes float': {
+          '0%, 100%': {
+            transform: 'translateY(0) scale(1)',
+          },
+          '50%': {
+            transform: 'translateY(-40px) scale(1.05)',
+          },
+        },
+      }}
+    />
+    <Box
+      sx={{
+        position: 'fixed',
+        bottom: '10%',
+        left: '-5%',
+        width: '300px',
+        height: '300px',
+        background: 'radial-gradient(circle, rgba(155, 107, 254, 0.3) 0%, rgba(155, 107, 254, 0) 70%)',
+        borderRadius: '50%',
+        filter: 'blur(60px)',
+        animation: 'float2 12s ease-in-out infinite',
+        zIndex: 0,
+        pointerEvents: 'none',
+        '@keyframes float2': {
+          '0%, 100%': {
+            transform: 'translate(0, 0) scale(1)',
+          },
+          '50%': {
+            transform: 'translate(40px, -20px) scale(1.1)',
+          },
+        },
+      }}
+    />
+    <Box
+      sx={{
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        width: '800px',
+        height: '800px',
+        background: 'radial-gradient(circle, rgba(64, 42, 213, 0.2) 0%, rgba(64, 42, 213, 0) 70%)',
+        transform: 'translate(-50%, -50%)',
+        borderRadius: '50%',
+        filter: 'blur(80px)',
+        animation: 'pulse 15s ease-in-out infinite',
+        zIndex: 0,
+        pointerEvents: 'none',
+        '@keyframes pulse': {
+          '0%, 100%': {
+            transform: 'translate(-50%, -50%) scale(1)',
+            opacity: 0.5,
+          },
+          '50%': {
+            transform: 'translate(-50%, -50%) scale(1.2)',
+            opacity: 0.8,
+          },
+        },
+      }}
+    />
+  </>
+);
 
 function App() {
   return (
@@ -35,31 +125,94 @@ function App() {
       <CssBaseline />
       <AuthProvider>
         <Router>
-          <Navigation />
-          <Container sx={{ mt: 4, mb: 4 }}>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Navigate to="/login" replace />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password/:token" element={<ResetPassword />} />
-              <Route path="/verify-email/:token" element={<VerifyEmail />} />
-              
-              {/* Protected routes for all authenticated users */}
-              <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-              <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-              <Route path="/create-order" element={<PrivateRoute><CreateOrder /></PrivateRoute>} />
-              
-              {/* Admin-only routes */}
-              <Route path="/user-management" element={<AdminRoute><UserManagement /></AdminRoute>} />
-              <Route path="/role-management" element={<AdminRoute><RoleManagement /></AdminRoute>} />
-              <Route path="/order-management" element={<AdminRoute><OrderManagement /></AdminRoute>} />
-              
-              {/* 404 route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Container>
+          <Box
+            sx={{
+              minHeight: '100vh',
+              position: 'relative',
+              background: 'linear-gradient(135deg, #0B1121 0%, #151C2C 50%, #1A202C 100%)',
+              backgroundAttachment: 'fixed',
+              '&::before': {
+                content: '""',
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backdropFilter: 'blur(100px)',
+                zIndex: -1,
+              },
+            }}
+          >
+            <BackgroundGradient />
+            <Box 
+              sx={{ 
+                position: 'relative', 
+                zIndex: 1,
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column'
+              }}
+            >
+              <Navigation />
+              <Box
+                component="main"
+                sx={{
+                  position: 'relative',
+                  zIndex: 2,
+                  pt: 8,
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}
+              >
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password/:token" element={<ResetPassword />} />
+                  
+                  {/* Protected Routes */}
+                  <Route path="/" element={
+                    <PrivateRoute>
+                      <Box sx={{ p: 3 }}>
+                        <Dashboard />
+                      </Box>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/profile" element={
+                    <PrivateRoute>
+                      <Box sx={{ p: 3 }}>
+                        <Profile />
+                      </Box>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/admin/orders" element={
+                    <PrivateRoute>
+                      <Box sx={{ p: 3 }}>
+                        <OrderManagement />
+                      </Box>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/admin/roles" element={
+                    <PrivateRoute>
+                      <Box sx={{ p: 3 }}>
+                        <RoleManagement />
+                      </Box>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/admin/users" element={
+                    <PrivateRoute>
+                      <Box sx={{ p: 3 }}>
+                        <UserManagement />
+                      </Box>
+                    </PrivateRoute>
+                  } />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Box>
+            </Box>
+          </Box>
         </Router>
       </AuthProvider>
     </ThemeProvider>

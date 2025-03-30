@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 <<<<<<< HEAD
 # Glassmorphic FortiGateX Security System
 
@@ -155,16 +156,113 @@ fortigatex/
 
 3. Start the backend:
    ```bash
+=======
+# FortiGateX Security System
+
+FortiGateX is a modern, glassmorphic security system with advanced authentication and role-based access control.
+
+## Features
+
+- 🔐 Secure authentication system with JWT
+- 👤 Role-based access control
+- 📱 Responsive glassmorphic UI using Material-UI
+- 🛒 Order management system
+- 👩‍💼 User management for administrators
+- 🔄 Email verification (configurable)
+
+## Tech Stack
+
+### Frontend
+
+- React.js with hooks
+- Material-UI for UI components
+- Context API for state management
+- React Router for navigation
+- Axios for API requests
+
+### Backend
+
+- Node.js & Express
+- MongoDB with Mongoose ODM
+- JWT for authentication
+- bcrypt for password hashing
+- Nodemailer for email services
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js >= 14.0.0
+- MongoDB (local or Atlas)
+- NPM or Yarn
+
+### Installation
+
+1. Clone the repository:
+
+   ```
+   git clone https://github.com/Sardaar2003/fortigatex.git
+   cd fortigatex
+   ```
+
+2. Install server dependencies:
+
+   ```
+   cd server
+   npm install
+   ```
+
+3. Install client dependencies:
+
+   ```
+   cd ../client
+   npm install
+   ```
+
+4. Create a `.env` file in the server directory with the following variables:
+
+   ```
+   PORT=5000
+   MONGODB_URI=your_mongodb_connection_string
+   JWT_SECRET=your_jwt_secret_key
+   JWT_EXPIRES_IN=1d
+   EMAIL_SERVICE=your_email_service
+   EMAIL_USER=your_email
+   EMAIL_PASS=your_email_password
+   CLIENT_URL=http://localhost:3000
+   ENABLE_EMAIL=false
+   NODE_ENV=development
+   ```
+
+5. Create a `.env` file in the client directory:
+
+   ```
+   REACT_APP_API_URL=http://localhost:5000
+   ```
+
+### Running the Application
+
+1. Start the server:
+
+   ```
+>>>>>>> Stashed changes
    cd server
    npm run dev
    ```
 
+<<<<<<< Updated upstream
 4. Start the frontend:
    ```bash
+=======
+2. Start the client:
+
+   ```
+>>>>>>> Stashed changes
    cd client
    npm start
    ```
 
+<<<<<<< Updated upstream
 ## Key Features Implementation Details
 
 ### Backend RBAC Implementation
@@ -204,11 +302,15 @@ After completing the core functionality, consider these enhancements:
 4. User profile management
 5. Activity logging and audit trails 
 =======
+=======
+3. The application will be available at `http://localhost:3000`
+
+>>>>>>> Stashed changes
 ## Deployment Guide for Render.com
 
 ### Backend Deployment (API Service)
 
-1. Sign up for a Render account at https://render.com
+1. Sign up for a Render account at <https://render.com>
 2. Click "New +" and select "Web Service"
 3. Connect your GitHub repository or use the manual deploy option
 4. Configure the service:
@@ -225,10 +327,10 @@ After completing the core functionality, consider these enhancements:
    - `EMAIL_SERVICE`: Your SMTP service (e.g., smtp.gmail.com)
    - `EMAIL_USER`: Your email address
    - `EMAIL_PASS`: Your email password or app password
-   - `CLIENT_URL`: URL of your frontend (e.g., https://fortigatex-client.onrender.com)
+   - `CLIENT_URL`: URL of your frontend (e.g., <https://fortigatex-client.onrender.com>)
    - `ENABLE_EMAIL`: true/false
    - `NODE_ENV`: production
-   - `CORS_ORIGIN`: URL of your frontend (e.g., https://fortigatex-client.onrender.com)
+   - `CORS_ORIGIN`: URL of your frontend (e.g., <https://fortigatex-client.onrender.com>)
 6. Click "Create Web Service"
 
 ### Frontend Deployment (Static Site)
@@ -241,7 +343,7 @@ After completing the core functionality, consider these enhancements:
    - **Publish Directory**: `build`
    - **Plan**: Select the appropriate plan (Free tier works for testing)
 4. Add the following environment variable:
-   - `REACT_APP_API_URL`: URL of your backend API service (e.g., https://fortigatex-server.onrender.com)
+   - `REACT_APP_API_URL`: URL of your backend API service (e.g., <https://fortigatex-server.onrender.com>)
 5. Click "Create Static Site"
 
 ### Post-Deployment
@@ -249,5 +351,22 @@ After completing the core functionality, consider these enhancements:
 1. After both services are deployed, verify that they're communicating correctly
 2. Test user registration, login, and other key features
 3. Check the logs in Render dashboard for any errors
+<<<<<<< Updated upstream
 4. If needed, adjust environment variables or configuration settings 
 >>>>>>> a6cc220b4d14076dcc56121307b3bbbe9a5c1099
+=======
+4. If needed, adjust environment variables or configuration settings
+
+## Default Admin Account
+
+On first run, the system automatically creates an admin account:
+
+- Email: <admin@example.com>
+- Password: admin123
+
+**IMPORTANT**: Change this password immediately after first login for security.
+
+## License
+
+MIT License
+>>>>>>> Stashed changes

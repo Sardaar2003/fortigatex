@@ -1,127 +1,272 @@
-import React, { useContext } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useContext } from 'react';
 import {
   AppBar,
-  Toolbar,
-  Typography,
-  Button,
   Box,
+  Toolbar,
+  IconButton,
+  Typography,
+  Menu,
   Container,
+  Avatar,
+  Button,
+  Tooltip,
   MenuItem,
-  ListItemIcon,
-  ListItemText
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
-import AuthContext from '../context/AuthContext';
-import { Link as RouterLink } from 'react-router-dom';
+import MenuIcon from '@mui/icons-material/Menu';
 import PersonIcon from '@mui/icons-material/Person';
-import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
 const Navigation = () => {
-  const { isAuthenticated, user, logout } = useContext(AuthContext);
-  const location = useLocation();
+  const { user, logout, isAuthenticated } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [anchorElUser, setAnchorElUser] = useState(null);
+  const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
 
-  // Only show navigation when the user is authenticated
-  if (!isAuthenticated) return null;
+  // Don't render navigation if user is not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
-  const isActive = (path) => {
-    return location.pathname === path;
+  const handleOpenUserMenu = (event) => {
+    setAnchorElUser(event.currentTarget);
   };
 
-  const isAdmin = user && user.role && user.role.name === 'admin';
-
-  const handleMenuClose = () => {
-    // Implement the logic to close the menu
+  const handleCloseUserMenu = () => {
+    setAnchorElUser(null);
   };
+
+  const handleOpenMobileMenu = (event) => {
+    setMobileMenuAnchor(event.currentTarget);
+  };
+
+  const handleCloseMobileMenu = () => {
+    setMobileMenuAnchor(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    handleCloseUserMenu();
+    navigate('/login');
+  };
+
+  const userMenuItems = [
+    { label: 'Profile', icon: <PersonIcon />, path: '/profile' },
+  ];
+
+  // Define menu items based on user role
+  const getMenuItems = () => {
+    if (user?.role?.name === 'admin') {
+      return [
+        { label: 'Dashboard', path: '/dashboard' },
+        { label: 'User Management', path: '/admin/users' },
+        { label: 'Role Management', path: '/admin/roles' },
+        { label: 'Order Management', path: '/admin/orders' },
+      ];
+    } else {
+      return [
+        { label: 'Dashboard', path: '/dashboard' },
+      ];
+    }
+  };
+
+  const menuItems = getMenuItems();
 
   return (
-    <AppBar position="static" className="glass-navbar">
-      <Container>
-        <Toolbar sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="h6" component={Link} to="/dashboard" sx={{ textDecoration: 'none', color: 'inherit' }}>
-            FortiGateX
+    <AppBar 
+      position="fixed" 
+      sx={{ 
+        background: 'rgba(26, 32, 44, 0.95)',
+        backdropFilter: 'blur(10px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+      }}
+    >
+      <Container maxWidth="xl">
+        <Toolbar disableGutters>
+          {isMobile && (
+            <IconButton
+              size="large"
+              aria-label="menu"
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              onClick={handleOpenMobileMenu}
+              color="inherit"
+              sx={{ mr: 2, color: 'white' }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+          <Typography
+            variant="h6"
+            noWrap
+            component="div"
+            sx={{ 
+              mr: 2, 
+              display: { xs: 'none', md: 'flex' },
+              fontWeight: 700,
+              color: 'white',
+              textDecoration: 'none',
+            }}
+          >
+            FORTIGATEX
           </Typography>
 
-          <Box>
-            <Button 
-              component={Link} 
-              to="/dashboard" 
-              color="inherit" 
-              sx={{ 
-                mx: 1,
-                fontWeight: isActive('/dashboard') ? 'bold' : 'normal',
-                borderBottom: isActive('/dashboard') ? '2px solid' : 'none'
-              }}
-            >
-              Dashboard
-            </Button>
-            
-            <Button 
-              component={Link} 
-              to="/profile" 
-              color="inherit"
-              sx={{ 
-                mx: 1,
-                fontWeight: isActive('/profile') ? 'bold' : 'normal',
-                borderBottom: isActive('/profile') ? '2px solid' : 'none'
-              }}
-            >
-              Profile
-            </Button>
-            
-            {isAdmin && (
-              <>
-                <Button 
-                  component={Link} 
-                  to="/user-management" 
-                  color="inherit"
-                  sx={{ 
-                    mx: 1,
-                    fontWeight: isActive('/user-management') ? 'bold' : 'normal',
-                    borderBottom: isActive('/user-management') ? '2px solid' : 'none'
-                  }}
-                >
-                  Users
-                </Button>
-                
-                <Button 
-                  component={Link} 
-                  to="/role-management" 
-                  color="inherit"
-                  sx={{ 
-                    mx: 1,
-                    fontWeight: isActive('/role-management') ? 'bold' : 'normal',
-                    borderBottom: isActive('/role-management') ? '2px solid' : 'none'
-                  }}
-                >
-                  Roles
-                </Button>
+          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+            {menuItems.map((item) => (
+              <Button
+                key={item.label}
+                onClick={() => navigate(item.path)}
+                sx={{ 
+                  my: 2, 
+                  color: 'white', 
+                  display: 'block',
+                  '&:hover': {
+                    backgroundColor: 'rgba(111, 76, 255, 0.1)',
+                  }
+                }}
+              >
+                {item.label}
+              </Button>
+            ))}
+          </Box>
 
-                <Button 
-                  component={Link} 
-                  to="/order-management" 
-                  color="inherit"
-                  sx={{ 
-                    mx: 1,
-                    fontWeight: isActive('/order-management') ? 'bold' : 'normal',
-                    borderBottom: isActive('/order-management') ? '2px solid' : 'none'
+          <Box sx={{ flexGrow: 0 }}>
+            <Tooltip title="Open settings">
+              <IconButton 
+                onClick={handleOpenUserMenu}
+                sx={{ 
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: 'rgba(111, 76, 255, 0.1)',
+                  }
+                }}
+              >
+                <Avatar
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    bgcolor: '#6F4CFF',
+                    '&:hover': {
+                      bgcolor: '#8266FF',
+                    }
                   }}
                 >
-                  Orders
-                </Button>
-              </>
-            )}
-            
-            <Button 
-              color="inherit" 
-              onClick={logout}
-              sx={{ ml: 2 }}
+                  {user?.firstName?.[0] || <PersonIcon />}
+                </Avatar>
+              </IconButton>
+            </Tooltip>
+            <Menu
+              sx={{
+                mt: '45px',
+                '& .MuiPaper-root': {
+                  background: 'rgba(26, 32, 44, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '10px',
+                  boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+                },
+              }}
+              id="menu-appbar"
+              anchorEl={anchorElUser}
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              keepMounted
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              open={Boolean(anchorElUser)}
+              onClose={handleCloseUserMenu}
             >
-              Logout
-            </Button>
+              {userMenuItems.map((item) => (
+                <MenuItem
+                  key={item.label}
+                  onClick={() => {
+                    handleCloseUserMenu();
+                    navigate(item.path);
+                  }}
+                  sx={{
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: 'rgba(111, 76, 255, 0.1)',
+                    },
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {item.icon}
+                    <Typography>{item.label}</Typography>
+                  </Box>
+                </MenuItem>
+              ))}
+              <MenuItem
+                onClick={handleLogout}
+                sx={{
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  },
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <LogoutIcon />
+                  <Typography>Logout</Typography>
+                </Box>
+              </MenuItem>
+            </Menu>
           </Box>
         </Toolbar>
       </Container>
+      <Menu
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiPaper-root': {
+            background: 'rgba(26, 32, 44, 0.95)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '10px',
+            boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+          },
+        }}
+        id="menu-appbar"
+        anchorEl={mobileMenuAnchor}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        keepMounted
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+        open={Boolean(mobileMenuAnchor)}
+        onClose={handleCloseMobileMenu}
+      >
+        {menuItems.map((item) => (
+          <MenuItem 
+            key={item.label}
+            onClick={() => {
+              handleCloseMobileMenu();
+              navigate(item.path);
+            }}
+            sx={{
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(111, 76, 255, 0.1)',
+              },
+            }}
+          >
+            <Typography textAlign="center">{item.label}</Typography>
+          </MenuItem>
+        ))}
+      </Menu>
     </AppBar>
   );
 };

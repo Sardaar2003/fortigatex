@@ -1,212 +1,92 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Box,
-  Typography,
-  Button,
-  IconButton,
+  Paper,
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
   TableRow,
   TablePagination,
-  Chip,
+  Typography,
+  Button,
+  IconButton,
   Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
   DialogTitle,
+  DialogContent,
+  DialogActions,
   TextField,
-  Grid,
-  MenuItem,
-  InputAdornment,
   FormControl,
   InputLabel,
-  Select
+  Select,
+  MenuItem,
+  Grid,
+  Alert,
+  TableContainer,
+  Chip,
+  CircularProgress,
+  Container,
+  Divider
 } from '@mui/material';
-import {
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  Visibility as ViewIcon,
-  Search as SearchIcon,
-  Refresh as RefreshIcon,
-  Download as DownloadIcon
-} from '@mui/icons-material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { AuthContext } from '../../context/AuthContext';
 import axios from 'axios';
-import AuthContext from '../../context/AuthContext';
-import GlassCard from '../../components/GlassCard';
-
-// Status colors for chips
-const statusColors = {
-  pending: 'warning',
-  processing: 'info',
-  completed: 'success',
-  cancelled: 'error',
-  refunded: 'default'
-};
-
-// Validation status colors
-const validationColors = {
-  true: 'success',
-  false: 'error'
-};
-
-// Glassmorphism styles
-const glassMorphism = {
-  background: 'rgba(255, 255, 255, 0.75)',
-  backdropFilter: 'blur(12px)',
-  borderRadius: '16px',
-  border: '1px solid rgba(255, 255, 255, 0.3)',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)'
-};
+import {
+  Visibility as VisibilityIcon,
+  Download as DownloadIcon,
+  Refresh as RefreshIcon,
+  Search,
+  FilterList
+} from '@mui/icons-material';
+import EditOrderDialog from '../../components/EditOrderDialog';
+import { format } from 'date-fns';
 
 const OrderManagement = () => {
   const { token } = useContext(AuthContext);
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [totalOrders, setTotalOrders] = useState(0);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [downloadingData, setDownloadingData] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [editForm, setEditForm] = useState({});
   const [filters, setFilters] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
+    search: '',
     status: '',
-    startDate: '',
-    endDate: ''
+    validation: '',
+    project: 'all'
   });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [validationFilter, setValidationFilter] = useState('');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteSuccess, setDeleteSuccess] = useState('');
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
 
-  // API base URL with fallback
-  const apiBaseUrl = process.env.REACT_APP_API_URL || '';
-  
-  // Log environment variables to help with debugging
+  const projects = ['all', 'Radius Project', 'Sempris Project'];
+
   useEffect(() => {
-    console.log('Environment variables:', {
-      REACT_APP_API_URL: process.env.REACT_APP_API_URL || 'not set'
-    });
-  }, []);
+    fetchOrders();
+  }, [page, rowsPerPage]);
 
-  // Status options for filter and editing
-  const statusOptions = [
-    { value: '', label: 'All Statuses' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'processing', label: 'Processing' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'cancelled', label: 'Cancelled' },
-    { value: 'refunded', label: 'Refunded' }
-  ];
-
-  // Fetch orders
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
-    setError('');
+  const fetchOrders = async () => {
     try {
-      const queryParams = new URLSearchParams();
-      
-      // Add pagination
-      queryParams.append('page', page + 1);
-      queryParams.append('limit', rowsPerPage);
-      
-      // Add search term if present (apply to firstName, lastName and email)
-      if (searchTerm.trim()) {
-        queryParams.append('firstName', searchTerm.trim());
-        queryParams.append('lastName', searchTerm.trim());
-        queryParams.append('email', searchTerm.trim());
-      }
-      
-      // Add status filter if present
-      if (statusFilter) {
-        queryParams.append('status', statusFilter);
-      }
-      
-      // Add validation filter - converted to boolean
-      if (validationFilter) {
-        queryParams.append('validationStatus', validationFilter === 'true');
-      }
-      
-      const url = `${apiBaseUrl}/api/orders?${queryParams.toString()}`;
-      console.log('Fetching orders from:', url);
-      
-      // Use the correct API endpoint
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/orders`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         }
-      });
-
-      // Check if response is OK before trying to parse as JSON
-      if (!response.ok) {
-        const text = await response.text();
-        
-        // Log the actual response content to help diagnose issues
-        console.error('API Error Response:', text);
-        console.error('API URL that failed:', url);
-        
-        // Try to parse as JSON if possible for structured error
-        try {
-          const errorData = JSON.parse(text);
-          throw new Error(errorData.message || `Server error: ${response.status}`);
-        } catch (jsonError) {
-          // If can't parse as JSON, use status text
-          throw new Error(`Server error (${response.status}): ${response.statusText}`);
-        }
-      }
-      
-      // Only try to parse JSON if we got an OK response
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.message || 'Failed to fetch orders');
-      }
-      
-      setOrders(data.data || []);
-      setTotalOrders(data.totalPages * rowsPerPage || 0);
+      );
+      setOrders(response.data.data);
+      setLoading(false);
     } catch (err) {
-      console.error('Error fetching orders:', err);
-      
-      // Special handling for network errors (like CORS issues)
-      if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
-        setError(`Network error: Could not connect to the server. This might be a CORS issue or the server is not running. Check that your API URL (${apiBaseUrl}) is correct.`);
-      } else {
-        setError(err.message || 'Failed to fetch orders. Please try again.');
-      }
-    } finally {
+      setError(err.response?.data?.message || 'Failed to fetch orders');
       setLoading(false);
     }
-  }, [page, rowsPerPage, searchTerm, statusFilter, validationFilter, apiBaseUrl, token]);
+  };
 
-  // Initial fetch and when filters/pagination change
-  useEffect(() => {
-    if (token) {
-      fetchOrders();
-    }
-  }, [token, fetchOrders]);
-
-  // Fetch orders when search term changes (with debounce)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (token && page === 0) {
-        fetchOrders();
-      } else if (token) {
-        setPage(0);
-      }
-    }, 500); // 500ms debounce
-
-    return () => clearTimeout(timer);
-  }, [searchTerm, statusFilter, validationFilter, token, fetchOrders]);
-
-  // Handle pagination changes
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -216,1208 +96,761 @@ const OrderManagement = () => {
     setPage(0);
   };
 
-  // Dialog handlers
-  const handleViewOrder = (order) => {
+  const handleEdit = (order) => {
     setSelectedOrder(order);
-    setViewDialogOpen(true);
+    setEditForm(order);
+    setOpenDialog(true);
   };
 
-  const handleEditOrder = (order) => {
-    setSelectedOrder(order);
-    setEditDialogOpen(true);
-  };
-
-  const handleDeleteOrder = (order) => {
-    setSelectedOrder(order);
-    setDeleteDialogOpen(true);
-  };
-
-  // Update order status
-  const updateOrderStatus = async (newStatus) => {
-    try {
-      const response = await fetch(`${apiBaseUrl}/api/orders/${selectedOrder._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-      
-      // Check if response is OK before trying to parse as JSON
-      if (!response.ok) {
-        const text = await response.text();
-        console.error('Update API Error Response:', text);
-        console.error('Update API URL that failed:', `${apiBaseUrl}/api/orders/${selectedOrder._id}`);
-        try {
-          const errorData = JSON.parse(text);
-          throw new Error(errorData.message || `Server error: ${response.status}`);
-        } catch (jsonError) {
-          throw new Error(`Server error (${response.status}): ${response.statusText}`);
-        }
-      }
-      
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.message || 'Failed to update order status');
-      }
-      
-      // Close dialog and refresh orders
-      setEditDialogOpen(false);
-      fetchOrders();
-    } catch (err) {
-      console.error('Error updating order:', err);
-      setError(err.message || 'Failed to update order status');
-    }
-  };
-
-  // Confirm order deletion
-  const confirmDeleteOrder = async () => {
-    try {
-      const response = await fetch(`${apiBaseUrl}/api/orders/${selectedOrder._id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      // Check if response is OK before trying to parse as JSON
-      if (!response.ok) {
-        const text = await response.text();
-        console.error('Delete API Error Response:', text);
-        console.error('Delete API URL that failed:', `${apiBaseUrl}/api/orders/${selectedOrder._id}`);
-        try {
-          const errorData = JSON.parse(text);
-          throw new Error(errorData.message || `Server error: ${response.status}`);
-        } catch (jsonError) {
-          throw new Error(`Server error (${response.status}): ${response.statusText}`);
-        }
-      }
-      
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.message || 'Failed to delete order');
-      }
-      
-      // Close dialog and refresh orders
-      setDeleteDialogOpen(false);
-      fetchOrders();
-    } catch (err) {
-      console.error('Error deleting order:', err);
-      setError(err.message || 'Failed to delete order');
-    }
-  };
-
-  // Handle filter changes
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
-    setPage(0); // Reset to first page when filters change
-  };
-
-  // Reset all filters
-  const resetFilters = () => {
-    setFilters({
-      firstName: '',
-      lastName: '',
-      email: '',
-      status: '',
-      startDate: '',
-      endDate: ''
-    });
-    setSearchTerm('');
-    setStatusFilter('');
-    setValidationFilter('');
-  };
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  // Function to download orders as CSV
-  const downloadOrdersAsCSV = async () => {
-    setDownloadingData(true);
-    setError('');
-    try {
-      // Prepare query params to include current filters
-      const queryParams = new URLSearchParams();
-      
-      // Add current search and filters (apply search to name/email)
-      if (searchTerm.trim()) {
-        queryParams.append('firstName', searchTerm.trim());
-        queryParams.append('lastName', searchTerm.trim());
-        queryParams.append('email', searchTerm.trim());
-      }
-      
-      if (statusFilter) {
-        queryParams.append('status', statusFilter);
-      }
-      
-      if (validationFilter) {
-        queryParams.append('validationStatus', validationFilter === 'true');
-      }
-      
-      // Request to download all orders matching the current filters - use regular orders endpoint with higher limit
-      queryParams.append('limit', 1000); // Get a large batch of orders
-      const response = await fetch(`${apiBaseUrl}/api/orders?${queryParams.toString()}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      // Check if response is OK before trying to parse as JSON
-      if (!response.ok) {
-        const text = await response.text();
-        
-        // Log the actual response content to help diagnose issues
-        console.error('Download API Error Response:', text);
-        console.error('Download API URL that failed:', `${apiBaseUrl}/api/orders?${queryParams.toString()}`);
-        
-        // Try to parse as JSON if possible for structured error
-        try {
-          const errorData = JSON.parse(text);
-          throw new Error(errorData.message || `Server error: ${response.status}`);
-        } catch (jsonError) {
-          // If can't parse as JSON, use status text
-          throw new Error(`Server error (${response.status}): ${response.statusText}`);
-        }
-      }
-      
-      // Only try to parse JSON if we got an OK response
-      const data = await response.json();
-      if (!data.success) throw new Error(data.message);
-      
-      const orders = data.data || [];
-      if (orders.length === 0) {
-        setError('No orders to download');
-        return;
-      }
-
-      // Table headers
-      const headers = [
-        'ID', 
-        'Date', 
-        'First Name', 
-        'Last Name', 
-        'Email', 
-        'Phone', 
-        'Address', 
-        'City', 
-        'State', 
-        'Zip Code', 
-        'Product', 
-        'Price', 
-        'Status',
-        'Validation Status',
-        'Validation Message',
-        'Session ID'
-      ];
-
-      // Convert data to rows
-      const rows = orders.map(order => [
-        order._id,
-        new Date(order.orderDate).toLocaleDateString(),
-        order.firstName,
-        order.lastName,
-        order.email || '',
-        order.phoneNumber || '',
-        order.address1 || '',
-        order.city || '',
-        order.state || '',
-        order.zipCode || '',
-        order.productName || '',
-        order.price ? `$${order.price}` : '',
-        order.status || '',
-        order.validationStatus ? 'Valid' : 'Invalid',
-        order.validationMessage || '',
-        order.sessionId || ''
-      ]);
-
-      // Create CSV content with comma delimiter
+  const handleDelete = async (orderId) => {
+    if (window.confirm('Are you sure you want to delete this order?')) {
       try {
-        const csvContent = [headers, ...rows].map(row => {
-          // Check if row has expected format
-          if (!Array.isArray(row) || row.length !== headers.length) {
-            console.warn('Row format issue:', row);
-            // Fill missing values with empty strings to match header length
-            return Array(headers.length).fill('').map((val, idx) => {
-              let cell = row && idx < row.length ? (row[idx] === null || row[idx] === undefined ? '' : String(row[idx])) : '';
-              // Escape quotes and wrap in quotes if contains commas or quotes
-              if (cell.includes('"') || cell.includes(',') || cell.includes('\n')) {
-                cell = cell.replace(/"/g, '""');
-                return `"${cell}"`;
-              }
-              return cell;
-            }).join(',');
-          }
-          
-          return row.map(cell => {
-            cell = cell === null || cell === undefined ? '' : String(cell);
-            // Escape quotes and wrap in quotes if contains commas or quotes
-            if (cell.includes('"') || cell.includes(',') || cell.includes('\n')) {
-              cell = cell.replace(/"/g, '""');
-              return `"${cell}"`;
+        await axios.delete(
+          `${process.env.REACT_APP_API_URL}/api/orders/${orderId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
             }
-            return cell;
-          }).join(',');
-        }).join('\n');
-
-        // Create Blob and download link
-        const blob = new Blob([csvContent], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `orders-${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch (formatErr) {
-        console.error('CSV formatting error:', formatErr);
-        setError('Error formatting data for download');
+          }
+        );
+        setDeleteSuccess('Order deleted successfully');
+        setTimeout(() => setDeleteSuccess(''), 3000);
+        fetchOrders();
+      } catch (err) {
+        setDeleteError(err.response?.data?.message || 'Failed to delete order');
+        setTimeout(() => setDeleteError(''), 5000);
       }
-    } catch (err) {
-      setError(err.message);
-      console.error('Error downloading orders:', err);
-    } finally {
-      setDownloadingData(false);
     }
   };
+
+  const handleDialogClose = () => {
+    setOpenDialog(false);
+    setSelectedOrder(null);
+    setEditForm({});
+  };
+
+  const handleUpdate = async () => {
+    try {
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/orders/${selectedOrder._id}`,
+        editForm,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      handleDialogClose();
+      fetchOrders();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update order');
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleFilterChange = (field) => (event) => {
+    setFilters(prev => ({
+      ...prev,
+      [field]: event.target.value
+    }));
+  };
+
+  const handleReset = () => {
+    setFilters({
+      search: '',
+      status: '',
+      validation: '',
+      project: 'all'
+    });
+  };
+
+  const getStatusColor = (status) => {
+    if (!status) return {
+      color: '#6B7280',
+      bg: '#F3F4F6'
+    };
+
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return {
+          color: '#F59E0B',
+          bg: '#FEF3C7'
+        };
+      case 'cancelled':
+        return {
+          color: '#EF4444',
+          bg: '#FEE2E2'
+        };
+      default:
+        return {
+          color: '#10B981',
+          bg: '#D1FAE5'
+        };
+    }
+  };
+
+  const getValidationColor = (validation) => {
+    if (validation === undefined || validation === null) return {
+      color: '#6B7280',
+      bg: '#F3F4F6'
+    };
+
+    if (typeof validation === 'boolean') {
+      return validation ? {
+        color: '#10B981',
+        bg: '#D1FAE5'
+      } : {
+        color: '#EF4444',
+        bg: '#FEE2E2'
+      };
+    }
+
+    switch (validation.toLowerCase()) {
+      case 'invalid':
+      case 'false':
+        return {
+          color: '#EF4444',
+          bg: '#FEE2E2'
+        };
+      case 'valid':
+      case 'true':
+        return {
+          color: '#10B981',
+          bg: '#D1FAE5'
+        };
+      default:
+        return {
+          color: '#F59E0B',
+          bg: '#FEF3C7'
+        };
+    }
+  };
+
+  const getValidationText = (validation) => {
+    if (validation === undefined || validation === null) return 'Pending';
+    if (typeof validation === 'boolean') return validation ? 'Valid' : 'Invalid';
+    return validation;
+  };
+
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = order.firstName.toLowerCase().includes(filters.search.toLowerCase()) ||
+      order.lastName.toLowerCase().includes(filters.search.toLowerCase()) ||
+      order.email.toLowerCase().includes(filters.search.toLowerCase());
+    const matchesStatus = filters.status === '' || order.status === filters.status;
+    const matchesValidation = filters.validation === '' || getValidationText(order.validationStatus) === filters.validation;
+    const matchesProject = filters.project === 'all' || order.project === filters.project;
+    return matchesSearch && matchesStatus && matchesValidation && matchesProject;
+  });
+
+  const handlePreview = (order) => {
+    setSelectedOrder(order);
+    setPreviewDialogOpen(true);
+  };
+
+  const handlePreviewClose = () => {
+    setPreviewDialogOpen(false);
+    setSelectedOrder(null);
+  };
+
+  const handleDownloadCSV = () => {
+    // Create CSV headers
+    const headers = [
+      'Order ID',
+      'Order Date',
+      'First Name',
+      'Last Name',
+      'Email',
+      'Phone',
+      'Address',
+      'City',
+      'State',
+      'Zip Code',
+      'Source Code',
+      'SKU',
+      'Product Name',
+      'Session ID',
+      'Status',
+      'Credit Card Last 4',
+      'Credit Card Expiration',
+      'Voice Recording ID',
+      'Validation Status',
+      'Validation Message',
+      'Validation Response',
+      'Validation Date',
+      'Created At',
+      'Updated At',
+      'Project'
+    ];
+
+    // Create CSV rows
+    const rows = orders.map(order => [
+      order._id,
+      format(new Date(order.orderDate), 'yyyy-MM-dd HH:mm:ss'),
+      order.firstName,
+      order.lastName,
+      order.email,
+      order.phoneNumber,
+      order.address1,
+      order.city,
+      order.state,
+      order.zipCode,
+      order.sourceCode,
+      order.sku,
+      order.productName,
+      order.sessionId,
+      order.status,
+      order.creditCardLast4,
+      order.creditCardExpiration,
+      order.voiceRecordingId,
+      order.validationStatus,
+      order.validationMessage,
+      order.validationResponse,
+      order.validationDate ? format(new Date(order.validationDate), 'yyyy-MM-dd HH:mm:ss') : '',
+      format(new Date(order.createdAt), 'yyyy-MM-dd HH:mm:ss'),
+      format(new Date(order.updatedAt), 'yyyy-MM-dd HH:mm:ss'),
+      order.project
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    // Create and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `orders_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Typography>Loading...</Typography>
+      </Box>
+    );
+  }
 
   return (
-    <Box sx={{ width: '100%', maxWidth: '1200px', margin: '0 auto', pt: 3, px: 2 }}>
-      <GlassCard maxWidth="100%" sx={{ 
-        backgroundColor: 'rgba(255, 255, 255, 0.3)', 
-        p: { xs: 3, sm: 4 },
-        m: 0,
-        '&::before': {
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%)',
-        }
-      }}>
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: { xs: 'column', md: 'row' },
-          justifyContent: 'space-between', 
-          alignItems: { xs: 'flex-start', md: 'center' }, 
-          mb: 4,
-          gap: 2
-        }}>
-          <Typography variant="h4" gutterBottom sx={{ 
-            fontWeight: 700, 
-            background: 'linear-gradient(45deg, #7371FC, #9896FF)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            textShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-            letterSpacing: '0.5px',
-            mb: { xs: 1, md: 0 }
-          }}>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Paper
+        sx={{
+          p: 3,
+          background: 'rgba(26, 32, 44, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '10px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" component="h1" sx={{ color: 'white' }}>
             Order Management
           </Typography>
           <Button
-            variant="contained"
-            color="primary"
             startIcon={<DownloadIcon />}
-            onClick={downloadOrdersAsCSV}
-            disabled={downloadingData}
+            onClick={handleDownloadCSV}
             sx={{
-              background: 'linear-gradient(135deg, #5755C8 0%, #7371FC 100%)',
-              boxShadow: '0 3px 5px 2px rgba(115, 113, 252, 0.3)',
-              borderRadius: '8px',
-              padding: '10px 24px',
-              height: '44px',
-              backdropFilter: 'blur(10px)',
-              fontWeight: 500,
-              fontSize: '15px',
+              background: 'rgba(111, 76, 255, 0.2)',
+              color: '#6F4CFF',
               '&:hover': {
-                boxShadow: '0 6px 10px 2px rgba(115, 113, 252, 0.4)',
-                transform: 'translateY(-2px)'
+                background: 'rgba(111, 76, 255, 0.3)',
               },
-              transition: 'all 0.3s ease'
             }}
           >
-            {downloadingData ? 'Downloading...' : 'Download CSV'}
+            Download CSV
           </Button>
         </Box>
 
-        {/* Filter Section */}
-        <Box 
-          sx={{ 
-            mb: 4, 
-            p: 3, 
-            backgroundColor: 'rgba(255, 255, 255, 0.6)',
-            borderRadius: '12px',
-            border: '1px solid rgba(115, 113, 252, 0.15)',
-            boxShadow: '0 4px 20px rgba(115, 113, 252, 0.07)'
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Search orders..."
+              value={filters.search}
+              onChange={handleFilterChange('search')}
+              InputProps={{
+                startAdornment: <Search sx={{ mr: 1, color: 'rgba(255, 255, 255, 0.7)' }} />,
+                sx: {
+                  color: 'white',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.23)',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#6F4CFF',
+                  },
+                  '& input': {
+                    color: 'white',
+                  },
+                }
+              }}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>Status</InputLabel>
+              <Select
+                value={filters.status}
+                onChange={handleFilterChange('status')}
+                label="Status"
+                sx={{
+                  color: 'white',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.23)',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#6F4CFF',
+                  },
+                }}
+              >
+                <MenuItem value="">All</MenuItem>
+                <MenuItem value="pending">Pending</MenuItem>
+                <MenuItem value="processing">Processing</MenuItem>
+                <MenuItem value="completed">Completed</MenuItem>
+                <MenuItem value="cancelled">Cancelled</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>Validation</InputLabel>
+              <Select
+                value={filters.validation}
+                onChange={handleFilterChange('validation')}
+                label="Validation"
+                sx={{
+                  color: 'white',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.23)',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#6F4CFF',
+                  },
+                }}
+              >
+                <MenuItem value="">All</MenuItem>
+                <MenuItem value="valid">Valid</MenuItem>
+                <MenuItem value="invalid">Invalid</MenuItem>
+                <MenuItem value="pending">Pending</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>Project</InputLabel>
+              <Select
+                value={filters.project}
+                onChange={handleFilterChange('project')}
+                label="Project"
+                sx={{
+                  color: 'white',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.23)',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#6F4CFF',
+                  },
+                }}
+              >
+                <MenuItem value="all">All Projects</MenuItem>
+                <MenuItem value="Radius Project">Radius Project</MenuItem>
+                <MenuItem value="Sempris Project">Sempris Project</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+
+        <Button
+          startIcon={<RefreshIcon />}
+          onClick={handleReset}
+          sx={{
+            mb: 3,
+            color: 'white',
+            '&:hover': {
+              background: 'rgba(255, 255, 255, 0.1)',
+            }
           }}
         >
-          <Typography variant="subtitle1" sx={{ 
-            mb: 2.5, 
-            fontWeight: 600,
-            color: 'primary.dark',
-            pl: 1,
-            fontSize: '17px',
-            display: 'flex',
-            alignItems: 'center',
-            '&:after': {
-              content: '""',
-              display: 'block',
-              width: '30px',
-              height: '2px',
-              background: 'linear-gradient(90deg, rgba(115, 113, 252, 0.7), rgba(115, 113, 252, 0))',
-              ml: 1
-            }
+          Refresh
+        </Button>
+
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+            <CircularProgress sx={{ color: '#6F4CFF' }} />
+          </Box>
+        ) : (
+          <TableContainer component={Paper} sx={{
+            background: 'rgba(26, 32, 44, 0.95)',
+            backdropFilter: 'blur(5px)',
+            borderRadius: '10px',
+            border: '1px solid rgba(255, 255, 255, 0.1)'
           }}>
-            Filters
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Search"
-                variant="outlined"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                size="small"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon fontSize="small" />
-                    </InputAdornment>
-                  )
-                }}
-                sx={{ 
-                  backgroundColor: 'rgba(255, 255, 255, 0.6)',
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '8px',
-                    '&:hover fieldset': {
-                      borderColor: 'rgba(115, 113, 252, 0.5)',
-                    },
-                  },
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(115, 113, 252, 0.3)'
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: 'primary.dark'
-                  }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <FormControl fullWidth size="small" sx={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.6)',
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(115, 113, 252, 0.3)'
-                },
-                '& .MuiInputLabel-root': {
-                  color: 'primary.dark'
-                }
-              }}>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  label="Status"
-                  sx={{ borderRadius: '8px' }}
-                >
-                  <MenuItem value="">All</MenuItem>
-                  <MenuItem value="pending">Pending</MenuItem>
-                  <MenuItem value="processing">Processing</MenuItem>
-                  <MenuItem value="completed">Completed</MenuItem>
-                  <MenuItem value="cancelled">Cancelled</MenuItem>
-                  <MenuItem value="refunded">Refunded</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <FormControl fullWidth size="small" sx={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.6)',
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(115, 113, 252, 0.3)'
-                },
-                '& .MuiInputLabel-root': {
-                  color: 'primary.dark'
-                }
-              }}>
-                <InputLabel>Validation</InputLabel>
-                <Select
-                  value={validationFilter}
-                  onChange={(e) => setValidationFilter(e.target.value)}
-                  label="Validation"
-                  sx={{ borderRadius: '8px' }}
-                >
-                  <MenuItem value="">All</MenuItem>
-                  <MenuItem value="true">Valid</MenuItem>
-                  <MenuItem value="false">Invalid</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={2}>
-              <Box sx={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'flex-end' }}>
-                <Button 
-                  variant="outlined" 
-                  onClick={resetFilters}
-                  startIcon={<RefreshIcon />}
-                  sx={{ 
-                    height: '38px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                    borderColor: 'rgba(115, 113, 252, 0.3)',
-                    color: 'primary.dark',
-                    borderRadius: '8px',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                      borderColor: 'rgba(115, 113, 252, 0.5)',
-                    }
-                  }}
-                >
-                  Reset
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
-        </Box>
-
-        {/* Action buttons - Remove redundant Download CSV button */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'flex-start', 
-          alignItems: 'center', 
-          mb: 3, 
-          width: '100%' 
-        }}>
-          <Typography 
-            variant="h6" 
-            component="h2" 
-            sx={{ 
-              fontWeight: 600, 
-              color: 'primary.dark',
-              fontSize: '17px',
-              pl: 1,
-              display: 'flex',
-              alignItems: 'center',
-              '&:after': {
-                content: '""',
-                display: 'block',
-                width: '30px',
-                height: '2px',
-                background: 'linear-gradient(90deg, rgba(115, 113, 252, 0.7), rgba(115, 113, 252, 0))',
-                ml: 1
-              }
-            }}
-          >
-            Orders
-          </Typography>
-        </Box>
-
-        {/* Error message */}
-        {error && (
-          <Typography color="error" sx={{ 
-            my: 2, 
-            textAlign: 'center', 
-            fontWeight: 500,
-            backgroundColor: 'rgba(211, 47, 47, 0.05)',
-            borderRadius: '8px',
-            p: 2,
-            border: '1px solid rgba(211, 47, 47, 0.1)'
-          }}>
-            {error}
-          </Typography>
-        )}
-
-        {/* Orders table */}
-        <Box sx={{ 
-          mb: 3, 
-          width: '100%', 
-          overflow: 'hidden', 
-          borderRadius: '12px',
-          border: '1px solid rgba(115, 113, 252, 0.15)',
-          boxShadow: '0 4px 20px rgba(115, 113, 252, 0.07)'
-        }}>
-          <Table sx={{ minWidth: 650, width: '100%', backgroundColor: 'rgba(255, 255, 255, 0.6)' }} aria-label="orders table">
-            <TableHead>
-              <TableRow sx={{ 
-                backgroundColor: 'rgba(115, 113, 252, 0.06)',
-                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
-                height: '64px'
-              }}>
-                <TableCell sx={{ fontWeight: 600, color: 'primary.dark', padding: '16px 20px', fontSize: '15px' }}>ID</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'primary.dark', padding: '16px 20px', fontSize: '15px' }}>Date</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'primary.dark', padding: '16px 20px', fontSize: '15px' }}>Name</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'primary.dark', padding: '16px 20px', fontSize: '15px' }}>Product</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'primary.dark', padding: '16px 20px', fontSize: '15px' }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'primary.dark', padding: '16px 20px', fontSize: '15px' }}>Validation</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'primary.dark', padding: '16px 20px', fontSize: '15px' }}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
+            <Table>
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ padding: '60px 16px', fontSize: '15px' }}>Loading...</TableCell>
+                  <TableCell sx={{ color: 'white' }}>Order ID</TableCell>
+                  <TableCell sx={{ color: 'white' }}>Customer</TableCell>
+                  <TableCell sx={{ color: 'white' }}>Project</TableCell>
+                  <TableCell sx={{ color: 'white' }}>Status</TableCell>
+                  <TableCell align="right" sx={{ color: 'white' }}>Actions</TableCell>
                 </TableRow>
-              ) : orders.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ padding: '60px 16px', fontSize: '15px' }}>No orders found</TableCell>
-                </TableRow>
-              ) : (
-                orders.map((order) => (
-                  <TableRow 
-                    key={order._id} 
-                    sx={{ 
-                      '&:hover': { 
-                        backgroundColor: 'rgba(115, 113, 252, 0.06)',
-                        boxShadow: 'inset 0 0 10px rgba(115, 113, 252, 0.1)'
-                      },
-                      transition: 'all 0.2s ease',
-                      borderBottom: '1px solid rgba(115, 113, 252, 0.05)',
-                      height: '70px'
+              </TableHead>
+              <TableBody>
+                {filteredOrders.map((order) => (
+                  <TableRow
+                    key={order._id}
+                    sx={{
+                      '&:hover': {
+                        backgroundColor: 'rgba(111, 76, 255, 0.1)',
+                        transition: 'background-color 0.2s ease-in-out'
+                      }
                     }}
                   >
-                    <TableCell sx={{ color: 'rgba(0, 0, 0, 0.7)', padding: '16px 20px', fontSize: '15px', fontWeight: 500 }}>{order._id.substring(0, 8)}...</TableCell>
-                    <TableCell sx={{ color: 'rgba(0, 0, 0, 0.7)', padding: '16px 20px', fontSize: '15px' }}>{formatDate(order.orderDate)}</TableCell>
-                    <TableCell sx={{ color: 'rgba(0, 0, 0, 0.7)', padding: '16px 20px', fontSize: '15px', fontWeight: 500 }}>{`${order.firstName} ${order.lastName}`}</TableCell>
-                    <TableCell sx={{ color: 'rgba(0, 0, 0, 0.7)', padding: '16px 20px', fontSize: '15px' }}>{order.productName}</TableCell>
-                    <TableCell sx={{ padding: '16px 20px' }}>
-                      <Chip 
-                        label={order.status.charAt(0).toUpperCase() + order.status.slice(1)} 
-                        color={statusColors[order.status] || 'default'} 
-                        size="small" 
-                        sx={{ 
+                    <TableCell sx={{ color: 'white' }}>{order._id}</TableCell>
+                    <TableCell sx={{ color: 'white' }}>
+                      {`${order.firstName} ${order.lastName}`}
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={order.project}
+                        size="small"
+                        sx={{
+                          background: order.project === 'Radius Project'
+                            ? 'rgba(111, 76, 255, 0.2)'
+                            : 'rgba(156, 39, 176, 0.2)',
+                          color: order.project === 'Radius Project'
+                            ? '#6F4CFF'
+                            : '#9C27B0',
                           backdropFilter: 'blur(5px)',
-                          fontWeight: 500,
-                          borderRadius: '6px',
-                          boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
-                          height: '30px',
-                          fontSize: '14px',
-                          '& .MuiChip-label': {
-                            px: 2
-                          }
+                          border: '1px solid rgba(255, 255, 255, 0.1)'
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={{ padding: '16px 20px' }}>
-                      <Chip 
-                        label={order.validationStatus ? "Valid" : "Invalid"} 
-                        color={validationColors[order.validationStatus ? 'true' : 'false']} 
-                        size="small" 
-                        title={order.validationMessage}
-                        sx={{ 
+                    <TableCell>
+                      <Chip
+                        label={order.status}
+                        size="small"
+                        sx={{
+                          background: order.status === 'completed'
+                            ? 'rgba(76, 175, 80, 0.2)'
+                            : order.status === 'pending'
+                              ? 'rgba(255, 152, 0, 0.2)'
+                              : 'rgba(211, 47, 47, 0.2)',
+                          color: order.status === 'completed'
+                            ? '#4CAF50'
+                            : order.status === 'pending'
+                              ? '#FF9800'
+                              : '#D32F2F',
                           backdropFilter: 'blur(5px)',
-                          fontWeight: 500,
-                          borderRadius: '6px',
-                          boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
-                          height: '30px',
-                          fontSize: '14px',
-                          '& .MuiChip-label': {
-                            px: 2
-                          }
+                          border: '1px solid rgba(255, 255, 255, 0.1)'
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={{ padding: '16px 20px' }}>
-                      <Box sx={{ display: 'flex', gap: 1.5 }}>
-                        <IconButton 
-                          aria-label="view" 
-                          size="small" 
-                          onClick={() => handleViewOrder(order)}
-                          sx={{ 
-                            background: 'rgba(115, 113, 252, 0.1)',
-                            backdropFilter: 'blur(5px)',
-                            width: '36px',
-                            height: '36px',
-                            '&:hover': { 
-                              background: 'rgba(115, 113, 252, 0.2)',
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 3px 6px rgba(0, 0, 0, 0.1)'
-                            },
-                            transition: 'all 0.2s ease'
-                          }}
-                        >
-                          <ViewIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton 
-                          aria-label="edit" 
-                          size="small" 
-                          onClick={() => handleEditOrder(order)}
-                          sx={{ 
-                            background: 'rgba(66, 165, 245, 0.1)',
-                            backdropFilter: 'blur(5px)',
-                            width: '36px',
-                            height: '36px',
-                            '&:hover': { 
-                              background: 'rgba(66, 165, 245, 0.2)',
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 3px 6px rgba(0, 0, 0, 0.1)'
-                            },
-                            transition: 'all 0.2s ease'
-                          }}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton 
-                          aria-label="delete" 
-                          size="small" 
-                          color="error"
-                          onClick={() => handleDeleteOrder(order)}
-                          sx={{ 
-                            background: 'rgba(244, 67, 54, 0.1)',
-                            backdropFilter: 'blur(5px)',
-                            width: '36px',
-                            height: '36px',
-                            '&:hover': { 
-                              background: 'rgba(244, 67, 54, 0.2)',
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 3px 6px rgba(0, 0, 0, 0.1)'
-                            },
-                            transition: 'all 0.2s ease'
-                          }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
+                    <TableCell align="right">
+                      <Button
+                        size="small"
+                        startIcon={<VisibilityIcon />}
+                        sx={{
+                          mr: 1,
+                          color: '#6F4CFF',
+                          '&:hover': {
+                            backgroundColor: 'rgba(111, 76, 255, 0.1)',
+                            color: '#8266FF'
+                          }
+                        }}
+                        onClick={() => handlePreview(order)}
+                      >
+                        Preview
+                      </Button>
+                      <Button
+                        size="small"
+                        color="error"
+                        startIcon={<DeleteIcon />}
+                        sx={{
+                          '&:hover': {
+                            backgroundColor: 'rgba(211, 47, 47, 0.1)'
+                          }
+                        }}
+                        onClick={() => handleDelete(order._id)}
+                      >
+                        Delete
+                      </Button>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </Box>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
 
-        {/* Pagination */}
-        <Box sx={{ width: '100%' }}>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25, 50]}
-            component="div"
-            count={totalOrders}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            sx={{
-              p: 1.5,
-              backgroundColor: 'rgba(255, 255, 255, 0.6)',
-              borderRadius: '10px',
-              border: '1px solid rgba(115, 113, 252, 0.15)',
-              '.MuiTablePagination-selectIcon, .MuiTablePagination-select': {
-                color: 'inherit'
-              },
-              '.MuiTablePagination-toolbar': {
-                padding: '0 20px',
-                minHeight: '60px',
-                width: '100%',
-                justifyContent: 'space-between'
-              },
-              '.MuiTablePagination-displayedRows': {
-                margin: '0 20px',
-                fontSize: '15px',
-                fontWeight: 500
-              },
-              '.MuiTablePagination-select': {
-                fontSize: '15px'
-              }
-            }}
-          />
-        </Box>
+        {/* Edit Order Dialog */}
+        <EditOrderDialog
+          open={editDialogOpen}
+          handleClose={handleDialogClose}
+          order={selectedOrder}
+          onOrderUpdated={handleUpdate}
+        />
 
-        {/* View Order Dialog */}
-        <Dialog 
-          open={viewDialogOpen} 
-          onClose={() => setViewDialogOpen(false)} 
-          maxWidth="md" 
+        {/* Preview Dialog */}
+        <Dialog
+          open={previewDialogOpen}
+          onClose={handlePreviewClose}
+          maxWidth="md"
           fullWidth
           PaperProps={{
             sx: {
-              borderRadius: '16px',
-              p: 2,
-              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              background: 'rgba(26, 32, 44, 0.95)',
               backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+              borderRadius: '10px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: 'white'
             }
           }}
         >
-          <DialogTitle 
-            sx={{ 
-              pb: 1,
-              pt: 1.5,
-              fontWeight: 700,
-              fontSize: '24px',
-              color: 'primary.main',
-              textAlign: 'center',
-              borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
-              position: 'relative',
-              mb: 2,
-              '&:after': {
-                content: '""',
-                position: 'absolute',
-                left: '50%',
-                bottom: -1,
-                width: '100px',
-                height: '3px',
-                backgroundColor: 'primary.main',
-                transform: 'translateX(-50%)'
-              }
-            }}
-          >
+          <DialogTitle sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
             Order Details
           </DialogTitle>
-          <DialogContent dividers sx={{ 
-            borderTop: 'none', 
-            borderBottom: 'none', 
-            py: 3 
-          }}>
+          <DialogContent sx={{ mt: 2 }}>
             {selectedOrder && (
-              <>
-                {/* First section: Customer and Order information */}
-                <Grid container spacing={3} sx={{ mb: 4 }}>
-                  <Grid item xs={12} md={6}>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        fontWeight: 600, 
-                        color: 'primary.dark',
-                        fontSize: '17px',
-                        mb: 2,
-                        display: 'flex',
-                        alignItems: 'center',
-                        '&:after': {
-                          content: '""',
-                          display: 'block',
-                          width: '30px',
-                          height: '2px',
-                          background: 'linear-gradient(90deg, rgba(115, 113, 252, 0.7), rgba(115, 113, 252, 0))',
-                          ml: 1
-                        }
-                      }}
-                    >
-                      Customer Information
-                    </Typography>
-                    <Box sx={{ 
-                      p: 2.5, 
-                      backgroundColor: 'rgba(255, 255, 255, 0.6)',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(115, 113, 252, 0.15)',
-                      height: '100%',
-                      backdropFilter: 'blur(8px)',
-                      boxShadow: '0 4px 20px rgba(115, 113, 252, 0.07)'
-                    }}>
-                      <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '90px' }}>Name:</Box> 
-                        <Box component="span" sx={{ fontWeight: 500 }}>{selectedOrder.firstName} {selectedOrder.lastName}</Box>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Typography variant="h6" sx={{ color: '#6F4CFF', mb: 2 }}>
+                    Order Information
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Order ID
                       </Typography>
-                      <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                        <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '90px' }}>Address:</Box> 
-                        <Box component="span">{selectedOrder.address1}
-                          {selectedOrder.address2 && <span><br />{selectedOrder.address2}</span>}
-                        </Box>
+                      <Typography>{selectedOrder._id}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Project
                       </Typography>
-                      <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '90px' }}>City/State:</Box> 
-                        <Box component="span">{selectedOrder.city}, {selectedOrder.state} {selectedOrder.zipCode}</Box>
+                      <Typography>{selectedOrder.project}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Status
                       </Typography>
-                      <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '90px' }}>Phone:</Box> 
-                        <Box component="span">{selectedOrder.phoneNumber}</Box>
+                      <Typography>{selectedOrder.status}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Order Date
                       </Typography>
-                      {selectedOrder.email && (
-                        <Typography variant="body1" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '90px' }}>Email:</Box> 
-                          <Box component="span">{selectedOrder.email}</Box>
-                        </Typography>
-                      )}
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        fontWeight: 600, 
-                        color: 'info.dark',
-                        fontSize: '17px',
-                        mb: 2,
-                        display: 'flex',
-                        alignItems: 'center',
-                        '&:after': {
-                          content: '""',
-                          display: 'block',
-                          width: '30px',
-                          height: '2px',
-                          background: 'linear-gradient(90deg, rgba(66, 165, 245, 0.7), rgba(66, 165, 245, 0))',
-                          ml: 1
-                        }
-                      }}
-                    >
-                      Order Information
-                    </Typography>
-                    <Box sx={{ 
-                      p: 2.5, 
-                      backgroundColor: 'rgba(255, 255, 255, 0.6)',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(66, 165, 245, 0.15)',
-                      height: '100%',
-                      backdropFilter: 'blur(8px)',
-                      boxShadow: '0 4px 20px rgba(66, 165, 245, 0.07)'
-                    }}>
-                      <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '110px' }}>Order ID:</Box> 
-                        <Box component="span" sx={{ wordBreak: 'break-all' }}>{selectedOrder._id}</Box>
+                      <Typography>
+                        {new Date(selectedOrder.orderDate).toLocaleString()}
                       </Typography>
-                      <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '110px' }}>Order Date:</Box> 
-                        <Box component="span">{formatDate(selectedOrder.orderDate)}</Box>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Source Code
                       </Typography>
-                      <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '110px' }}>Status:</Box> 
-                        <Chip 
-                          label={selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)} 
-                          color={statusColors[selectedOrder.status] || 'default'} 
-                          size="small" 
-                          sx={{ 
-                            backdropFilter: 'blur(5px)',
-                            fontWeight: 500,
-                            height: '28px' 
-                          }}
-                        />
+                      <Typography>{selectedOrder.sourceCode}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        SKU
                       </Typography>
-                      <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '110px' }}>Source Code:</Box> 
-                        <Box component="span">{selectedOrder.sourceCode || 'N/A'}</Box>
+                      <Typography>{selectedOrder.sku}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Session ID
                       </Typography>
-                      <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box component="span" sx={{ fontWeight: 500, color: 'rgba(0, 0, 0, 0.6)', width: '110px' }}>Session ID:</Box> 
-                        <Box component="span" sx={{ wordBreak: 'break-all' }}>{selectedOrder.sessionId || 'N/A'}</Box>
-                      </Typography>
-                      <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box component="span" sx={{ fontWeight: 500, color: 'rgba(0, 0, 0, 0.6)', width: '110px' }}>Validation:</Box> 
-                        <Chip 
-                          label={selectedOrder.validationStatus ? "Valid" : "Invalid"} 
-                          color={validationColors[selectedOrder.validationStatus ? 'true' : 'false']} 
-                          size="small" 
-                          sx={{ 
-                            backdropFilter: 'blur(5px)',
-                            fontWeight: 500,
-                            height: '28px' 
-                          }}
-                        />
-                      </Typography>
-                      {selectedOrder.validationMessage && (
-                        <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                          <Box component="span" sx={{ fontWeight: 500, color: 'rgba(0, 0, 0, 0.6)', width: '110px' }}>Message:</Box> 
-                          <Box component="span">{selectedOrder.validationMessage}</Box>
-                        </Typography>
-                      )}
-                      {selectedOrder.validationDate && (
-                        <Typography variant="body1" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box component="span" sx={{ fontWeight: 500, color: 'rgba(0, 0, 0, 0.6)', width: '110px' }}>Validated On:</Box> 
-                          <Box component="span">{formatDate(selectedOrder.validationDate)}</Box>
-                        </Typography>
-                      )}
-                    </Box>
+                      <Typography>{selectedOrder.sessionId}</Typography>
+                    </Grid>
                   </Grid>
                 </Grid>
 
-                {/* Second section: Product and Payment information */}
-                <Grid container spacing={3} sx={{ mb: 1, mt: 2 }}>
-                  <Grid item xs={12} md={6}>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        fontWeight: 600, 
-                        color: 'secondary.dark',
-                        fontSize: '17px',
-                        mb: 2,
-                        display: 'flex',
-                        alignItems: 'center',
-                        '&:after': {
-                          content: '""',
-                          display: 'block',
-                          width: '30px',
-                          height: '2px',
-                          background: 'linear-gradient(90deg, rgba(47, 150, 131, 0.7), rgba(47, 150, 131, 0))',
-                          ml: 1
-                        }
-                      }}
-                    >
-                      Product Information
-                    </Typography>
-                    <Box sx={{ 
-                      p: 2.5, 
-                      backgroundColor: 'rgba(255, 255, 255, 0.6)',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(47, 150, 131, 0.15)',
-                      height: '100%',
-                      backdropFilter: 'blur(8px)',
-                      boxShadow: '0 4px 20px rgba(47, 150, 131, 0.07)'
-                    }}>
-                      <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '90px' }}>Product:</Box> 
-                        <Box component="span">{selectedOrder.productName || 'N/A'}</Box>
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                  <Typography variant="h6" sx={{ color: '#6F4CFF', mb: 2 }}>
+                    Customer Information
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        First Name
                       </Typography>
-                      <Typography variant="body1" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '90px' }}>SKU:</Box> 
-                        <Box component="span">{selectedOrder.sku || 'N/A'}</Box>
+                      <Typography>{selectedOrder.firstName}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Last Name
                       </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        fontWeight: 600, 
-                        color: 'error.dark',
-                        fontSize: '17px',
-                        mb: 2,
-                        display: 'flex',
-                        alignItems: 'center',
-                        '&:after': {
-                          content: '""',
-                          display: 'block',
-                          width: '30px',
-                          height: '2px',
-                          background: 'linear-gradient(90deg, rgba(207, 75, 75, 0.7), rgba(207, 75, 75, 0))',
-                          ml: 1
-                        }
-                      }}
-                    >
-                      Payment Information
-                    </Typography>
-                    <Box sx={{ 
-                      p: 2.5, 
-                      backgroundColor: 'rgba(255, 255, 255, 0.6)',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(207, 75, 75, 0.15)',
-                      height: '100%',
-                      backdropFilter: 'blur(8px)',
-                      boxShadow: '0 4px 20px rgba(207, 75, 75, 0.07)'
-                    }}>
-                      <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '90px' }}>Card:</Box> 
-                        <Box component="span">**** **** **** {selectedOrder.creditCardLast4 || 'N/A'}</Box>
+                      <Typography>{selectedOrder.lastName}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Phone
                       </Typography>
-                      <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '90px' }}>Expiration:</Box> 
-                        <Box component="span">
-                          {selectedOrder.creditCardExpiration ? 
-                            `${selectedOrder.creditCardExpiration.substring(0, 2)}/${selectedOrder.creditCardExpiration.substring(2, 4)}` : 
-                            'N/A'
-                          }
-                        </Box>
+                      <Typography>{selectedOrder.phoneNumber}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Email
                       </Typography>
-                      {selectedOrder.voiceRecordingId && (
-                        <Typography variant="body1" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '90px' }}>Recording:</Box> 
-                          <Box component="span">{selectedOrder.voiceRecordingId}</Box>
-                        </Typography>
-                      )}
-                    </Box>
+                      <Typography>{selectedOrder.email || 'N/A'}</Typography>
+                    </Grid>
                   </Grid>
                 </Grid>
 
-                {/* Third section: Validation Status and Results */}
-                {selectedOrder && (selectedOrder.validationStatus || selectedOrder.validationMessage || selectedOrder.validationDate) && (
-                  <Grid container spacing={3} sx={{ mb: 1, mt: 2 }}>
-                    <Grid item xs={12}>
-                      <Typography 
-                        variant="h6" 
-                        sx={{ 
-                          fontWeight: 600, 
-                          color: 'primary.dark',
-                          fontSize: '17px',
-                          mb: 2,
-                          display: 'flex',
-                          alignItems: 'center',
-                          '&:after': {
-                            content: '""',
-                            display: 'block',
-                            width: '30px',
-                            height: '2px',
-                            background: 'linear-gradient(90deg, rgba(87, 85, 200, 0.7), rgba(87, 85, 200, 0))',
-                            ml: 1
-                          }
-                        }}
-                      >
-                        Validation Details
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                  <Typography variant="h6" sx={{ color: '#6F4CFF', mb: 2 }}>
+                    Address Information
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Address Line 1
                       </Typography>
-                      <Box sx={{ 
-                        p: 2.5, 
-                        backgroundColor: 'rgba(255, 255, 255, 0.6)',
-                        borderRadius: '12px',
-                        border: '1px solid rgba(87, 85, 200, 0.15)',
-                        backdropFilter: 'blur(8px)',
-                        boxShadow: '0 4px 20px rgba(87, 85, 200, 0.07)'
-                      }}>
-                        <Grid container spacing={2}>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '100px' }}>Status:</Box> 
-                              <Chip 
-                                label={selectedOrder.validationStatus || 'N/A'} 
-                                size="small"
-                                sx={{
-                                  bgcolor: selectedOrder.validationStatus === 'valid' 
-                                    ? 'rgba(47, 150, 131, 0.1)' 
-                                    : selectedOrder.validationStatus === 'invalid' 
-                                      ? 'rgba(207, 75, 75, 0.1)' 
-                                      : 'rgba(87, 85, 200, 0.1)',
-                                  color: selectedOrder.validationStatus === 'valid' 
-                                    ? 'secondary.dark' 
-                                    : selectedOrder.validationStatus === 'invalid' 
-                                      ? 'error.dark' 
-                                      : 'primary.dark',
-                                  fontWeight: 600,
-                                  border: '1px solid',
-                                  borderColor: selectedOrder.validationStatus === 'valid' 
-                                    ? 'rgba(47, 150, 131, 0.3)' 
-                                    : selectedOrder.validationStatus === 'invalid' 
-                                      ? 'rgba(207, 75, 75, 0.3)' 
-                                      : 'rgba(87, 85, 200, 0.3)',
-                                }}
-                              />
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '100px' }}>Date:</Box> 
-                              <Box component="span">
-                                {selectedOrder.validationDate 
-                                  ? new Date(selectedOrder.validationDate).toLocaleString()
-                                  : 'N/A'
-                                }
-                              </Box>
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={12}>
-                            <Typography variant="body1" sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                              <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '100px', mt: 0.5 }}>Message:</Box> 
-                              <Box 
-                                component="span" 
-                                sx={{ 
-                                  p: 1.5, 
-                                  bgcolor: 'rgba(87, 85, 200, 0.05)',
-                                  borderRadius: '8px',
-                                  border: '1px dashed rgba(87, 85, 200, 0.2)',
-                                  width: 'calc(100% - 120px)',
-                                  wordBreak: 'break-word',
-                                  fontSize: '0.9rem',
-                                  lineHeight: 1.5
-                                }}
-                              >
-                                {selectedOrder.validationMessage || 'No validation message available.'}
-                              </Box>
-                            </Typography>
-                          </Grid>
-                        </Grid>
-                      </Box>
+                      <Typography>{selectedOrder.address1}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Address Line 2
+                      </Typography>
+                      <Typography>{selectedOrder.address2 || 'N/A'}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        City
+                      </Typography>
+                      <Typography>{selectedOrder.city}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        State
+                      </Typography>
+                      <Typography>{selectedOrder.state}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        ZIP Code
+                      </Typography>
+                      <Typography>{selectedOrder.zipCode}</Typography>
                     </Grid>
                   </Grid>
-                )}
+                </Grid>
 
-                {/* Fourth section: Technical Details */}
-                {selectedOrder && (selectedOrder.sourceCode || selectedOrder.sessionId) && (
-                  <Grid container spacing={3} sx={{ mb: 1, mt: 2 }}>
-                    <Grid item xs={12}>
-                      <Typography 
-                        variant="h6" 
-                        sx={{ 
-                          fontWeight: 600, 
-                          color: 'text.primary',
-                          fontSize: '17px',
-                          mb: 2,
-                          display: 'flex',
-                          alignItems: 'center',
-                          '&:after': {
-                            content: '""',
-                            display: 'block',
-                            width: '30px',
-                            height: '2px',
-                            background: 'linear-gradient(90deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0))',
-                            ml: 1
-                          }
-                        }}
-                      >
-                        Technical Details
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                  <Typography variant="h6" sx={{ color: '#6F4CFF', mb: 2 }}>
+                    Product Information
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Product Name
                       </Typography>
-                      <Box sx={{ 
-                        p: 2.5, 
-                        backgroundColor: 'rgba(255, 255, 255, 0.6)',
-                        borderRadius: '12px',
-                        border: '1px solid rgba(0, 0, 0, 0.05)',
-                        backdropFilter: 'blur(8px)',
-                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)'
-                      }}>
-                        <Grid container spacing={2}>
-                          {selectedOrder.sourceCode && (
-                            <Grid item xs={12} sm={6}>
-                              <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '100px' }}>Source:</Box> 
-                                <Chip 
-                                  label={selectedOrder.sourceCode || 'N/A'} 
-                                  size="small"
-                                  sx={{
-                                    bgcolor: 'rgba(0, 0, 0, 0.03)',
-                                    color: 'text.primary',
-                                    fontWeight: 500,
-                                    border: '1px solid rgba(0, 0, 0, 0.1)',
-                                  }}
-                                />
-                              </Typography>
-                            </Grid>
-                          )}
-                          {selectedOrder.sessionId && (
-                            <Grid item xs={12} sm={6}>
-                              <Typography variant="body1" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Box component="span" sx={{ fontWeight: 600, color: 'text.secondary', width: '100px' }}>Session ID:</Box> 
-                                <Box 
-                                  component="span" 
-                                  sx={{ 
-                                    p: 1, 
-                                    bgcolor: 'rgba(0, 0, 0, 0.02)',
-                                    borderRadius: '4px',
-                                    border: '1px solid rgba(0, 0, 0, 0.05)',
-                                    fontSize: '0.8rem',
-                                    fontFamily: 'monospace',
-                                    letterSpacing: '0.5px'
-                                  }}
-                                >
-                                  {selectedOrder.sessionId}
-                                </Box>
-                              </Typography>
-                            </Grid>
-                          )}
-                        </Grid>
-                      </Box>
+                      <Typography>{selectedOrder.productName}</Typography>
                     </Grid>
                   </Grid>
-                )}
-              </>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                  <Typography variant="h6" sx={{ color: '#6F4CFF', mb: 2 }}>
+                    Payment Information
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Credit Card Last 4
+                      </Typography>
+                      <Typography>{selectedOrder.creditCardLast4}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Credit Card Expiration
+                      </Typography>
+                      <Typography>{selectedOrder.creditCardExpiration}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Voice Recording ID
+                      </Typography>
+                      <Typography>{selectedOrder.voiceRecordingId || 'N/A'}</Typography>
+                    </Grid>
+                  </Grid>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                  <Typography variant="h6" sx={{ color: '#6F4CFF', mb: 2 }}>
+                    Validation Information
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Validation Status
+                      </Typography>
+                      <Typography>{selectedOrder.validationStatus ? 'Valid' : 'Invalid'}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Validation Message
+                      </Typography>
+                      <Typography>{selectedOrder.validationMessage}</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Validation Date
+                      </Typography>
+                      <Typography>
+                        {new Date(selectedOrder.validationDate).toLocaleString()}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        Last Updated
+                      </Typography>
+                      <Typography>
+                        {new Date(selectedOrder.updatedAt).toLocaleString()}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </Grid>
             )}
           </DialogContent>
-          <DialogActions sx={{ 
-            justifyContent: 'center', 
-            mt: 2,
-            pt: 2,
-            borderTop: '1px solid rgba(0, 0, 0, 0.05)'
-          }}>
-            <Button 
-              onClick={() => setViewDialogOpen(false)} 
-              variant="contained"
-              sx={{ 
-                minWidth: '120px',
-                borderRadius: '8px',
-                textTransform: 'none',
-                fontSize: '14px',
-                fontWeight: 600,
-                py: 1,
-                background: 'linear-gradient(135deg, #5755C8 0%, #7371FC 100%)',
+          <DialogActions sx={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', p: 2 }}>
+            <Button
+              onClick={handlePreviewClose}
+              sx={{
+                color: 'white',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #4744b7 0%, #6260eb 100%)',
+                  background: 'rgba(255, 255, 255, 0.1)',
                 }
               }}
             >
@@ -1426,238 +859,11 @@ const OrderManagement = () => {
           </DialogActions>
         </Dialog>
 
-        {/* Edit Order Dialog */}
-        <Dialog 
-          open={editDialogOpen} 
-          onClose={() => setEditDialogOpen(false)}
-          PaperProps={{
-            sx: {
-              borderRadius: '16px',
-              p: 2,
-              backgroundColor: 'rgba(255, 255, 255, 0.8)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
-            }
-          }}
-        >
-          <DialogTitle sx={{ 
-            pb: 1,
-            pt: 1.5,
-            fontWeight: 700,
-            fontSize: '22px',
-            color: 'info.main',
-            textAlign: 'center',
-            borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
-            position: 'relative',
-            mb: 2,
-            '&:after': {
-              content: '""',
-              position: 'absolute',
-              left: '50%',
-              bottom: -1,
-              width: '80px',
-              height: '3px',
-              backgroundColor: 'info.main',
-              transform: 'translateX(-50%)'
-            }
-          }}>
-            Update Order Status
-          </DialogTitle>
-          <DialogContent sx={{ pt: 3, pb: 2, px: 2 }}>
-            {selectedOrder && (
-              <Box sx={{ minWidth: 300, mt: 1 }}>
-                <TextField
-                  select
-                  label="Status"
-                  value={selectedOrder.status}
-                  onChange={(e) => setSelectedOrder({...selectedOrder, status: e.target.value})}
-                  fullWidth
-                  margin="normal"
-                  sx={{ 
-                    '& .MuiOutlinedInput-root': { 
-                      backgroundColor: 'rgba(255, 255, 255, 0.6)',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(66, 165, 245, 0.2)'
-                    },
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'rgba(66, 165, 245, 0.3)'
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: 'info.dark'
-                    }
-                  }}
-                >
-                  {statusOptions.filter(option => option.value).map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Box>
-            )}
-          </DialogContent>
-          <DialogActions sx={{ 
-            justifyContent: 'center', 
-            mt: 2,
-            pt: 2,
-            borderTop: '1px solid rgba(0, 0, 0, 0.05)'
-          }}>
-            <Button 
-              onClick={() => setEditDialogOpen(false)}
-              variant="outlined"
-              sx={{ 
-                minWidth: '100px',
-                borderRadius: '8px',
-                textTransform: 'none',
-                fontSize: '14px',
-                fontWeight: 500,
-                mr: 2,
-                color: 'text.secondary',
-                borderColor: 'rgba(0, 0, 0, 0.2)',
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.03)',
-                  borderColor: 'rgba(0, 0, 0, 0.3)'
-                }
-              }}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={() => updateOrderStatus(selectedOrder.status)} 
-              variant="contained" 
-              sx={{
-                minWidth: '100px',
-                borderRadius: '8px',
-                textTransform: 'none',
-                fontSize: '14px',
-                fontWeight: 600,
-                py: 1,
-                background: 'linear-gradient(135deg, #42A5F5 0%, #64B5F6 100%)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #1E88E5 0%, #42A5F5 100%)',
-                }
-              }}
-            >
-              Update
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Delete Confirmation Dialog */}
-        <Dialog 
-          open={deleteDialogOpen} 
-          onClose={() => setDeleteDialogOpen(false)}
-          PaperProps={{
-            sx: {
-              borderRadius: '16px',
-              p: 2,
-              backgroundColor: 'rgba(255, 255, 255, 0.8)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
-            }
-          }}
-        >
-          <DialogTitle sx={{ 
-            pb: 1,
-            pt: 1.5,
-            fontWeight: 700,
-            fontSize: '22px',
-            color: 'error.main',
-            textAlign: 'center',
-            borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
-            position: 'relative',
-            mb: 2,
-            '&:after': {
-              content: '""',
-              position: 'absolute',
-              left: '50%',
-              bottom: -1,
-              width: '80px',
-              height: '3px',
-              backgroundColor: 'error.main',
-              transform: 'translateX(-50%)'
-            }
-          }}>
-            Confirm Delete
-          </DialogTitle>
-          <DialogContent sx={{ pt: 3, pb: 2, px: 3 }}>
-            <DialogContentText sx={{ 
-              color: 'text.secondary', 
-              fontSize: '16px',
-              textAlign: 'center',
-              mb: 2
-            }}>
-              Are you sure you want to delete this order? This action cannot be undone.
-            </DialogContentText>
-            {selectedOrder && (
-              <Box sx={{ 
-                p: 2, 
-                backgroundColor: 'rgba(244, 67, 54, 0.05)',
-                borderRadius: '8px',
-                border: '1px solid rgba(244, 67, 54, 0.2)'
-              }}>
-                <Typography variant="body1" sx={{ fontSize: '14px', mb: 1 }}>
-                  <strong>Order ID:</strong> {selectedOrder._id}
-                </Typography>
-                <Typography variant="body1" sx={{ fontSize: '14px', mb: 1 }}>
-                  <strong>Customer:</strong> {selectedOrder.firstName} {selectedOrder.lastName}
-                </Typography>
-                <Typography variant="body1" sx={{ fontSize: '14px' }}>
-                  <strong>Date:</strong> {formatDate(selectedOrder.orderDate)}
-                </Typography>
-              </Box>
-            )}
-          </DialogContent>
-          <DialogActions sx={{ 
-            justifyContent: 'center', 
-            mt: 2,
-            pt: 2,
-            borderTop: '1px solid rgba(0, 0, 0, 0.05)'
-          }}>
-            <Button 
-              onClick={() => setDeleteDialogOpen(false)}
-              variant="outlined"
-              sx={{ 
-                minWidth: '100px',
-                borderRadius: '8px',
-                textTransform: 'none',
-                fontSize: '14px',
-                fontWeight: 500,
-                mr: 2,
-                color: 'text.secondary',
-                borderColor: 'rgba(0, 0, 0, 0.2)',
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.03)',
-                  borderColor: 'rgba(0, 0, 0, 0.3)'
-                }
-              }}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={confirmDeleteOrder} 
-              variant="contained"
-              sx={{ 
-                minWidth: '100px',
-                borderRadius: '8px',
-                textTransform: 'none',
-                fontSize: '14px',
-                fontWeight: 600,
-                py: 1,
-                background: 'linear-gradient(135deg, #F44336 0%, #E57373 100%)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #D32F2F 0%, #EF5350 100%)',
-                }
-              }}
-            >
-              Delete
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </GlassCard>
-    </Box>
+        {error && <Alert severity="error" sx={{ mt: 3 }}>{error}</Alert>}
+        {deleteError && <Alert severity="error" sx={{ mt: 3 }}>{deleteError}</Alert>}
+        {deleteSuccess && <Alert severity="success" sx={{ mt: 3 }}>{deleteSuccess}</Alert>}
+      </Paper>
+    </Container>
   );
 };
 

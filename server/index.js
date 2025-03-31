@@ -55,6 +55,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/orders/sempris', orderRoutes);
+app.use('/api/orders/radius', orderRoutes);
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {

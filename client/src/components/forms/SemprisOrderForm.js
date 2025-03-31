@@ -8,7 +8,6 @@ import {
   Alert,
   MenuItem,
   FormControl,
-  FormHelperText,
   InputLabel,
   Select,
   Paper,
@@ -34,27 +33,23 @@ const SemprisOrderForm = () => {
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    first_name: '',
+    last_name: '',
     address1: '',
     address2: '',
     city: '',
     state: '',
-    zipCode: '',
-    phoneNumber: '',
+    zip: '',
+    phone: '',
     email: '',
-    sourceCode: '',
+    source: '',
     sku: '',
-    productName: '',
-    creditCardNumber: '',
-    creditCardExpiration: '',
-    creditCardCVV: '',
-    cardIssuer: '',
-    vendorId: 'STAR',
-    clientOrderNumber: '',
-    clientData: '',
-    pitchId: '',
-    project: 'Sempris Project'
+    card_number: '',
+    card_expiration: '',
+    card_cvv: '',
+    issuer: '',
+    vendor_id: 'STAR',
+    tracking_number: crypto.randomUUID()
   });
 
   const handleChange = (e) => {
@@ -67,27 +62,23 @@ const SemprisOrderForm = () => {
 
   const handleClearForm = () => {
     setFormData({
-      firstName: '',
-      lastName: '',
+      first_name: '',
+      last_name: '',
       address1: '',
       address2: '',
       city: '',
       state: '',
-      zipCode: '',
-      phoneNumber: '',
+      zip: '',
+      phone: '',
       email: '',
-      sourceCode: '',
+      source: '',
       sku: '',
-      productName: '',
-      creditCardNumber: '',
-      creditCardExpiration: '',
-      creditCardCVV: '',
-      cardIssuer: '',
-      vendorId: 'STAR',
-      clientOrderNumber: '',
-      clientData: '',
-      pitchId: '',
-      project: 'Sempris Project'
+      card_number: '',
+      card_expiration: '',
+      card_cvv: '',
+      issuer: '',
+      vendor_id: 'STAR',
+      tracking_number: crypto.randomUUID()
     });
     setError('');
     setShowPreview(false);
@@ -152,11 +143,11 @@ const SemprisOrderForm = () => {
               </TableRow>
               <TableRow>
                 <TableCell>Name</TableCell>
-                <TableCell>{`${formData.firstName} ${formData.lastName}`}</TableCell>
+                <TableCell>{`${formData.first_name} ${formData.last_name}`}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Phone</TableCell>
-                <TableCell>{formData.phoneNumber}</TableCell>
+                <TableCell>{formData.phone}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Email</TableCell>
@@ -177,24 +168,24 @@ const SemprisOrderForm = () => {
               </TableRow>
               <TableRow>
                 <TableCell>City, State, ZIP</TableCell>
-                <TableCell>{`${formData.city}, ${formData.state} ${formData.zipCode}`}</TableCell>
+                <TableCell>{`${formData.city}, ${formData.state} ${formData.zip}`}</TableCell>
               </TableRow>
 
               <TableRow>
-                <TableCell component="th" sx={{ fontWeight: 'bold' }}>Product Information</TableCell>
+                <TableCell component="th" sx={{ fontWeight: 'bold' }}>Order Information</TableCell>
                 <TableCell></TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Source Code</TableCell>
-                <TableCell>{formData.sourceCode}</TableCell>
+                <TableCell>{formData.source}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>SKU</TableCell>
                 <TableCell>{formData.sku}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell>Product Name</TableCell>
-                <TableCell>{formData.productName}</TableCell>
+                <TableCell>Tracking Number</TableCell>
+                <TableCell>{formData.tracking_number}</TableCell>
               </TableRow>
 
               <TableRow>
@@ -204,37 +195,16 @@ const SemprisOrderForm = () => {
               <TableRow>
                 <TableCell>Credit Card</TableCell>
                 <TableCell>
-                  {`****-****-****-${formData.creditCardNumber.slice(-4)}`}
+                  {`****-****-****-${formData.card_number.slice(-4)}`}
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Expiration</TableCell>
-                <TableCell>{formData.creditCardExpiration}</TableCell>
+                <TableCell>{formData.card_expiration}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Card Issuer</TableCell>
-                <TableCell>{formData.cardIssuer}</TableCell>
-              </TableRow>
-
-              <TableRow>
-                <TableCell component="th" sx={{ fontWeight: 'bold' }}>Sempris Specific Information</TableCell>
-                <TableCell></TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Vendor ID</TableCell>
-                <TableCell>{formData.vendorId}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Client Order Number</TableCell>
-                <TableCell>{formData.clientOrderNumber}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Client Data</TableCell>
-                <TableCell>{formData.clientData}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Pitch ID</TableCell>
-                <TableCell>{formData.pitchId}</TableCell>
+                <TableCell>{formData.issuer}</TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -305,8 +275,8 @@ const SemprisOrderForm = () => {
             required
             fullWidth
             label="First Name"
-            name="firstName"
-            value={formData.firstName}
+            name="first_name"
+            value={formData.first_name}
             onChange={handleChange}
             maxLength={30}
           />
@@ -316,8 +286,8 @@ const SemprisOrderForm = () => {
             required
             fullWidth
             label="Last Name"
-            name="lastName"
-            value={formData.lastName}
+            name="last_name"
+            value={formData.last_name}
             onChange={handleChange}
             maxLength={30}
           />
@@ -327,8 +297,8 @@ const SemprisOrderForm = () => {
             required
             fullWidth
             label="Phone Number"
-            name="phoneNumber"
-            value={formData.phoneNumber}
+            name="phone"
+            value={formData.phone}
             onChange={handleChange}
             inputProps={{ pattern: '[0-9]{10}' }}
             helperText="Enter 10-digit phone number"
@@ -336,13 +306,13 @@ const SemprisOrderForm = () => {
         </Grid>
         <Grid item xs={12} sm={6}>
           <TextField
+            required
             fullWidth
             label="Email"
             name="email"
             type="email"
             value={formData.email}
             onChange={handleChange}
-            maxLength={512}
           />
         </Grid>
 
@@ -361,7 +331,6 @@ const SemprisOrderForm = () => {
             name="address1"
             value={formData.address1}
             onChange={handleChange}
-            maxLength={50}
           />
         </Grid>
         <Grid item xs={12}>
@@ -371,7 +340,6 @@ const SemprisOrderForm = () => {
             name="address2"
             value={formData.address2}
             onChange={handleChange}
-            maxLength={50}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -382,7 +350,6 @@ const SemprisOrderForm = () => {
             name="city"
             value={formData.city}
             onChange={handleChange}
-            maxLength={30}
           />
         </Grid>
         <Grid item xs={12} sm={3}>
@@ -393,7 +360,6 @@ const SemprisOrderForm = () => {
             name="state"
             value={formData.state}
             onChange={handleChange}
-            maxLength={2}
             inputProps={{ pattern: '[A-Z]{2}' }}
             helperText="Enter 2-letter state code"
           />
@@ -403,18 +369,18 @@ const SemprisOrderForm = () => {
             required
             fullWidth
             label="ZIP Code"
-            name="zipCode"
-            value={formData.zipCode}
+            name="zip"
+            value={formData.zip}
             onChange={handleChange}
             inputProps={{ pattern: '[0-9]{5}(-[0-9]{4})?' }}
             helperText="Enter 5 or 9-digit ZIP code"
           />
         </Grid>
 
-        {/* Product Information */}
+        {/* Order Information */}
         <Grid item xs={12}>
           <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-            Product Information
+            Order Information
           </Typography>
           <Divider sx={{ mb: 2 }} />
         </Grid>
@@ -423,10 +389,9 @@ const SemprisOrderForm = () => {
             required
             fullWidth
             label="Source Code"
-            name="sourceCode"
-            value={formData.sourceCode}
+            name="source"
+            value={formData.source}
             onChange={handleChange}
-            maxLength={6}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -436,17 +401,6 @@ const SemprisOrderForm = () => {
             label="SKU"
             name="sku"
             value={formData.sku}
-            onChange={handleChange}
-            maxLength={7}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            required
-            fullWidth
-            label="Product Name"
-            name="productName"
-            value={formData.productName}
             onChange={handleChange}
           />
         </Grid>
@@ -463,11 +417,11 @@ const SemprisOrderForm = () => {
             required
             fullWidth
             label="Credit Card Number"
-            name="creditCardNumber"
-            value={formData.creditCardNumber}
+            name="card_number"
+            value={formData.card_number}
             onChange={handleChange}
-            inputProps={{ pattern: '[0-9]{13,16}' }}
-            helperText="Enter 13-16 digit card number"
+            inputProps={{ pattern: '[0-9]{16}' }}
+            helperText="Enter 16-digit card number"
           />
         </Grid>
         <Grid item xs={12} sm={3}>
@@ -475,8 +429,8 @@ const SemprisOrderForm = () => {
             required
             fullWidth
             label="Expiration (MMYY)"
-            name="creditCardExpiration"
-            value={formData.creditCardExpiration}
+            name="card_expiration"
+            value={formData.card_expiration}
             onChange={handleChange}
             inputProps={{ pattern: '[0-9]{4}' }}
             helperText="Format: MMYY"
@@ -487,8 +441,8 @@ const SemprisOrderForm = () => {
             required
             fullWidth
             label="CVV"
-            name="creditCardCVV"
-            value={formData.creditCardCVV}
+            name="card_cvv"
+            value={formData.card_cvv}
             onChange={handleChange}
             inputProps={{ pattern: '[0-9]{3,4}' }}
             helperText="3 or 4 digits"
@@ -498,68 +452,17 @@ const SemprisOrderForm = () => {
           <FormControl fullWidth required>
             <InputLabel>Card Issuer</InputLabel>
             <Select
-              name="cardIssuer"
-              value={formData.cardIssuer}
+              name="issuer"
+              value={formData.issuer}
               onChange={handleChange}
               label="Card Issuer"
             >
-              <MenuItem value="diners-club">Diners Club</MenuItem>
-              <MenuItem value="discover">Discover</MenuItem>
-              <MenuItem value="jcb">JCB</MenuItem>
               <MenuItem value="visa">Visa</MenuItem>
               <MenuItem value="mastercard">Mastercard</MenuItem>
               <MenuItem value="american-express">American Express</MenuItem>
+              <MenuItem value="discover">Discover</MenuItem>
             </Select>
           </FormControl>
-        </Grid>
-
-        {/* Sempris Specific Information */}
-        <Grid item xs={12}>
-          <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-            Sempris Specific Information
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            required
-            fullWidth
-            label="Vendor ID"
-            name="vendorId"
-            value={formData.vendorId}
-            onChange={handleChange}
-            maxLength={4}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Client Order Number"
-            name="clientOrderNumber"
-            value={formData.clientOrderNumber}
-            onChange={handleChange}
-            maxLength={10}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Client Data"
-            name="clientData"
-            value={formData.clientData}
-            onChange={handleChange}
-            maxLength={64}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Pitch ID"
-            name="pitchId"
-            value={formData.pitchId}
-            onChange={handleChange}
-            maxLength={11}
-          />
         </Grid>
 
         {/* Submit Button */}

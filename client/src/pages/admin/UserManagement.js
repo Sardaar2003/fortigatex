@@ -33,12 +33,25 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
+      console.log('Fetching users...');
       const res = await axios.get('/api/users');
+      console.log('Users fetched successfully:', res.data);
       setUsers(res.data.data);
       setError('');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch users');
-      console.error(err);
+      console.error('Error fetching users:', err);
+      console.error('Error response:', err.response);
+      console.error('Error status:', err.response?.status);
+      console.error('Error data:', err.response?.data);
+      
+      if (err.response?.status === 401) {
+        setError('Unauthorized: Please log in again');
+        // Optionally redirect to login
+      } else if (err.response?.status === 403) {
+        setError('Forbidden: You do not have permission to view users');
+      } else {
+        setError(err.response?.data?.message || 'Failed to fetch users');
+      }
     } finally {
       setLoading(false);
     }

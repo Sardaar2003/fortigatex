@@ -6,7 +6,11 @@ const Role = require('../models/Role');
 // @access  Private/Admin
 exports.getUsers = async (req, res) => {
   try {
+    console.log('Fetching all users - Request from:', req.user.email);
+    console.log('User role:', req.user.role.name);
+    
     const users = await User.find().populate('role');
+    console.log(`Found ${users.length} users`);
 
     res.status(200).json({
       success: true,
@@ -14,7 +18,8 @@ exports.getUsers = async (req, res) => {
       data: users
     });
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching users:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -24,18 +29,24 @@ exports.getUsers = async (req, res) => {
 // @access  Private/Admin
 exports.getUser = async (req, res) => {
   try {
+    console.log('Fetching user by ID:', req.params.id);
+    console.log('Request from:', req.user.email);
+    
     const user = await User.findById(req.params.id).populate('role');
 
     if (!user) {
+      console.log('User not found:', req.params.id);
       return res.status(404).json({ message: 'User not found' });
     }
 
+    console.log('User found:', user.email);
     res.status(200).json({
       success: true,
       data: user
     });
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching user:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ message: 'Server error' });
   }
 };

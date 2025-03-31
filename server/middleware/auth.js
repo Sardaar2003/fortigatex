@@ -46,10 +46,10 @@ exports.authorize = (...roles) => {
     try {
       console.log('Authorize middleware: Checking roles for user:', req.user._id);
       console.log('Required roles:', roles);
-      console.log('User role:', req.user.role.name);
+      console.log('User role:', req.user.role?.name);
 
       if (!req.user || !req.user.role) {
-        console.log('Authorize middleware: User not authorized for roles:', roles);
+        console.log('Authorize middleware: User or role not found');
         return res.status(403).json({ message: 'Forbidden: Access denied' });
       }
 

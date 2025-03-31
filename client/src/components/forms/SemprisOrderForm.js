@@ -179,7 +179,7 @@ const SemprisOrderForm = () => {
       };
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/sempris/orders`,
+        `${process.env.REACT_APP_API_URL}/api/orders/sempris`,
         orderData,
         {
           headers: {

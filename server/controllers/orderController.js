@@ -5,7 +5,7 @@ const radiusService = require('../services/radiusService');
 const semprisService = require('../services/semprisService');
 
 // @desc    Create a new order
-// @route   POST /api/orders
+// @route   POST /api/orders/:project
 // @access  Private
 const createOrder = asyncHandler(async (req, res) => {
   try {
@@ -29,12 +29,14 @@ const createOrder = asyncHandler(async (req, res) => {
       creditCardCVV,
       cardIssuer,
       voiceRecordingId,
-      project,
       vendorId,
       clientOrderNumber,
       clientData,
       pitchId
     } = req.body;
+
+    // Determine project from route or body
+    const project = req.params.project ? `${req.params.project} Project` : req.body.project;
 
     // Generate session ID if not provided
     const finalSessionId = sessionId || Math.random().toString(36).substring(2, 15);
@@ -91,8 +93,7 @@ const createOrder = asyncHandler(async (req, res) => {
         clientData,
         pitchId
       }, req.user);
-    } else {
-      // Default to Radius Project
+    } else if (project === 'Radius Project') {
       validationResult = await radiusService.checkCustomerEligibility({
         lastName,
         address1,
@@ -101,6 +102,11 @@ const createOrder = asyncHandler(async (req, res) => {
         creditCardNumber,
         sessionId: finalSessionId
       }, req.user);
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid project type'
+      });
     }
 
     // Store validation results

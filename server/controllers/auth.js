@@ -6,12 +6,15 @@ const sendEmail = require('../utils/sendEmail');
 
 // Helper function to get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
+  console.log('Generating token for user:', user._id);
   // Create token
   const token = jwt.sign(
     { id: user._id },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN }
   );
+
+  console.log('Token generated successfully');
 
   // Remove password from output
   user.password = undefined;
@@ -28,17 +31,20 @@ const sendTokenResponse = (user, statusCode, res) => {
 // @access  Public
 exports.register = async (req, res) => {
   try {
+    console.log('Registration attempt:', req.body);
     const { name, email, password } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      console.log('Registration failed: User already exists:', email);
       return res.status(400).json({ message: 'User already exists' });
     }
 
     // Get default user role
     const userRole = await Role.findOne({ name: 'user' });
     if (!userRole) {
+      console.log('Registration failed: Default role not found');
       return res.status(500).json({ message: 'Default role not found. Please contact administrator.' });
     }
 
@@ -51,10 +57,12 @@ exports.register = async (req, res) => {
       isVerified: true // Always auto-verify users
     });
 
+    console.log('User registered successfully:', user._id);
+
     // Send token response (auto-login)
     sendTokenResponse(user, 201, res);
   } catch (error) {
-    console.error(error);
+    console.error('Registration error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -93,31 +101,38 @@ exports.verifyEmail = async (req, res) => {
 // @access  Public
 exports.login = async (req, res) => {
   try {
+    console.log('Login attempt:', { email: req.body.email });
     const { email, password } = req.body;
 
     // Validate email & password
     if (!email || !password) {
+      console.log('Login failed: Missing credentials');
       return res.status(400).json({ message: 'Please provide an email and password' });
     }
 
     // Check for user
     const user = await User.findOne({ email }).select('+password').populate('role');
+    console.log('User found:', user ? 'Yes' : 'No');
 
     if (!user) {
+      console.log('Login failed: Invalid credentials for email:', email);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     // Check if password matches
     const isMatch = await user.matchPassword(password);
+    console.log('Password match:', isMatch ? 'Yes' : 'No');
 
     if (!isMatch) {
+      console.log('Login failed: Invalid password for email:', email);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    console.log('Login successful for user:', user._id);
     // Send token
     sendTokenResponse(user, 200, res);
   } catch (error) {
-    console.error(error);
+    console.error('Login error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -127,14 +142,21 @@ exports.login = async (req, res) => {
 // @access  Private
 exports.getMe = async (req, res) => {
   try {
+    console.log('Get current user request for user:', req.user.id);
     const user = await User.findById(req.user.id).populate('role');
 
+    if (!user) {
+      console.log('User not found:', req.user.id);
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    console.log('Current user retrieved successfully:', user._id);
     res.status(200).json({
       success: true,
       data: user
     });
   } catch (error) {
-    console.error(error);
+    console.error('Get current user error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

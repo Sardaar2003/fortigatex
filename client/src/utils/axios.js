@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with default config
 const instance = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
+  baseURL: process.env.REACT_APP_API_URL || 'https://fortigatex.onrender.com',
   headers: {
     'Content-Type': 'application/json',
   },

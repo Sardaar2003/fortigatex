@@ -16,7 +16,7 @@ const corsOptions = {
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000' || "https://fortigatex-1.onrender.com/",
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept','Origin'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   optionsSuccessStatus: 200,
   preflightContinue: false,

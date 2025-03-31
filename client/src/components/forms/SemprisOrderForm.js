@@ -156,9 +156,31 @@ const SemprisOrderForm = () => {
     setLoading(true);
 
     try {
+      // Transform form data to match backend expectations
+      const orderData = {
+        firstName: formData.first_name,
+        lastName: formData.last_name,
+        address1: formData.address1,
+        address2: formData.address2 || '',
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zip,
+        phoneNumber: formData.phone,
+        email: formData.email,
+        sourceCode: formData.source,
+        sku: formData.sku,
+        creditCardNumber: formData.card_number,
+        creditCardExpiration: formData.card_expiration,
+        creditCardCVV: formData.card_cvv,
+        cardIssuer: formData.issuer,
+        vendorId: formData.vendor_id,
+        project: 'Sempris Project',
+        sessionId: formData.tracking_number
+      };
+
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/orders`,
-        formData,
+        orderData,
         {
           headers: {
             'Content-Type': 'application/json',

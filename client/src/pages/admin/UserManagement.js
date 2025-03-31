@@ -35,43 +35,19 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      console.log('API URL:', process.env.REACT_APP_API_URL);
-      console.log('Token:', token);
-      
-      if (!token) {
-        setError('No authentication token found. Please log in again.');
-        setLoading(false);
-        return;
-      }
-
-      const res = await axios.get(
+      const response = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/users`,
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         }
       );
-      
-      console.log('Users fetched successfully:', res.data);
-      setUsers(res.data.data);
+      setUsers(response.data.data);
       setError('');
     } catch (err) {
       console.error('Error fetching users:', err);
-      console.error('Error response:', err.response);
-      console.error('Error status:', err.response?.status);
-      console.error('Error data:', err.response?.data);
-      console.error('Full error object:', JSON.stringify(err, null, 2));
-      
-      if (err.response?.status === 401) {
-        setError('Unauthorized: Please log in again');
-        // Optionally redirect to login
-      } else if (err.response?.status === 403) {
-        setError('Forbidden: You do not have permission to view users');
-      } else {
-        setError(err.response?.data?.message || 'Failed to fetch users');
-      }
+      setError(err.response?.data?.message || 'Failed to fetch users');
     } finally {
       setLoading(false);
     }
@@ -79,7 +55,7 @@ const UserManagement = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [token]);
 
   const handleEditClick = (user) => {
     setSelectedUser(user);
@@ -97,7 +73,6 @@ const UserManagement = () => {
   };
 
   const handleUserUpdated = () => {
-    // Refresh the users list after a successful update
     fetchUsers();
   };
 
@@ -108,7 +83,7 @@ const UserManagement = () => {
           `${process.env.REACT_APP_API_URL}/api/users/${userId}`,
           {
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
+              'Authorization': `Bearer ${token}`
             }
           }
         );

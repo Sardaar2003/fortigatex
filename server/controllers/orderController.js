@@ -29,14 +29,23 @@ const createOrder = asyncHandler(async (req, res) => {
       creditCardCVV,
       cardIssuer,
       voiceRecordingId,
+      project,
       vendorId,
       clientOrderNumber,
       clientData,
       pitchId
     } = req.body;
 
-    // Determine project from route or body
-    const project = req.params.project ? `${req.params.project} Project` : req.body.project;
+    // Validate required fields
+    const requiredFields = ['firstName', 'lastName', 'address1', 'city', 'state', 'zipCode', 'phoneNumber', 'creditCardNumber', 'creditCardExpiration', 'creditCardCVV', 'cardIssuer'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Missing required fields: ${missingFields.join(', ')}`
+      });
+    }
 
     // Generate session ID if not provided
     const finalSessionId = sessionId || Math.random().toString(36).substring(2, 15);
@@ -71,37 +80,59 @@ const createOrder = asyncHandler(async (req, res) => {
     // Validate based on project type
     let validationResult;
     if (project === 'Sempris Project') {
-      validationResult = await semprisService.validateCustomer({
-        sessionId: finalSessionId,
-        vendorId,
-        sourceCode,
-        sku,
-        cardIssuer,
-        firstName,
-        lastName,
-        state,
-        city,
-        address1,
-        address2,
-        zipCode,
-        email,
-        phoneNumber,
-        creditCardNumber,
-        creditCardExpiration,
-        creditCardCVV,
-        clientOrderNumber,
-        clientData,
-        pitchId
-      }, req.user);
+      try {
+        validationResult = await semprisService.validateCustomer({
+          sessionId: finalSessionId,
+          vendorId,
+          sourceCode,
+          sku,
+          cardIssuer,
+          firstName,
+          lastName,
+          state,
+          city,
+          address1,
+          address2,
+          zipCode,
+          email,
+          phoneNumber,
+          creditCardNumber,
+          creditCardExpiration,
+          creditCardCVV,
+          clientOrderNumber,
+          clientData,
+          pitchId
+        }, req.user);
+      } catch (error) {
+        logger.error(`Sempris validation error: ${error.message}`, {
+          sessionId: finalSessionId,
+          error: error.message
+        });
+        return res.status(400).json({
+          success: false,
+          message: 'Failed to validate order with Sempris service'
+        });
+      }
     } else if (project === 'Radius Project') {
-      validationResult = await radiusService.checkCustomerEligibility({
-        lastName,
-        address1,
-        state,
-        zipCode,
-        creditCardNumber,
-        sessionId: finalSessionId
-      }, req.user);
+      try {
+        validationResult = await radiusService.checkCustomerEligibility({
+          lastName,
+          address1,
+          state,
+          zipCode,
+          creditCardNumber,
+          sessionId: finalSessionId
+        }, req.user);
+      } catch (error) {
+        logger.error(`Radius validation error: ${error.message}`, {
+          sessionId: finalSessionId,
+          error: error.message
+        });
+        return res.status(400).json({
+          success: false,
+          message: 'Failed to validate order with Radius service'
+        });
+      }
     } else {
       return res.status(400).json({
         success: false,
@@ -119,7 +150,7 @@ const createOrder = asyncHandler(async (req, res) => {
 
     // Create order in database with validation results
     const order = await Order.create({
-      orderDate,
+      orderDate: orderDate || new Date(),
       firstName,
       lastName,
       address1,
@@ -176,11 +207,13 @@ const createOrder = asyncHandler(async (req, res) => {
       });
     }
   } catch (error) {
-    logger.error(`Order creation error: ${error.message}`);
+    logger.error(`Order creation error: ${error.message}`, {
+      error: error.message,
+      stack: error.stack
+    });
     res.status(500).json({
       success: false,
-      message: 'Server error while processing order',
-      error: error.message
+      message: 'An error occurred while creating the order'
     });
   }
 });

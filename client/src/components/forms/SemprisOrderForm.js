@@ -56,7 +56,7 @@ const SemprisOrderForm = () => {
 
   const validateForm = () => {
     const errors = {};
-    
+
     if (!formData.first_name.trim()) errors.first_name = 'First name is required';
     if (!formData.last_name.trim()) errors.last_name = 'Last name is required';
     if (!formData.address1.trim()) errors.address1 = 'Address is required';
@@ -158,6 +158,7 @@ const SemprisOrderForm = () => {
     try {
       // Transform form data to match backend expectations
       const orderData = {
+        orderDate: new Date().toISOString(),
         firstName: formData.first_name,
         lastName: formData.last_name,
         address1: formData.address1,
@@ -169,17 +170,20 @@ const SemprisOrderForm = () => {
         email: formData.email,
         sourceCode: formData.source,
         sku: formData.sku,
-        creditCardNumber: formData.card_number,
-        creditCardExpiration: formData.card_expiration,
+        creditCardNumber: formData.card_number.replace(/\s+/g, ''),
+        creditCardExpiration: formData.card_expiration.replace(/\s+/g, ''),
         creditCardCVV: formData.card_cvv,
         cardIssuer: formData.issuer,
         vendorId: formData.vendor_id,
         project: 'Sempris Project',
-        sessionId: formData.tracking_number
+        sessionId: formData.tracking_number,
+        clientOrderNumber: '',
+        clientData: '',
+        pitchId: ''
       };
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/orders/sempris`,
+        `${process.env.REACT_APP_API_URL}/api/orders`,
         orderData,
         {
           headers: {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from '../../utils/axios';
+import axios from 'axios';
 import {
   Container,
   Paper,
@@ -34,7 +34,14 @@ const UserManagement = () => {
     setLoading(true);
     try {
       console.log('Fetching users...');
-      const res = await axios.get('/api/users');
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/users`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
       console.log('Users fetched successfully:', res.data);
       setUsers(res.data.data);
       setError('');
@@ -84,7 +91,14 @@ const UserManagement = () => {
   const handleDeleteClick = async (userId) => {
     if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
       try {
-        await axios.delete(`/api/users/${userId}`);
+        await axios.delete(
+          `${process.env.REACT_APP_API_URL}/api/users/${userId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
         setDeleteSuccess('User deleted successfully');
         setTimeout(() => setDeleteSuccess(''), 3000);
         fetchUsers();

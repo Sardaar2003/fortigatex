@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from '../../utils/axios';
+import axios from 'axios';
 import {
   Container,
   Paper,
@@ -68,7 +68,14 @@ const RoleManagement = () => {
   const fetchRoles = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('/api/roles');
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/roles`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
       setRoles(res.data.data);
       setError('');
     } catch (err) {
@@ -106,7 +113,14 @@ const RoleManagement = () => {
   const handleDeleteClick = async (roleId) => {
     if (window.confirm('Are you sure you want to delete this role? This action cannot be undone.')) {
       try {
-        await axios.delete(`/api/roles/${roleId}`);
+        await axios.delete(
+          `${process.env.REACT_APP_API_URL}/api/roles/${roleId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
         setDeleteSuccess('Role deleted successfully');
         setTimeout(() => setDeleteSuccess(''), 3000);
         fetchRoles();

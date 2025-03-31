@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import {
   Container,
@@ -19,8 +19,10 @@ import {
 import { Person, Edit, Delete } from '@mui/icons-material';
 import EditUserDialog from '../../components/EditUserDialog';
 import AddUserDialog from '../../components/AddUserDialog';
+import { AuthContext } from '../../context/AuthContext';
 
 const UserManagement = () => {
+  const { token } = useContext(AuthContext);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -33,15 +35,25 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      console.log('Fetching users...');
+      console.log('API URL:', process.env.REACT_APP_API_URL);
+      console.log('Token:', token);
+      
+      if (!token) {
+        setError('No authentication token found. Please log in again.');
+        setLoading(false);
+        return;
+      }
+
       const res = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/users`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         }
       );
+      
       console.log('Users fetched successfully:', res.data);
       setUsers(res.data.data);
       setError('');
@@ -50,6 +62,7 @@ const UserManagement = () => {
       console.error('Error response:', err.response);
       console.error('Error status:', err.response?.status);
       console.error('Error data:', err.response?.data);
+      console.error('Full error object:', JSON.stringify(err, null, 2));
       
       if (err.response?.status === 401) {
         setError('Unauthorized: Please log in again');

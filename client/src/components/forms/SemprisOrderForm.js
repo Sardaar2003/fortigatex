@@ -94,6 +94,20 @@ const SemprisOrderForm = () => {
     setLoading(true);
 
     try {
+      // Validate required fields
+      const requiredFields = [
+        'first_name', 'last_name', 'address1', 'city', 'state', 'zip',
+        'phone', 'email', 'source', 'sku', 'card_number', 'card_expiration',
+        'card_cvv', 'issuer'
+      ];
+
+      const missingFields = requiredFields.filter(field => !formData[field]);
+      if (missingFields.length > 0) {
+        setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/orders`,
         formData,
@@ -107,6 +121,7 @@ const SemprisOrderForm = () => {
 
       if (response.data.success) {
         handleClearForm();
+        setShowPreview(false);
       } else {
         setError(response.data.message || 'Failed to create order');
       }
@@ -195,7 +210,7 @@ const SemprisOrderForm = () => {
               <TableRow>
                 <TableCell>Credit Card</TableCell>
                 <TableCell>
-                  {`****-****-****-${formData.card_number.slice(-4)}`}
+                  {formData.card_number ? `****-****-****-${formData.card_number.slice(-4)}` : 'Not provided'}
                 </TableCell>
               </TableRow>
               <TableRow>

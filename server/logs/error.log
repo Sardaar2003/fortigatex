@@ -1,0 +1,23 @@
+[2025-04-07T03:55:20.336Z] [ERROR] Radius API error for user 67e007f14ca04a8eaf9f9694: Cannot read properties of undefined (reading 'substring')
+[2025-04-07T03:56:42.390Z] [ERROR] Radius API error for user 67e007f14ca04a8eaf9f9694: Cannot read properties of undefined (reading 'substring')
+[2025-04-07T03:57:17.283Z] [ERROR] Radius API error for user 67e007f14ca04a8eaf9f9694: Cannot read properties of undefined (reading 'substring')
+[2025-04-07T04:19:19.566Z] [ERROR] Radius API error for user 67e007f14ca04a8eaf9f9694: Request failed with status code 500
+[2025-04-07T04:20:33.653Z] [ERROR] Radius API error for user 67e007f14ca04a8eaf9f9694: Request failed with status code 500
+[2025-04-07T04:21:58.501Z] [ERROR] Radius API error for user 67e007f14ca04a8eaf9f9694: Request failed with status code 500
+[2025-04-07T04:23:05.937Z] [ERROR] Radius API error for user 67e007f14ca04a8eaf9f9694: Request failed with status code 500
+[2025-04-07T04:27:32.143Z] [ERROR] Radius API error for user 67e007f14ca04a8eaf9f9694: Request failed with status code 500
+[2025-04-07T04:28:47.044Z] [ERROR] Radius API error for user 67e007f14ca04a8eaf9f9694: Request failed with status code 500
+[2025-04-07T04:29:58.628Z] [ERROR] Radius API error for user 67e007f14ca04a8eaf9f9694: Request failed with status code 500
+[2025-04-07T04:32:18.574Z] [ERROR] Radius API error for user 67e007f14ca04a8eaf9f9694: Request failed with status code 500
+[2025-04-07T04:33:40.291Z] [ERROR] Radius API error for user 67e007f14ca04a8eaf9f9694: Request failed with status code 500
+[2025-04-07T04:34:32.460Z] [ERROR] Radius API error for user 67e007f14ca04a8eaf9f9694: Request failed with status code 500
+[2025-04-07T04:40:20.313Z] [ERROR] Radius API error for user 67e007f14ca04a8eaf9f9694: Request failed with status code 500
+[2025-04-07T04:42:32.894Z] [ERROR] Sempris API error: Request failed with status code 401
+[2025-04-07T04:45:12.761Z] [ERROR] Sempris API error: Request failed with status code 401
+[2025-04-07T05:38:33.421Z] [ERROR] Sempris API error: Request failed with status code 401
+[2025-04-07T05:39:34.715Z] [ERROR] Sempris API error: Request failed with status code 401
+[2025-04-07T05:40:31.840Z] [ERROR] Sempris API error: Request failed with status code 401
+[2025-04-07T05:46:20.944Z] [ERROR] Radius API error for user 67e007f14ca04a8eaf9f9694: Request failed with status code 500
+[2025-04-07T05:53:37.905Z] [ERROR] Radius API error for user 67e97d0e7ba85fc4b60ca05a: Request failed with status code 500
+[2025-04-07T05:55:39.819Z] [ERROR] Radius API error for user 67e97d0e7ba85fc4b60ca05a: Request failed with status code 500
+[2025-04-07T05:56:44.791Z] [ERROR] Radius API error for user 67e97d0e7ba85fc4b60ca05a: Request failed with status code 500

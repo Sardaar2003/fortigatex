@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: fortigatex-client
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://fortigatex-server.onrender.com
+      - key: REACT_APP_SEMPRIS_API_KEY
+        value: 6295e1bfd5e540c1b512d24f47ff6e9b
+    healthCheckPath: /
+    autoDeploy: true 

@@ -30,7 +30,7 @@ app.use((req, res, next) => {
 const corsOptions = {
   origin: [
     'https://fortigatex-client.onrender.com',
-    'https://fortigatex-server.onrender.com',
+    'https://fortigatex.onrender.com',
     'http://localhost:3000',
     'http://localhost:5000'
   ],

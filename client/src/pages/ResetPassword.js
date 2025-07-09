@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import GlassCard from '../components/GlassCard';
+import { AuthContext } from '../context/AuthContext';
 
 const ResetPasswordSchema = Yup.object().shape({
   password: Yup.string()
@@ -35,26 +36,95 @@ const ResetPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const { token } = useParams();
+  const { resetPassword } = useContext(AuthContext);
+
+  useEffect(() => {
+    // Check if token is present
+    if (!token) {
+      setStatus({
+        type: 'error',
+        message: 'Invalid reset password link. Please request a new password reset link.'
+      });
+    }
+  }, [token]);
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      // Add your reset password logic here using the token and new password
-      setStatus({
-        type: 'success',
-        message: 'Password has been successfully reset. You can now login with your new password.'
-      });
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
+      const response = await resetPassword(token, values.password);
+      
+      if (response.success) {
+        setStatus({
+          type: 'success',
+          message: 'Password has been successfully reset. You can now login with your new password.'
+        });
+        setTimeout(() => {
+          navigate('/login');
+        }, 3000);
+      } else {
+        setStatus({
+          type: 'error',
+          message: response.message || 'Failed to reset password. Please try again.'
+        });
+      }
     } catch (err) {
       setStatus({
         type: 'error',
-        message: 'Failed to reset password. Please try again.'
+        message: err.response?.data?.message || 'Failed to reset password. Please try again.'
       });
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (!token) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          py: 12,
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'radial-gradient(circle at center, rgba(111, 76, 255, 0.05) 0%, rgba(64, 42, 213, 0.05) 100%)',
+            zIndex: 0,
+          }
+        }}
+      >
+        <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
+          <GlassCard>
+            <Alert severity="error" sx={{ mb: 3 }}>
+              Invalid reset password link. Please request a new password reset link.
+            </Alert>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={() => navigate('/forgot-password')}
+              sx={{
+                height: '56px',
+                fontSize: '1rem',
+                fontWeight: 600,
+                textTransform: 'none',
+                background: 'linear-gradient(135deg, #6F4CFF 0%, #402AD5 100%)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #8B6FFF 0%, #6F4CFF 100%)',
+                },
+              }}
+            >
+              Request New Reset Link
+            </Button>
+          </GlassCard>
+        </Container>
+      </Box>
+    );
+  }
 
   return (
     <Box

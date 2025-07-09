@@ -21,3 +21,5 @@
 [2025-04-07T05:53:37.905Z] [ERROR] Radius API error for user 67e97d0e7ba85fc4b60ca05a: Request failed with status code 500
 [2025-04-07T05:55:39.819Z] [ERROR] Radius API error for user 67e97d0e7ba85fc4b60ca05a: Request failed with status code 500
 [2025-04-07T05:56:44.791Z] [ERROR] Radius API error for user 67e97d0e7ba85fc4b60ca05a: Request failed with status code 500
+[2025-04-27T16:09:50.624Z] [ERROR] Radius API error for user 67e007f14ca04a8eaf9f9694: Request failed with status code 500
+[2025-07-09T15:45:28.608Z] [ERROR] Radius API error for user 686d3a939ac027007907826f: Request failed with status code 500

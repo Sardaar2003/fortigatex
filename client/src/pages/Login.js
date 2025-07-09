@@ -172,6 +172,19 @@ const Login = () => {
                           variant="outlined"
                           error={touched.password && Boolean(errors.password)}
                           helperText={touched.password && errors.password}
+                          InputProps={{
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  aria-label="toggle password visibility"
+                                  onClick={handleClickShowPassword}
+                                  edge="end"
+                                >
+                                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          }}
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               height: '56px',
@@ -179,24 +192,6 @@ const Login = () => {
                                 borderColor: '#6F4CFF',
                               },
                             },
-                          }}
-                          InputProps={{
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                <IconButton
-                                  onClick={handleClickShowPassword}
-                                  edge="end"
-                                  sx={{
-                                    color: '#6F4CFF',
-                                    '&:hover': {
-                                      backgroundColor: 'rgba(111, 76, 255, 0.1)',
-                                    },
-                                  }}
-                                >
-                                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                                </IconButton>
-                              </InputAdornment>
-                            )
                           }}
                         />
                       )}

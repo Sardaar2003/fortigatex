@@ -93,7 +93,7 @@ const restrictedStates = ['IA', 'ME', 'MN', 'UT', 'VT', 'WI'];
 
 const prepaidCardBins = ['411111', '422222', '433333', '444444', '455555'];
 
-const RadiusOrderForm = () => {
+const RadiusOrderForm = ({ onOrderSuccess }) => {
   const navigate = useNavigate();
   const { token } = React.useContext(AuthContext);
   const [error, setError] = useState('');

@@ -8,6 +8,13 @@ const seedRoles = require('./config/db-seeder');
 // Load environment variables
 dotenv.config();
 
+// Debug logging for environment variables
+console.log('Environment variables loaded:');
+console.log('PSONLINE_API_KEY:', process.env.PSONLINE_API_KEY ? 'Present' : 'Missing');
+console.log('PSONLINE_MERCHANT_ID:', process.env.PSONLINE_MERCHANT_ID ? 'Present' : 'Missing');
+console.log('Current working directory:', process.cwd());
+console.log('Environment file path:', path.resolve('.env'));
+
 // Create Express app
 const app = express();
 
@@ -21,7 +28,9 @@ app.use((req, res, next) => {
 
 // Configure CORS with options
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000', 'https://fortigatex-1.onrender.com', 'https://fortigatex.onrender.com'],
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://fortigatex.onrender.com', 'https://fortigatex-1.onrender.com']
+    : ['http://localhost:3000', 'http://localhost:5000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],

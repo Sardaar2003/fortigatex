@@ -3,6 +3,7 @@ const asyncHandler = require('express-async-handler');
 const logger = require('../utils/logger');
 const radiusService = require('../services/radiusService');
 const semprisService = require('../services/semprisService');
+const psonlineService = require('../services/psonlineService');
 
 // @desc    Process Radius order
 // @route   POST /api/orders/radius
@@ -292,6 +293,83 @@ const processSemprisOrder = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Process PSOnline order
+// @route   POST /api/orders/psonline
+// @access  Private
+const processPSOnlineOrder = asyncHandler(async (req, res) => {
+  try {
+    // Validate order data
+    psonlineService.validateOrderData(req.body);
+
+    // Process order with PSOnline
+    const response = await psonlineService.processOrder(req.body);
+
+    // Determine order status based on PSOnline response
+    let orderStatus = 'pending';
+    let validationStatus = false;
+    let statusMessage = '';
+
+    if (response.ResponseCode === 200) {
+      orderStatus = 'completed';
+      validationStatus = true;
+      statusMessage = 'Order processed successfully';
+    } else {
+      orderStatus = 'cancelled';
+      validationStatus = false;
+      statusMessage = response.ResponseData || 'Order processing failed';
+    }
+
+    // Create order in database
+    const order = await Order.create({
+      user: req.user._id,
+      project: 'PSOnline Project',
+      orderDate: new Date(),
+      firstName: req.body.CustomerFirstName,
+      lastName: req.body.CustomerLastName,
+      address1: req.body.BillingStreetAddress,
+      address2: req.body.BillingApt,
+      city: req.body.BillingCity,
+      state: req.body.BillingState,
+      zipCode: req.body.BillingZipCode,
+      phoneNumber: req.body.BillingHomePhone,
+      email: req.body.Email,
+      creditCardNumber: req.body.card_num,
+      creditCardLast4: req.body.card_num.slice(-4),
+      creditCardExpiration: `${req.body.card_expm}/${req.body.card_expy}`,
+      creditCardCVV: req.body.card_cvv,
+      amount: req.body.amount,
+      productId: req.body.productid_1,
+      productSku: req.body.productsku_1,
+      quantity: req.body.productqty_1,
+      status: orderStatus,
+      validationStatus: validationStatus,
+      validationMessage: statusMessage,
+      validationResponse: response,
+      validationDate: new Date()
+    });
+
+    // Return appropriate response based on order status
+    if (orderStatus === 'cancelled') {
+      return res.status(400).json({
+        success: false,
+        message: statusMessage,
+        data: order
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      data: order
+    });
+  } catch (error) {
+    console.error('Error processing PSOnline order:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error processing order'
+    });
+  }
+});
+
 // @desc    Get all orders
 // @route   GET /api/orders
 // @access  Private
@@ -384,6 +462,7 @@ const getMyOrders = asyncHandler(async (req, res) => {
 module.exports = {
   processRadiusOrder,
   processSemprisOrder,
+  processPSOnlineOrder,
   getOrders,
   getOrderById,
   updateOrder,

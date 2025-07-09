@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   processRadiusOrder,
   processSemprisOrder,
+  processPSOnlineOrder,
   getOrders,
   getOrderById,
   updateOrder,
@@ -18,6 +19,7 @@ router.get('/:id', protect, getOrderById);
 // Project-specific order routes
 router.post('/sempris', protect, processSemprisOrder);
 router.post('/radius', protect, processRadiusOrder);
+router.post('/psonline', protect, processPSOnlineOrder);
 
 // Admin only routes
 router.get('/', protect, authorize('admin'), getOrders);

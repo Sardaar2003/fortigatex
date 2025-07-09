@@ -1,10 +1,11 @@
 import React from 'react';
 import { Box, Typography, Paper } from '@mui/material';
 
-const GlassCard = ({ children, title, subtitle, maxWidth = '800px', sx = {} }) => {
+const GlassCard = ({ children, title, subtitle, maxWidth = '800px', sx = {}, onClick, ...props }) => {
   return (
     <Paper
       elevation={0}
+      onClick={onClick}
       sx={{
         background: 'linear-gradient(135deg, rgba(26, 32, 44, 0.95) 0%, rgba(17, 25, 40, 0.95) 100%)',
         backdropFilter: 'blur(20px)',
@@ -26,6 +27,7 @@ const GlassCard = ({ children, title, subtitle, maxWidth = '800px', sx = {} }) =
         overflow: 'hidden',
         ...sx
       }}
+      {...props}
     >
       {title && (
         <Box sx={{ mb: subtitle ? 1 : 3 }}>

@@ -10,49 +10,54 @@ const nodemailer = require('nodemailer');
  */
 const sendEmail = async (options) => {
   try {
-    console.log('Email configuration:', {
-      service: process.env.EMAIL_SERVICE,
-      user: process.env.EMAIL_USER ? `${process.env.EMAIL_USER}` : 'undefined', // Show full email for debugging
-      pass: process.env.EMAIL_PASS ? 'PROVIDED' : 'undefined' // Don't log password
-    });
+    if (process.env.ENABLE_EMAIL !== 'true') {
+      return { success: false, message: 'Email sending is disabled' };
+    }
 
-    // Create transporter
+    // Check for required environment variables
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      throw new Error('Email configuration is missing');
+    }
+
+    // Create transporter with more detailed configuration
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 465,
-      secure: true, // use SSL
+      port: 587,
+      secure: false, // true for 465, false for other ports
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
       },
       tls: {
-        // do not fail on invalid certs
-        rejectUnauthorized: false
+        rejectUnauthorized: false // Only for development/testing
       }
     });
 
-    // Define mail options
+    // Verify transporter configuration
+    await transporter.verify();
+
+    // Create email options
     const mailOptions = {
       from: `"FortiGateX" <${process.env.EMAIL_USER}>`,
       to: options.to,
       subject: options.subject,
-      text: options.text,
       html: options.html
     };
 
-    console.log('Attempting to send email to:', options.to);
-    console.log('Email subject:', options.subject);
-    console.log('Email content:', options.html);
-
     // Send email
     const info = await transporter.sendMail(mailOptions);
-
-    console.log('Email sent: %s', info.messageId);
-    console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-    return info;
+    
+    return { 
+      success: true, 
+      messageId: info.messageId,
+      message: 'Email sent successfully'
+    };
   } catch (error) {
-    console.error('Email sending error details:', error);
-    throw error;
+    return { 
+      success: false, 
+      message: `Failed to send email: ${error.message}`,
+      error: error
+    };
   }
 };
 

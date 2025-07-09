@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
@@ -12,6 +12,7 @@ import {
   Container
 } from '@mui/material';
 import GlassCard from '../components/GlassCard';
+import { AuthContext } from '../context/AuthContext';
 
 const ForgotPasswordSchema = Yup.object().shape({
   email: Yup.string()
@@ -21,14 +22,23 @@ const ForgotPasswordSchema = Yup.object().shape({
 
 const ForgotPassword = () => {
   const [status, setStatus] = useState({ type: '', message: '' });
+  const { forgotPassword } = useContext(AuthContext);
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      // Add your forgot password logic here
-      setStatus({
-        type: 'success',
-        message: 'If an account exists with this email, you will receive password reset instructions.'
-      });
+      const response = await forgotPassword(values.email);
+      
+      if (response.success) {
+        setStatus({
+          type: 'success',
+          message: 'If an account exists with this email, you will receive password reset instructions.'
+        });
+      } else {
+        setStatus({
+          type: 'error',
+          message: response.message || 'An error occurred. Please try again.'
+        });
+      }
     } catch (err) {
       setStatus({
         type: 'error',

@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 
-const SemprisOrderForm = () => {
+const SemprisOrderForm = ({ onOrderSuccess }) => {
   const navigate = useNavigate();
   const { token, logout } = useContext(AuthContext);
   const [error, setError] = useState('');
@@ -161,8 +161,9 @@ const SemprisOrderForm = () => {
     setLoading(true);
 
     try {
+      const apiBaseUrl = process.env.REACT_APP_API_URL.split(',')[0];
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/orders/sempris`,
+        `${apiBaseUrl}/api/orders/sempris`,
         formDataToSubmit,
         {
           headers: {
@@ -172,11 +173,17 @@ const SemprisOrderForm = () => {
         }
       );
 
-      setSnackbar({
-        open: true,
-        message: response.data.success ? 'Order submitted successfully!' : (response.data.message || 'Failed to create order'),
-        severity: response.data.success ? 'success' : 'error'
-      });
+      if (response.status === 200) {
+        setSnackbar({
+          open: true,
+          message: 'Order submitted successfully!',
+          severity: 'success'
+        });
+        if (onOrderSuccess) {
+          onOrderSuccess(response.data);
+        }
+        handleClearForm();
+      }
     } catch (err) {
       console.error('Error submitting order:', err);
       if (err.response?.status === 401) {

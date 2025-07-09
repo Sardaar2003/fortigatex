@@ -1,0 +1,2 @@
+[2025-07-09T15:46:23.004Z] [USER_ACTION] SEMPRIS_API_CALL - {"tracking_number":"72c2407f-bb1c-48df-ac1a-151ff1df1bfb","vendor_id":"STAR"}
+[2025-07-09T15:46:24.518Z] [USER_ACTION] SEMPRIS_API_RESPONSE - {"tracking_number":"72c2407f-bb1c-48df-ac1a-151ff1df1bfb","status":200,"transaction_id":"a217c980-ff9d-4250-9979-2176a261e39f"}

@@ -168,10 +168,14 @@ exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(404).json({ message: 'There is no user with that email' });
+      return res.status(404).json({ success: false, message: 'No user found with this email' });
     }
 
     // Get reset token
@@ -195,29 +199,35 @@ exports.forgotPassword = async (req, res) => {
       <h1>You have requested a password reset</h1>
       <p>Please click on the following link to reset your password:</p>
       <a href="${resetUrl}" target="_blank">Reset Password</a>
+      <p>This link will expire in 10 minutes.</p>
     `;
 
-    try {
-      await sendEmail({
-        to: user.email,
-        subject: 'Password Reset Request',
-        html: message
-      });
+    const emailResult = await sendEmail({
+      to: user.email,
+      subject: 'Password Reset Request',
+      html: message
+    });
 
-      res.status(200).json({ success: true, message: 'Email sent' });
-    } catch (error) {
-      console.error(error);
-
+    if (!emailResult.success) {
       user.resetPasswordToken = undefined;
       user.resetPasswordExpire = undefined;
-
       await user.save({ validateBeforeSave: false });
 
-      return res.status(500).json({ message: 'Email could not be sent' });
+      return res.status(500).json({ 
+        success: false, 
+        message: emailResult.message || 'Email could not be sent'
+      });
     }
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Password reset email sent successfully' 
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error' 
+    });
   }
 };
 
@@ -238,7 +248,18 @@ exports.resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ message: 'Invalid token' });
+      // Check if token exists but is expired
+      const expiredUser = await User.findOne({ resetPasswordToken });
+      if (expiredUser) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Password reset link has expired. Please request a new one.' 
+        });
+      }
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid password reset link. Please request a new one.' 
+      });
     }
 
     // Set new password
@@ -254,6 +275,9 @@ exports.resetPassword = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error' 
+    });
   }
 };

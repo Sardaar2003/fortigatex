@@ -54,115 +54,109 @@ const Dashboard = () => {
   };
 
   const handleProjectSelect = (project) => {
+    console.log('Project selected:', project);
     setSelectedProject(project);
+    console.log('Selected project state updated to:', project);
   };
 
   const handleBackToProjects = () => {
     setSelectedProject(null);
   };
 
-  const renderProjectSelection = () => (
-    <Box sx={{ mt: 2 }}>
-      <Typography
-        variant="h5"
-        gutterBottom
-        sx={{
-          background: 'linear-gradient(135deg, #6F4CFF 0%, #402AD5 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          fontWeight: 700,
-          letterSpacing: '-0.025em',
-          filter: 'drop-shadow(0 2px 4px rgba(111, 76, 255, 0.3))',
-          mb: 4,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2
-        }}
-      >
-        Select Project
-      </Typography>
+  const renderProjectSelection = () => {
+    return (
+      <Box sx={{ mt: 4 }}>
+        <Typography
+          variant="h5"
+          sx={{
+            background: 'linear-gradient(135deg, #6F4CFF 0%, #402AD5 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            fontWeight: 700,
+            letterSpacing: '-0.025em',
+            filter: 'drop-shadow(0 2px 4px rgba(111, 76, 255, 0.3))',
+            mb: 4
+          }}
+        >
+          Select a Project
+        </Typography>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Box
-            onClick={() => handleProjectSelect('radius')}
-            sx={{
-              p: 4,
-              borderRadius: 2,
-              background: 'linear-gradient(135deg, rgba(26, 32, 44, 0.95) 0%, rgba(17, 25, 40, 0.95) 100%)',
-              border: '1px solid rgba(111, 76, 255, 0.2)',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                borderColor: '#6F4CFF',
-                boxShadow: '0 8px 24px rgba(111, 76, 255, 0.15)'
-              }
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <RadioIcon sx={{ fontSize: 40, color: '#6F4CFF' }} />
-              <Typography
-                variant="h6"
-                sx={{
-                  background: 'linear-gradient(135deg, #6F4CFF 0%, #402AD5 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  fontWeight: 600
-                }}
-              >
-                Radius Project
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <GlassCard
+              onClick={() => handleProjectSelect('radius')}
+              sx={{
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-5px)'
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <RadioIcon sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
+                <Typography variant="h6">Radius</Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Submit orders for Radius products and services
               </Typography>
-            </Box>
-            <Typography variant="body2" sx={{ color: '#A0AEC0' }}>
-              Create and manage Radius project orders with advanced configuration options.
-            </Typography>
-          </Box>
-        </Grid>
+            </GlassCard>
+          </Grid>
 
-        <Grid item xs={12} md={6}>
-          <Box
-            onClick={() => handleProjectSelect('sempris')}
-            sx={{
-              p: 4,
-              borderRadius: 2,
-              background: 'linear-gradient(135deg, rgba(26, 32, 44, 0.95) 0%, rgba(17, 25, 40, 0.95) 100%)',
-              border: '1px solid rgba(111, 76, 255, 0.2)',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                borderColor: '#6F4CFF',
-                boxShadow: '0 8px 24px rgba(111, 76, 255, 0.15)'
-              }
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <MemoryIcon sx={{ fontSize: 40, color: '#6F4CFF' }} />
-              <Typography
-                variant="h6"
-                sx={{
-                  background: 'linear-gradient(135deg, #6F4CFF 0%, #402AD5 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  fontWeight: 600
-                }}
-              >
-                Sempris Project
+          <Grid item xs={12} md={4}>
+            <GlassCard
+              onClick={() => handleProjectSelect('sempris')}
+              sx={{
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-5px)'
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
+                <Typography variant="h6">Sempris</Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Submit orders for Sempris products and services
               </Typography>
-            </Box>
-            <Typography variant="body2" sx={{ color: '#A0AEC0' }}>
-              Manage Sempris project orders with specialized features and integrations.
-            </Typography>
-          </Box>
+            </GlassCard>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <GlassCard
+              onClick={() => handleProjectSelect('psonline')}
+              sx={{
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-5px)'
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
+                <Typography variant="h6">PSONLINE</Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Submit orders for PSONLINE products and services
+              </Typography>
+            </GlassCard>
+          </Grid>
         </Grid>
-      </Grid>
-    </Box>
-  );
+      </Box>
+    );
+  };
 
   const renderOrderForm = () => {
-    if (!selectedProject) return renderProjectSelection();
+    console.log('Rendering order form for:', selectedProject);
+    if (!selectedProject) {
+      console.log('No project selected, rendering project selection');
+      return renderProjectSelection();
+    }
 
+    console.log('Rendering order form for project:', selectedProject);
     return (
       <Box sx={{ mt: 2 }}>
         <Box
@@ -192,10 +186,15 @@ const Dashboard = () => {
                 <RadioIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />
                 Radius Order Form
               </>
-            ) : (
+            ) : selectedProject === 'sempris' ? (
               <>
                 <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />
                 Sempris Order Form
+              </>
+            ) : (
+              <>
+                <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />
+                PSONLINE Order Form
               </>
             )}
           </Typography>

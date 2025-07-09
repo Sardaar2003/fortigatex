@@ -21,3 +21,5 @@
 [2025-04-07T05:40:29.855Z] [USER_ACTION] SEMPRIS_API_CALL - {"tracking_number":"3a7f9fc5-c0d8-444c-bb0b-d1a9d360eaf0","vendor_id":"STAR"}
 [2025-04-07T05:46:51.655Z] [USER_ACTION] SEMPRIS_API_CALL - {"tracking_number":"1f1fc3ee-e60f-45df-9da2-0c096151daa0","vendor_id":"STAR"}
 [2025-04-07T05:46:53.178Z] [USER_ACTION] SEMPRIS_API_RESPONSE - {"tracking_number":"1f1fc3ee-e60f-45df-9da2-0c096151daa0","status":200,"transaction_id":"7d1677ff-d450-485a-99a7-dd120f8edd79"}
+[2025-04-27T16:11:11.438Z] [USER_ACTION] SEMPRIS_API_CALL - {"tracking_number":"89c155fc-a973-4ad5-8bde-1aaa7c2dfc58","vendor_id":"STAR"}
+[2025-04-27T16:11:12.802Z] [USER_ACTION] SEMPRIS_API_RESPONSE - {"tracking_number":"89c155fc-a973-4ad5-8bde-1aaa7c2dfc58","status":200,"transaction_id":"b7e14d23-2489-45c8-a292-5bdc30229d85"}

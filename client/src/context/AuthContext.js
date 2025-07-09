@@ -34,6 +34,8 @@ export const AuthProvider = ({ children }) => {
 
   // Load user
   const loadUser = useCallback(async () => {
+    const publicRoutes = ['/login', '/register', '/forgot-password'];
+    const isResetPasswordRoute = window.location.pathname.startsWith('/reset-password');
     if (token) {
       setAuthToken(token);
 
@@ -51,13 +53,19 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
         setError('Session expired. Please login again.');
         localStorage.removeItem('token');
-        navigate('/login');
+        // Only redirect to login if we're not on a public route
+        if (!publicRoutes.includes(window.location.pathname) && !isResetPasswordRoute) {
+          navigate('/login');
+        }
       }
     } else {
       setUser(null);
       setIsAuthenticated(false);
       setLoading(false);
-      navigate('/login');
+      // Only redirect to login if we're not on a public route
+      if (!publicRoutes.includes(window.location.pathname) && !isResetPasswordRoute) {
+        navigate('/login');
+      }
     }
   }, [token, navigate]);
 
@@ -77,12 +85,13 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         setError(null);
         setAuthToken(res.data.token);
+        navigate('/dashboard');
       }
 
       return res.data;
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
-      return { success: false };
+      return { success: false, message: err.response?.data?.message || 'Registration failed' };
     }
   };
 
@@ -97,12 +106,13 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         setError(null);
         setAuthToken(res.data.token);
+        navigate('/dashboard');
       }
 
       return res.data;
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
-      return { success: false };
+      return { success: false, message: err.response?.data?.message || 'Login failed' };
     }
   };
 
@@ -122,8 +132,8 @@ export const AuthProvider = ({ children }) => {
       const res = await axios.post('/api/auth/forgot-password', { email });
       return res.data;
     } catch (err) {
-      setError(err.response?.data?.message || 'Password reset failed');
-      return { success: false };
+      setError(err.response?.data?.message || 'Password reset request failed');
+      return { success: false, message: err.response?.data?.message || 'Password reset request failed' };
     }
   };
 
@@ -134,7 +144,7 @@ export const AuthProvider = ({ children }) => {
       return res.data;
     } catch (err) {
       setError(err.response?.data?.message || 'Password reset failed');
-      return { success: false };
+      return { success: false, message: err.response?.data?.message || 'Password reset failed' };
     }
   };
 

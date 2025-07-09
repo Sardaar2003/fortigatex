@@ -3,7 +3,7 @@ import axios from 'axios';
 // Create axios instance with default config
 const instance = axios.create({
   baseURL: process.env.NODE_ENV === 'production' 
-    ? 'https://fortigatex-server.onrender.com'
+    ? 'https://fortigatex.onrender.com'
     : 'http://localhost:5000',
   headers: {
     'Content-Type': 'application/json',

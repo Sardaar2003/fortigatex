@@ -21,10 +21,10 @@ const app = express();
 // --- CORS CONFIGURATION: MUST BE FIRST MIDDLEWARE ---
 const corsOptions = {
   origin: [
-    'https://fortigatex-client.onrender.com', // Your deployed client
-    'https://fortigatex.onrender.com',        // Your deployed server (if needed for server-to-server calls)
-    'http://localhost:3000',                  // Local dev client
-    'http://localhost:5000'                   // Local dev server
+    'https://fortigatex-client.onrender.com', // deployed frontend
+    'https://fortigatex.onrender.com',        // deployed backend (if needed)
+    'http://localhost:3000',                  // local dev frontend
+    'http://localhost:5000'                   // local dev backend
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],

@@ -18,21 +18,13 @@ console.log('Environment file path:', path.resolve('.env'));
 // Create Express app
 const app = express();
 
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
-  next();
-});
-
-// Configure CORS with options
+// --- CORS CONFIGURATION: MUST BE FIRST MIDDLEWARE ---
 const corsOptions = {
   origin: [
-    'https://fortigatex-client.onrender.com',
-    'https://fortigatex.onrender.com',
-    'http://localhost:3000',
-    'http://localhost:5000'
+    'https://fortigatex-client.onrender.com', // Your deployed client
+    'https://fortigatex.onrender.com',        // Your deployed server (if needed for server-to-server calls)
+    'http://localhost:3000',                  // Local dev client
+    'http://localhost:5000'                   // Local dev server
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -42,10 +34,24 @@ const corsOptions = {
   preflightContinue: false,
   maxAge: 86400 // 24 hours
 };
-
-// Middleware
 app.use(cors(corsOptions));
+// --- END CORS CONFIGURATION ---
+
 app.use(express.json());
+
+// CORS test endpoint (for debugging)
+app.options('/api/*', cors(corsOptions));
+app.get('/api/cors-test', (req, res) => {
+  res.json({ message: 'CORS is working!', origin: req.headers.origin });
+});
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  next();
+});
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)

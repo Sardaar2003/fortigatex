@@ -28,9 +28,12 @@ app.use((req, res, next) => {
 
 // Configure CORS with options
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? ['https://fortigatex.onrender.com', 'https://fortigatex-1.onrender.com']
-    : ['http://localhost:3000', 'http://localhost:5000'],
+  origin: [
+    'https://fortigatex-client.onrender.com',
+    'https://fortigatex-server.onrender.com',
+    'http://localhost:3000',
+    'http://localhost:5000'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],

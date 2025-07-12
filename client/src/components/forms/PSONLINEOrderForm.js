@@ -290,7 +290,13 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
 
       console.log('All validations passed, sending request to backend...');
       console.log('Request URL:', '/api/orders/psonline');
+      console.log('Full URL:', axios.defaults.baseURL + '/api/orders/psonline');
       console.log('Auth token present:', !!token);
+      console.log('Request payload (masked):', {
+        ...orderData,
+        card_num: orderData.card_num ? `${orderData.card_num.substring(0, 4)}****${orderData.card_num.substring(-4)}` : 'Missing',
+        card_cvv: '***'
+      });
       
       const response = await axios.post('/api/orders/psonline', orderData, {
         headers: {
@@ -298,7 +304,27 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         }
       });
 
-      console.log('Backend response received:', response.data);
+      console.log('=== Backend Response Details ===');
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      console.log('Response data type:', typeof response.data);
+      console.log('Response data (raw):', response.data);
+      console.log('Response data (stringified):', JSON.stringify(response.data, null, 2));
+      
+      // Check if response is HTML (indicating routing issue)
+      if (typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
+        console.error('❌ ERROR: Received HTML instead of API response - routing issue detected!');
+        throw new Error('Server routing error - received HTML instead of API response');
+      }
+      
+      // Log PSOnline API response if available
+      if (response.data.psonlineResponse) {
+        console.log('=== PSOnline API Response (from backend) ===');
+        console.log('PSOnline ResponseCode:', response.data.psonlineResponse.ResponseCode);
+        console.log('PSOnline ResponseData:', response.data.psonlineResponse.ResponseData);
+        console.log('PSOnline Full Response:', response.data.psonlineResponse);
+        console.log('==========================================');
+      }
       
       if (response.data.ResponseCode === 200) {
         console.log('Order processed successfully!');

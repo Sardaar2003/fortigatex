@@ -315,6 +315,11 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
     // Process order with PSOnline
     const response = await psonlineService.processOrder(req.body);
     console.log('PSOnline response received:', response);
+    console.log('PSOnline response details for frontend:', {
+      ResponseCode: response.ResponseCode,
+      ResponseData: response.ResponseData,
+      FullResponse: response
+    });
 
     // Determine order status based on PSOnline response
     let orderStatus = 'pending';
@@ -376,14 +381,16 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
       return res.status(400).json({
         success: false,
         message: statusMessage,
-        data: order
+        data: order,
+        psonlineResponse: response // Include PSOnline response for debugging
       });
     }
 
     console.log('Returning successful order response');
     res.status(201).json({
       success: true,
-      data: order
+      data: order,
+      psonlineResponse: response // Include PSOnline response for debugging
     });
   } catch (error) {
     console.error('=== PSOnline Order Controller: Error ===');

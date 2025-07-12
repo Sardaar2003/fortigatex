@@ -68,9 +68,26 @@ class PSOnlineService {
       console.log('Response data (raw):', JSON.stringify(response.data, null, 2));
       console.log('Response data type:', typeof response.data);
       console.log('Response data keys:', Object.keys(response.data || {}));
+      console.log('Full response object:', response);
+      
+      // Check if response.data is a string that needs parsing
+      let processedResponse = response.data;
+      if (typeof response.data === 'string') {
+        console.log('Response is a string, attempting to parse...');
+        try {
+          processedResponse = JSON.parse(response.data);
+          console.log('Successfully parsed string response:', processedResponse);
+        } catch (parseError) {
+          console.log('Could not parse as JSON, using as-is');
+          processedResponse = response.data;
+        }
+      }
+      
+      console.log('Final processed response:', processedResponse);
       console.log('====================================\n');
 
-      return response.data;
+      // Return the complete response data
+      return processedResponse;
     } catch (error) {
       console.error('\n=== PSOnline API Error ===');
       console.error('Error type:', error.constructor.name);

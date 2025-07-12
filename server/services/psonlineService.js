@@ -19,41 +19,62 @@ class PSOnlineService {
 
   async processOrder(orderData) {
     try {
+      console.log('\n=== PSOnline Service: processOrder Started ===');
+      
       // Validate credentials before proceeding
       if (!this.apiKey || !this.merchantId) {
+        console.error('PSOnline credentials missing:', {
+          apiKey: !!this.apiKey,
+          merchantId: !!this.merchantId
+        });
         throw new Error('PSOnline credentials are missing. Please check your environment variables.');
       }
 
+      console.log('PSOnline credentials validated successfully');
       console.log('\n=== Processing PSOnline Order ===');
-      console.log('Order data:', {
+      console.log('Order data received:', {
         ...orderData,
-        card_num: orderData.card_num ? 'Present' : 'Missing',
-        card_cvv: orderData.card_cvv ? 'Present' : 'Missing'
+        card_num: orderData.card_num ? `${orderData.card_num.substring(0, 4)}****${orderData.card_num.substring(-4)}` : 'Missing',
+        card_cvv: orderData.card_cvv ? '***' : 'Missing'
       });
 
+      console.log('Building request payload with credentials...');
       const orderDataWithCredentials = {
         ...orderData,
         APIKey: this.apiKey,
         MerchantID: this.merchantId
       };
 
-      console.log('Request payload:', {
+      console.log('Request payload prepared:', {
         ...orderDataWithCredentials,
         APIKey: this.apiKey ? 'Present' : 'Missing',
         MerchantID: this.merchantId ? 'Present' : 'Missing'
       });
+      console.log('PSOnline API URL:', this.apiUrl);
 
+      console.log('Sending request to PSOnline API...');
       const response = await axios.post(this.apiUrl, orderDataWithCredentials);
-      console.log('PSOnline API Response:', response.data);
+      console.log('PSOnline API Response received:');
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      console.log('Response data:', response.data);
       console.log('====================================\n');
 
       return response.data;
     } catch (error) {
       console.error('\n=== PSOnline API Error ===');
+      console.error('Error type:', error.constructor.name);
       console.error('Error message:', error.message);
+      console.error('Error code:', error.code);
+      console.error('Error stack:', error.stack);
       console.error('Response data:', error.response?.data);
       console.error('Response status:', error.response?.status);
       console.error('Response headers:', error.response?.headers);
+      console.error('Request config:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers
+      });
       console.error('====================================\n');
 
       throw new Error(error.response?.data?.ResponseData || 'Failed to process order with PSOnline');
@@ -61,6 +82,13 @@ class PSOnlineService {
   }
 
   validateOrderData(orderData) {
+    console.log('\n=== PSOnline Service: validateOrderData Started ===');
+    console.log('Validating order data:', {
+      ...orderData,
+      card_num: orderData.card_num ? `${orderData.card_num.substring(0, 4)}****${orderData.card_num.substring(-4)}` : 'Missing',
+      card_cvv: orderData.card_cvv ? '***' : 'Missing'
+    });
+    
     // BIN Reject List - States that are not allowed for PSOnline orders
     const rejectedStates = ['ME', 'IA', 'UT', 'MN', 'VT', 'KS', 'WI', 'MO'];
 
@@ -163,53 +191,85 @@ class PSOnlineService {
       'ProductCount'
     ];
 
+    console.log('Checking required fields...');
     const missingFields = requiredFields.filter(field => !orderData[field]);
     if (missingFields.length > 0) {
+      console.error('Missing required fields:', missingFields);
       throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
     }
+    console.log('All required fields present');
 
     // Validate BIN reject list - check if state is in rejected states
+    console.log('Checking state validation...');
+    console.log('Billing state:', orderData.BillingState);
     if (rejectedStates.includes(orderData.BillingState.toUpperCase())) {
+      console.error('State rejected:', orderData.BillingState);
       throw new Error(`Orders from ${orderData.BillingState} are not currently accepted. Please contact support for assistance.`);
     }
+    console.log('State validation passed');
 
     // Validate BIN reject list - check if card number starts with rejected BIN
+    console.log('Checking BIN validation...');
     const cardNumber = orderData.card_num.replace(/\s/g, '');
     const cardBin = parseInt(cardNumber.substring(0, 6));
+    console.log('Card BIN:', cardBin);
     if (rejectedBins.includes(cardBin)) {
+      console.error('BIN rejected:', cardBin);
       throw new Error(`This card type is not currently accepted. Please use a different payment method.`);
     }
+    console.log('BIN validation passed');
 
     // Validate card number format (15-16 digits)
+    console.log('Validating card number format...');
     if (!/^\d{15,16}$/.test(orderData.card_num.replace(/\s/g, ''))) {
+      console.error('Invalid card number format');
       throw new Error('Invalid card number format (must be 15 or 16 digits)');
     }
+    console.log('Card number format valid');
 
     // Validate CVV format (3-4 digits)
+    console.log('Validating CVV format...');
     if (!/^\d{3,4}$/.test(orderData.card_cvv)) {
+      console.error('Invalid CVV format');
       throw new Error('Invalid CVV format (must be 3 or 4 digits)');
     }
+    console.log('CVV format valid');
 
     // Validate phone number format (10 digits)
+    console.log('Validating phone number format...');
     if (!/^\d{10}$/.test(orderData.BillingHomePhone.replace(/\D/g, ''))) {
+      console.error('Invalid phone number format');
       throw new Error('Invalid phone number format (must be 10 digits)');
     }
+    console.log('Phone number format valid');
 
     // Validate email format
+    console.log('Validating email format...');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderData.Email)) {
+      console.error('Invalid email format');
       throw new Error('Invalid email format');
     }
+    console.log('Email format valid');
 
     // Validate date formats
-    if (orderData.DOB && !/^\d{2}\/\d{2}\/\d{4}$/.test(orderData.DOB)) {
-      throw new Error('Invalid date format (must be MM/DD/YYYY)');
+    if (orderData.DOB) {
+      console.log('Validating date format...');
+      if (!/^\d{2}\/\d{2}\/\d{4}$/.test(orderData.DOB)) {
+        console.error('Invalid date format');
+        throw new Error('Invalid date format (must be MM/DD/YYYY)');
+      }
+      console.log('Date format valid');
     }
 
     // Validate amount is a positive number
+    console.log('Validating amount...');
     if (isNaN(orderData.amount) || orderData.amount <= 0) {
+      console.error('Invalid amount');
       throw new Error('Amount must be a positive number');
     }
+    console.log('Amount valid:', orderData.amount);
 
+    console.log('=== PSOnline Service: validateOrderData Completed Successfully ===\n');
     return true;
   }
 }

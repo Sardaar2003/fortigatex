@@ -181,6 +181,10 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
+    
+    console.log('=== PSOnline Order Form Submission Started ===');
+    console.log('Form data before processing:', formData);
+    
     try {
       // Format dates to MM/DD/YYYY
       const formatDate = (date) => {
@@ -191,6 +195,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         return `${month}/${day}/${year}`;
       };
 
+      console.log('Building order data...');
       const orderData = {
         domain: window.location.hostname,
         buildorder: 0, // Changed to 1 to build order in PSOnline
@@ -218,6 +223,12 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         // Gender: formData.gender,
         FormOfPayment: 'card'
       };
+
+      console.log('Order data built:', {
+        ...orderData,
+        card_num: orderData.card_num ? `${orderData.card_num.substring(0, 4)}****${orderData.card_num.substring(-4)}` : 'Missing',
+        card_cvv: orderData.card_cvv ? '***' : 'Missing'
+      });
 
       // Validate required fields
       const requiredFields = {
@@ -272,17 +283,25 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       // Validate BIN reject list - check if card number starts with rejected BIN
       const cardNumber = orderData.card_num.replace(/\s/g, '');
       const cardBin = parseInt(cardNumber.substring(0, 6));
+      console.log('Card BIN check:', { cardBin, isRejected: rejectedBins.includes(cardBin) });
       if (rejectedBins.includes(cardBin)) {
         throw new Error(`This card type is not currently accepted. Please use a different payment method.`);
       }
 
+      console.log('All validations passed, sending request to backend...');
+      console.log('Request URL:', '/api/orders/psonline');
+      console.log('Auth token present:', !!token);
+      
       const response = await axios.post('/api/orders/psonline', orderData, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
+      console.log('Backend response received:', response.data);
+      
       if (response.data.ResponseCode === 200) {
+        console.log('Order processed successfully!');
         setSnackbar({
           open: true,
           message: 'Order processed successfully!',
@@ -312,6 +331,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
           onOrderSuccess();
         }
       } else {
+        console.log('Order processing failed:', response.data);
         setSnackbar({
           open: true,
           message: response.data.ResponseData || 'Failed to process order',
@@ -319,8 +339,15 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         });
       }
     } catch (error) {
-      console.error('Order submission error:', error);
+      console.error('=== PSOnline Order Submission Error ===');
+      console.error('Error message:', error.message);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Error headers:', error.response?.headers);
+      console.error('Full error object:', error);
+      
       if (error.response?.status === 401) {
+        console.log('Authentication error, redirecting to login...');
         logout();
         navigate('/login');
         return;
@@ -331,6 +358,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         severity: 'error'
       });
     } finally {
+      console.log('=== PSOnline Order Form Submission Ended ===');
       setLoading(false);
     }
   };

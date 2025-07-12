@@ -297,28 +297,47 @@ const processSemprisOrder = asyncHandler(async (req, res) => {
 // @route   POST /api/orders/psonline
 // @access  Private
 const processPSOnlineOrder = asyncHandler(async (req, res) => {
+  console.log('\n=== PSOnline Order Controller: Started ===');
+  console.log('Request body:', {
+    ...req.body,
+    card_num: req.body.card_num ? `${req.body.card_num.substring(0, 4)}****${req.body.card_num.substring(-4)}` : 'Missing',
+    card_cvv: req.body.card_cvv ? '***' : 'Missing'
+  });
+  console.log('User ID:', req.user._id);
+  
   try {
+    console.log('Validating order data...');
     // Validate order data
     psonlineService.validateOrderData(req.body);
 
+    console.log('Order data validated successfully');
+    console.log('Processing order with PSOnline...');
     // Process order with PSOnline
     const response = await psonlineService.processOrder(req.body);
+    console.log('PSOnline response received:', response);
 
     // Determine order status based on PSOnline response
     let orderStatus = 'pending';
     let validationStatus = false;
     let statusMessage = '';
 
+    console.log('Determining order status...');
+    console.log('Response code:', response.ResponseCode);
+    console.log('Response data:', response.ResponseData);
+    
     if (response.ResponseCode === 200) {
       orderStatus = 'completed';
       validationStatus = true;
       statusMessage = 'Order processed successfully';
+      console.log('Order status: COMPLETED');
     } else {
       orderStatus = 'cancelled';
       validationStatus = false;
       statusMessage = response.ResponseData || 'Order processing failed';
+      console.log('Order status: CANCELLED -', statusMessage);
     }
 
+    console.log('Creating order in database...');
     // Create order in database
     const order = await Order.create({
       user: req.user._id,
@@ -348,8 +367,11 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
       validationDate: new Date()
     });
 
+    console.log('Order created in database:', order._id);
+    
     // Return appropriate response based on order status
     if (orderStatus === 'cancelled') {
+      console.log('Returning cancelled order response');
       return res.status(400).json({
         success: false,
         message: statusMessage,
@@ -357,12 +379,16 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
       });
     }
 
+    console.log('Returning successful order response');
     res.status(201).json({
       success: true,
       data: order
     });
   } catch (error) {
-    console.error('Error processing PSOnline order:', error);
+    console.error('=== PSOnline Order Controller: Error ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Error type:', error.constructor.name);
     res.status(500).json({
       success: false,
       message: error.message || 'Error processing order'

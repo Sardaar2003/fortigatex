@@ -339,90 +339,28 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         }
       });
 
-      console.log('=== Backend Response Details ===');
+      console.log('=== Backend Response ===');
       console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-      console.log('Response data type:', typeof response.data);
-      console.log('Response data (raw):', response.data);
-      console.log('Response data (stringified):', JSON.stringify(response.data, null, 2));
+      console.log('Response data:', response.data);
       
-      // Check if response is HTML (indicating routing issue)
-      if (typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
-        console.error('❌ ERROR: Received HTML instead of API response - routing issue detected!');
-        console.error('HTML Response:', response.data.substring(0, 500) + '...');
-        throw new Error('Server routing error - received HTML instead of API response. Please check the backend URL configuration.');
-      }
-      
-      // Log PSOnline API response if available
-      if (response.data.psonlineResponse) {
-        console.log('=== PSOnline API Response (from backend) ===');
-        console.log('PSOnline ResponseCode:', response.data.psonlineResponse.ResponseCode);
-        console.log('PSOnline ResponseData:', response.data.psonlineResponse.ResponseData);
-        console.log('PSOnline Full Response:', response.data.psonlineResponse);
-        console.log('==========================================');
-      }
-      
-      // Handle the response regardless of format
-      let responseData = response.data;
-      let responseCode = response.data.ResponseCode;
-      let responseMessage = response.data.ResponseData || response.data.message || 'Unknown response';
-      
-      // If response is a string, try to parse it
-      if (typeof response.data === 'string') {
-        try {
-          const parsed = JSON.parse(response.data);
-          responseData = parsed;
-          responseCode = parsed.ResponseCode;
-          responseMessage = parsed.ResponseData || parsed.message || response.data;
-        } catch (e) {
-          // If it's not JSON, use the string as is
-          responseData = { rawResponse: response.data };
-          responseCode = 'STRING_RESPONSE';
-          responseMessage = response.data;
-        }
-      }
-      
-      console.log('Processed response data:', responseData);
-      console.log('Response code:', responseCode);
-      console.log('Response message:', responseMessage);
-      
-      if (responseCode === 200 || response.data.success) {
-        console.log('Order processed successfully!');
+      // Display the raw PSOnline response
+      if (response.data.rawPSOnlineResponse) {
+        console.log('=== RAW PSOnline API Response ===');
+        console.log('Raw response:', response.data.rawPSOnlineResponse);
+        console.log('Response type:', typeof response.data.rawPSOnlineResponse);
+        console.log('Response as string:', JSON.stringify(response.data.rawPSOnlineResponse, null, 2));
+        console.log('================================');
+        
         setSnackbar({
           open: true,
-          message: 'Order processed successfully!',
-          severity: 'success'
+          message: `PSOnline Response: ${JSON.stringify(response.data.rawPSOnlineResponse, null, 2)}`,
+          severity: 'info'
         });
-        setFormData({
-          product: '',
-          productId: '',
-          amount: '',
-          firstName: '',
-          lastName: '',
-          email: '',
-          phone: '',
-          dob: null,
-          gender: '',
-          streetAddress: '',
-          apt: '',
-          city: '',
-          state: '',
-          zipCode: '',
-          cardNumber: '',
-          expiryMonth: '',
-          expiryYear: '',
-          cvv: ''
-        });
-        setSelectedProduct(null);
-        if (onOrderSuccess) {
-          onOrderSuccess();
-        }
       } else {
-        console.log('Order processing failed:', responseData);
         setSnackbar({
           open: true,
-          message: responseMessage || 'Failed to process order',
-          severity: 'error'
+          message: 'No PSOnline response received',
+          severity: 'warning'
         });
       }
     } catch (error) {
@@ -430,30 +368,21 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       console.error('Error message:', error.message);
       console.error('Error response:', error.response?.data);
       console.error('Error status:', error.response?.status);
-      console.error('Error headers:', error.response?.headers);
       console.error('Full error object:', error);
       
-      // Handle different types of errors
+      // Display the raw error response
       let errorMessage = error.message;
       
-      if (error.response?.status === 401) {
-        console.log('Authentication error, redirecting to login...');
-        logout();
-        navigate('/login');
-        return;
-      } else if (error.response?.status === 404) {
-        errorMessage = 'API endpoint not found. Please check the backend URL configuration.';
-      } else if (error.response?.status >= 500) {
-        errorMessage = 'Server error. Please try again later.';
-      } else if (error.response?.data) {
-        // Try to extract meaningful error message from response
-        if (typeof error.response.data === 'string') {
-          errorMessage = error.response.data;
-        } else if (error.response.data.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response.data.ResponseData) {
-          errorMessage = error.response.data.ResponseData;
-        }
+      if (error.response?.data?.rawPSOnlineResponse) {
+        console.log('=== RAW PSOnline Error Response ===');
+        console.log('Raw error response:', error.response.data.rawPSOnlineResponse);
+        console.log('Error response type:', typeof error.response.data.rawPSOnlineResponse);
+        console.log('Error response as string:', JSON.stringify(error.response.data.rawPSOnlineResponse, null, 2));
+        console.log('==================================');
+        
+        errorMessage = `PSOnline Error: ${JSON.stringify(error.response.data.rawPSOnlineResponse, null, 2)}`;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
       }
       
       setSnackbar({

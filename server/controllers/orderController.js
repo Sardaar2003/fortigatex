@@ -314,129 +314,19 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
     console.log('Processing order with PSOnline...');
     // Process order with PSOnline
     const response = await psonlineService.processOrder(req.body);
-    console.log('=== Controller: PSOnline Response Analysis ===');
-    console.log('PSOnline response received:', response);
+    
+    console.log('\n=== RAW PSOnline API Response ===');
     console.log('Response type:', typeof response);
-    console.log('Response keys:', Object.keys(response || {}));
-    console.log('ResponseCode:', response?.ResponseCode);
-    console.log('ResponseData:', response?.ResponseData);
-    console.log('Full response object:', JSON.stringify(response, null, 2));
-    console.log('==============================================');
+    console.log('Raw response:', response);
+    console.log('Response as string:', JSON.stringify(response, null, 2));
+    console.log('================================\n');
 
-    // Handle response regardless of format
-    let processedResponse = response;
-    let responseCode = response?.ResponseCode;
-    let responseData = response?.ResponseData;
-    
-    // If response is a string, try to parse it
-    if (typeof response === 'string') {
-      try {
-        const parsed = JSON.parse(response);
-        processedResponse = parsed;
-        responseCode = parsed.ResponseCode;
-        responseData = parsed.ResponseData;
-        console.log('Successfully parsed string response:', parsed);
-      } catch (e) {
-        console.log('Could not parse as JSON, using as-is');
-        processedResponse = { rawResponse: response };
-        responseCode = 'STRING_RESPONSE';
-        responseData = response;
-      }
-    }
-
-    // Determine order status based on PSOnline response
-    let orderStatus = 'pending';
-    let validationStatus = false;
-    let statusMessage = '';
-
-    console.log('Determining order status...');
-    console.log('Response code:', responseCode);
-    console.log('Response data:', responseData);
-    console.log('Auth result:', processedResponse.AuthResult);
-    console.log('Order result:', processedResponse.OrderResult);
-    console.log('Fulfillment result:', processedResponse.FulfillmentResult);
-    console.log('Fulfillment code:', processedResponse.FulfillmentCode);
-    console.log('Warnings:', processedResponse.Warnings);
-    
-    if (responseCode === 200) {
-      // Check individual results for more detailed status
-      if (processedResponse.AuthResult === 1 && processedResponse.OrderResult === 1) {
-        orderStatus = 'completed';
-        validationStatus = true;
-        statusMessage = 'Order processed successfully';
-        if (processedResponse.FulfillmentResult === 1) {
-          statusMessage += processedResponse.FulfillmentCode ? ` - Fulfillment Code: ${processedResponse.FulfillmentCode}` : ' - Order fulfilled';
-        }
-        console.log('Order status: COMPLETED');
-      } else {
-        orderStatus = 'cancelled';
-        validationStatus = false;
-        statusMessage = 'Order processing failed';
-        if (processedResponse.AuthResult !== 1) statusMessage += ' - Payment authorization failed';
-        if (processedResponse.OrderResult !== 1) statusMessage += ' - Order creation failed';
-        console.log('Order status: CANCELLED -', statusMessage);
-      }
-    } else {
-      orderStatus = 'cancelled';
-      validationStatus = false;
-      statusMessage = responseData || 'Order processing failed';
-      console.log('Order status: CANCELLED -', statusMessage);
-    }
-
-    console.log('Creating order in database...');
-    // Create order in database
-    const order = await Order.create({
-      user: req.user._id,
-      project: 'PSOnline Project',
-      orderDate: new Date(),
-      firstName: req.body.CustomerFirstName,
-      lastName: req.body.CustomerLastName,
-      address1: req.body.BillingStreetAddress,
-      address2: req.body.BillingApt,
-      city: req.body.BillingCity,
-      state: req.body.BillingState,
-      zipCode: req.body.BillingZipCode,
-      phoneNumber: req.body.BillingHomePhone,
-      email: req.body.Email,
-      creditCardNumber: req.body.card_num,
-      creditCardLast4: req.body.card_num.slice(-4),
-      creditCardExpiration: `${req.body.card_expm}/${req.body.card_expy}`,
-      creditCardCVV: req.body.card_cvv,
-      amount: req.body.amount,
-      productId: req.body.productid_1,
-      productSku: req.body.productsku_1 || `PSO-${req.body.productid_1}`,
-      productName: req.body.productid_1 === '43' ? 'ID Theft' : req.body.productid_1 === '46' ? 'Telemed' : 'PSOnline Product',
-      quantity: req.body.productqty_1,
-      status: orderStatus,
-      validationStatus: validationStatus,
-      validationMessage: statusMessage,
-      validationResponse: {
-        ...processedResponse,
-        fulfillmentCode: processedResponse.FulfillmentCode,
-        warnings: processedResponse.Warnings
-      },
-      validationDate: new Date()
-    });
-
-    console.log('Order created in database:', order._id);
-    
-    // Return appropriate response based on order status
-    if (orderStatus === 'cancelled') {
-      console.log('Returning cancelled order response');
-      return res.status(400).json({
-        success: false,
-        message: statusMessage,
-        data: order,
-        psonlineResponse: processedResponse // Include processed PSOnline response for debugging
-      });
-    }
-
-    console.log('Returning successful order response');
-    res.status(201).json({
+    // Simply return the raw PSOnline response
+    res.status(200).json({
       success: true,
-      data: order,
-      psonlineResponse: processedResponse // Include processed PSOnline response for debugging
+      rawPSOnlineResponse: response
     });
+    
   } catch (error) {
     console.error('=== PSOnline Order Controller: Error ===');
     console.error('Error message:', error.message);
@@ -444,7 +334,8 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
     console.error('Error type:', error.constructor.name);
     res.status(500).json({
       success: false,
-      message: error.message || 'Error processing order'
+      error: error.message,
+      rawPSOnlineResponse: error.response?.data || error.message
     });
   }
 });

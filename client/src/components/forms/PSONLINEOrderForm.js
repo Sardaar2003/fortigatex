@@ -41,7 +41,8 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
     state: '',
     zipCode: '',
     cardNumber: '',
-    expiryDate: null,
+    expiryMonth: '',
+    expiryYear: '',
     cvv: ''
   });
   const [snackbar, setSnackbar] = useState({
@@ -178,6 +179,25 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
+  // Generate month and year options
+  const months = [
+    { value: '01', label: 'January' },
+    { value: '02', label: 'February' },
+    { value: '03', label: 'March' },
+    { value: '04', label: 'April' },
+    { value: '05', label: 'May' },
+    { value: '06', label: 'June' },
+    { value: '07', label: 'July' },
+    { value: '08', label: 'August' },
+    { value: '09', label: 'September' },
+    { value: '10', label: 'October' },
+    { value: '11', label: 'November' },
+    { value: '12', label: 'December' }
+  ];
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 20 }, (_, i) => currentYear + i);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
@@ -201,8 +221,8 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         buildorder: 1, // Set to 1 to build order in PSOnline
         capture_delay: 0,
         card_num: formData.cardNumber.replace(/\s/g, ''),
-        card_expm: formData.expiryDate ? String(formData.expiryDate.getMonth() + 1).padStart(2, '0') : '',
-        card_expy: formData.expiryDate ? formData.expiryDate.getFullYear() : '',
+        card_expm: formData.expiryMonth,
+        card_expy: formData.expiryYear,
         card_cvv: formData.cvv,
         CustomerFirstName: formData.firstName,
         CustomerLastName: formData.lastName,
@@ -285,6 +305,11 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         throw new Error('Gender must be M or F');
       }
 
+      // Validate expiry month and year
+      if (!orderData.card_expm || !orderData.card_expy) {
+        throw new Error('Card expiration month and year are required');
+      }
+
       // Validate BIN reject list - check if state is in rejected states
       if (rejectedStates.includes(orderData.BillingState.toUpperCase())) {
         throw new Error(`Orders from ${orderData.BillingState} are not currently accepted. Please contact support for assistance.`);
@@ -324,7 +349,8 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       // Check if response is HTML (indicating routing issue)
       if (typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
         console.error('❌ ERROR: Received HTML instead of API response - routing issue detected!');
-        throw new Error('Server routing error - received HTML instead of API response');
+        console.error('HTML Response:', response.data.substring(0, 500) + '...');
+        throw new Error('Server routing error - received HTML instead of API response. Please check the backend URL configuration.');
       }
       
       // Log PSOnline API response if available
@@ -336,7 +362,31 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         console.log('==========================================');
       }
       
-      if (response.data.ResponseCode === 200) {
+      // Handle the response regardless of format
+      let responseData = response.data;
+      let responseCode = response.data.ResponseCode;
+      let responseMessage = response.data.ResponseData || response.data.message || 'Unknown response';
+      
+      // If response is a string, try to parse it
+      if (typeof response.data === 'string') {
+        try {
+          const parsed = JSON.parse(response.data);
+          responseData = parsed;
+          responseCode = parsed.ResponseCode;
+          responseMessage = parsed.ResponseData || parsed.message || response.data;
+        } catch (e) {
+          // If it's not JSON, use the string as is
+          responseData = { rawResponse: response.data };
+          responseCode = 'STRING_RESPONSE';
+          responseMessage = response.data;
+        }
+      }
+      
+      console.log('Processed response data:', responseData);
+      console.log('Response code:', responseCode);
+      console.log('Response message:', responseMessage);
+      
+      if (responseCode === 200 || response.data.success) {
         console.log('Order processed successfully!');
         setSnackbar({
           open: true,
@@ -359,7 +409,8 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
           state: '',
           zipCode: '',
           cardNumber: '',
-          expiryDate: null,
+          expiryMonth: '',
+          expiryYear: '',
           cvv: ''
         });
         setSelectedProduct(null);
@@ -367,10 +418,10 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
           onOrderSuccess();
         }
       } else {
-        console.log('Order processing failed:', response.data);
+        console.log('Order processing failed:', responseData);
         setSnackbar({
           open: true,
-          message: response.data.ResponseData || 'Failed to process order',
+          message: responseMessage || 'Failed to process order',
           severity: 'error'
         });
       }
@@ -382,15 +433,32 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       console.error('Error headers:', error.response?.headers);
       console.error('Full error object:', error);
       
+      // Handle different types of errors
+      let errorMessage = error.message;
+      
       if (error.response?.status === 401) {
         console.log('Authentication error, redirecting to login...');
         logout();
         navigate('/login');
         return;
+      } else if (error.response?.status === 404) {
+        errorMessage = 'API endpoint not found. Please check the backend URL configuration.';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (error.response?.data) {
+        // Try to extract meaningful error message from response
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.ResponseData) {
+          errorMessage = error.response.data.ResponseData;
+        }
       }
+      
       setSnackbar({
         open: true,
-        message: error.message || 'An error occurred while processing your order',
+        message: errorMessage || 'An error occurred while processing your order',
         severity: 'error'
       });
     } finally {
@@ -599,12 +667,38 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
             />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <DatePicker
-              label="Expiry Date"
-              value={formData.expiryDate}
-              onChange={handleDateChange('expiryDate')}
-              renderInput={(params) => <TextField {...params} fullWidth />}
-            />
+            <FormControl fullWidth required>
+              <InputLabel>Expiry Month</InputLabel>
+              <Select
+                value={formData.expiryMonth}
+                onChange={handleChange}
+                name="expiryMonth"
+                label="Expiry Month"
+              >
+                {months.map(month => (
+                  <MenuItem key={month.value} value={month.value}>
+                    {month.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth required>
+              <InputLabel>Expiry Year</InputLabel>
+              <Select
+                value={formData.expiryYear}
+                onChange={handleChange}
+                name="expiryYear"
+                label="Expiry Year"
+              >
+                {years.map(year => (
+                  <MenuItem key={year} value={year}>
+                    {year}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField

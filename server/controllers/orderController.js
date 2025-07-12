@@ -323,42 +323,63 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
     console.log('Full response object:', JSON.stringify(response, null, 2));
     console.log('==============================================');
 
+    // Handle response regardless of format
+    let processedResponse = response;
+    let responseCode = response?.ResponseCode;
+    let responseData = response?.ResponseData;
+    
+    // If response is a string, try to parse it
+    if (typeof response === 'string') {
+      try {
+        const parsed = JSON.parse(response);
+        processedResponse = parsed;
+        responseCode = parsed.ResponseCode;
+        responseData = parsed.ResponseData;
+        console.log('Successfully parsed string response:', parsed);
+      } catch (e) {
+        console.log('Could not parse as JSON, using as-is');
+        processedResponse = { rawResponse: response };
+        responseCode = 'STRING_RESPONSE';
+        responseData = response;
+      }
+    }
+
     // Determine order status based on PSOnline response
     let orderStatus = 'pending';
     let validationStatus = false;
     let statusMessage = '';
 
     console.log('Determining order status...');
-    console.log('Response code:', response.ResponseCode);
-    console.log('Response data:', response.ResponseData);
-    console.log('Auth result:', response.AuthResult);
-    console.log('Order result:', response.OrderResult);
-    console.log('Fulfillment result:', response.FulfillmentResult);
-    console.log('Fulfillment code:', response.FulfillmentCode);
-    console.log('Warnings:', response.Warnings);
+    console.log('Response code:', responseCode);
+    console.log('Response data:', responseData);
+    console.log('Auth result:', processedResponse.AuthResult);
+    console.log('Order result:', processedResponse.OrderResult);
+    console.log('Fulfillment result:', processedResponse.FulfillmentResult);
+    console.log('Fulfillment code:', processedResponse.FulfillmentCode);
+    console.log('Warnings:', processedResponse.Warnings);
     
-    if (response.ResponseCode === 200) {
+    if (responseCode === 200) {
       // Check individual results for more detailed status
-      if (response.AuthResult === 1 && response.OrderResult === 1) {
+      if (processedResponse.AuthResult === 1 && processedResponse.OrderResult === 1) {
         orderStatus = 'completed';
         validationStatus = true;
         statusMessage = 'Order processed successfully';
-        if (response.FulfillmentResult === 1) {
-          statusMessage += response.FulfillmentCode ? ` - Fulfillment Code: ${response.FulfillmentCode}` : ' - Order fulfilled';
+        if (processedResponse.FulfillmentResult === 1) {
+          statusMessage += processedResponse.FulfillmentCode ? ` - Fulfillment Code: ${processedResponse.FulfillmentCode}` : ' - Order fulfilled';
         }
         console.log('Order status: COMPLETED');
       } else {
         orderStatus = 'cancelled';
         validationStatus = false;
         statusMessage = 'Order processing failed';
-        if (response.AuthResult !== 1) statusMessage += ' - Payment authorization failed';
-        if (response.OrderResult !== 1) statusMessage += ' - Order creation failed';
+        if (processedResponse.AuthResult !== 1) statusMessage += ' - Payment authorization failed';
+        if (processedResponse.OrderResult !== 1) statusMessage += ' - Order creation failed';
         console.log('Order status: CANCELLED -', statusMessage);
       }
     } else {
       orderStatus = 'cancelled';
       validationStatus = false;
-      statusMessage = response.ResponseData || 'Order processing failed';
+      statusMessage = responseData || 'Order processing failed';
       console.log('Order status: CANCELLED -', statusMessage);
     }
 
@@ -390,9 +411,9 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
       validationStatus: validationStatus,
       validationMessage: statusMessage,
       validationResponse: {
-        ...response,
-        fulfillmentCode: response.FulfillmentCode,
-        warnings: response.Warnings
+        ...processedResponse,
+        fulfillmentCode: processedResponse.FulfillmentCode,
+        warnings: processedResponse.Warnings
       },
       validationDate: new Date()
     });
@@ -406,7 +427,7 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
         success: false,
         message: statusMessage,
         data: order,
-        psonlineResponse: response // Include PSOnline response for debugging
+        psonlineResponse: processedResponse // Include processed PSOnline response for debugging
       });
     }
 
@@ -414,7 +435,7 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
     res.status(201).json({
       success: true,
       data: order,
-      psonlineResponse: response // Include PSOnline response for debugging
+      psonlineResponse: processedResponse // Include processed PSOnline response for debugging
     });
   } catch (error) {
     console.error('=== PSOnline Order Controller: Error ===');

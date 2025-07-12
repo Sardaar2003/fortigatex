@@ -55,6 +55,7 @@ const OrderManagement = () => {
             <MenuItem value="all">All Projects</MenuItem>
             <MenuItem value="radius">Radius Project</MenuItem>
             <MenuItem value="sempris">Sempris Project</MenuItem>
+            <MenuItem value="psonline">PSOnline Project</MenuItem>
           </Select>
         </FormControl>
       </Box>

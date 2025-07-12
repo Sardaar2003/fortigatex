@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Box,
   Typography,
@@ -15,26 +15,121 @@ import {
   TableRow,
   TableCell,
   Chip,
-  Button
+  Button,
+  CircularProgress,
+  Alert
 } from '@mui/material';
+import axios from 'axios';
+import { AuthContext } from '../context/AuthContext';
 
 const OrderManagement = () => {
+  const { token } = useContext(AuthContext);
   const [searchTerm, setSearchTerm] = useState('');
   const [projectType, setProjectType] = useState('all');
+  const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch orders from API
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('/api/orders', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        console.log('Orders fetched:', response.data);
+        setOrders(response.data.data || []);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+        setError('Failed to fetch orders');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) {
+      fetchOrders();
+    }
+  }, [token]);
+
+  // Filter orders based on search term and project type
+  useEffect(() => {
+    let filtered = orders;
+
+    // Filter by project type
+    if (projectType !== 'all') {
+      filtered = filtered.filter(order => 
+        order.project && order.project.toLowerCase().includes(projectType.toLowerCase())
+      );
+    }
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(order =>
+        order.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.phoneNumber?.includes(searchTerm) ||
+        order._id?.includes(searchTerm)
+      );
+    }
+
+    setFilteredOrders(filtered);
+  }, [orders, searchTerm, projectType]);
 
   const handleViewOrder = (order) => {
+    console.log('View order details:', order);
     // Implement the view order logic
+    alert(`Order Details:\nID: ${order._id}\nProject: ${order.project}\nStatus: ${order.status}\nCustomer: ${order.firstName} ${order.lastName}`);
   };
 
-  const handleDeleteOrder = (id) => {
-    // Implement the delete order logic
+  const handleDeleteOrder = async (id) => {
+    if (window.confirm('Are you sure you want to delete this order?')) {
+      try {
+        await axios.delete(`/api/orders/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        // Refresh orders after deletion
+        const response = await axios.get('/api/orders', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        setOrders(response.data.data || []);
+      } catch (err) {
+        console.error('Error deleting order:', err);
+        alert('Failed to delete order');
+      }
+    }
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ width: '100%', p: 3 }}>
       <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-        Order Management
+        Order Management ({filteredOrders.length} orders)
       </Typography>
 
       <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
@@ -76,7 +171,16 @@ const OrderManagement = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredOrders.map((order) => (
+              {filteredOrders.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center">
+                    <Typography variant="body2" color="text.secondary">
+                      No orders found
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredOrders.map((order) => (
                 <TableRow key={order._id}>
                   <TableCell>{order._id}</TableCell>
                   <TableCell>{order.project}</TableCell>
@@ -115,7 +219,8 @@ const OrderManagement = () => {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+              ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>

@@ -53,11 +53,21 @@ class PSOnlineService {
       console.log('PSOnline API URL:', this.apiUrl);
 
       console.log('Sending request to PSOnline API...');
+      console.log('Request URL:', this.apiUrl);
+      console.log('Request method: POST');
+      console.log('Request headers:', {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'PSOnline-Client'
+      });
+      
       const response = await axios.post(this.apiUrl, orderDataWithCredentials);
-      console.log('PSOnline API Response received:');
+      console.log('=== PSOnline API Response Details ===');
       console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-      console.log('Response data:', response.data);
+      console.log('Response status text:', response.statusText);
+      console.log('Response headers:', JSON.stringify(response.headers, null, 2));
+      console.log('Response data (raw):', JSON.stringify(response.data, null, 2));
+      console.log('Response data type:', typeof response.data);
+      console.log('Response data keys:', Object.keys(response.data || {}));
       console.log('====================================\n');
 
       return response.data;

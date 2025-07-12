@@ -198,7 +198,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       console.log('Building order data...');
       const orderData = {
         domain: window.location.hostname,
-        buildorder: 0, // Changed to 1 to build order in PSOnline
+        buildorder: 1, // Set to 1 to build order in PSOnline
         capture_delay: 0,
         card_num: formData.cardNumber.replace(/\s/g, ''),
         card_expm: formData.expiryDate ? String(formData.expiryDate.getMonth() + 1).padStart(2, '0') : '',
@@ -216,11 +216,11 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         amount: formData.amount,
         ProductCount: 1,
         productid_1: formData.productId,
-        // productsku_1: `PSO-${formData.productId}`,
+        productsku_1: `PSO-${formData.productId}`,
         productqty_1: 1,
-        // producttype_1: 'simple',
-        // DOB: formData.dob ? formatDate(formData.dob) : '',
-        // Gender: formData.gender,
+        producttype_1: 'simple',
+        DOB: formData.dob ? formatDate(formData.dob) : '',
+        Gender: formData.gender,
         FormOfPayment: 'card'
       };
 
@@ -273,6 +273,16 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       // Validate email format
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderData.Email)) {
         throw new Error('Invalid email format');
+      }
+
+      // Validate DOB format if provided (MM/DD/YYYY)
+      if (orderData.DOB && !/^\d{2}\/\d{2}\/\d{4}$/.test(orderData.DOB)) {
+        throw new Error('Date of birth must be in MM/DD/YYYY format');
+      }
+
+      // Validate Gender if provided
+      if (orderData.Gender && !['M', 'F'].includes(orderData.Gender)) {
+        throw new Error('Gender must be M or F');
       }
 
       // Validate BIN reject list - check if state is in rejected states

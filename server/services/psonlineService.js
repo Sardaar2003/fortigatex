@@ -2,12 +2,13 @@ const axios = require('axios');
 
 class PSOnlineService {
   constructor() {
-    this.apiUrl = 'https://app.periodicalservices.com/api/woocommerce/v1.4/process.asp';
+    this.apiUrl = 'https://app.periodicalservices.com/api/woocommerce/v1.9/process.asp';
     this.apiKey = process.env.PSONLINE_API_KEY;
     this.merchantId = process.env.PSONLINE_MERCHANT_ID;
 
     // Enhanced debug logging
     console.log('\n=== PSOnlineService Initialization ===');
+    console.log('API URL:', this.apiUrl);
     console.log('API Key:', this.apiKey ? 'Present' : 'Missing');
     console.log('Merchant ID:', this.merchantId ? 'Present' : 'Missing');
     console.log('Environment variables:', {
@@ -42,13 +43,15 @@ class PSOnlineService {
       const orderDataWithCredentials = {
         ...orderData,
         APIKey: this.apiKey,
-        MerchantID: this.merchantId
+        MerchantID: this.merchantId,
+        bincheck: 1 // Enable BIN checking against internal reject list
       };
 
       console.log('Request payload prepared:', {
         ...orderDataWithCredentials,
         APIKey: this.apiKey ? 'Present' : 'Missing',
-        MerchantID: this.merchantId ? 'Present' : 'Missing'
+        MerchantID: this.merchantId ? 'Present' : 'Missing',
+        bincheck: orderDataWithCredentials.bincheck
       });
       console.log('PSOnline API URL:', this.apiUrl);
 
@@ -280,12 +283,22 @@ class PSOnlineService {
 
     // Validate date formats
     if (orderData.DOB) {
-      console.log('Validating date format...');
+      console.log('Validating DOB format...');
       if (!/^\d{2}\/\d{2}\/\d{4}$/.test(orderData.DOB)) {
-        console.error('Invalid date format');
+        console.error('Invalid DOB format');
         throw new Error('Invalid date format (must be MM/DD/YYYY)');
       }
-      console.log('Date format valid');
+      console.log('DOB format valid');
+    }
+
+    // Validate Gender if provided
+    if (orderData.Gender) {
+      console.log('Validating Gender...');
+      if (!['M', 'F'].includes(orderData.Gender)) {
+        console.error('Invalid Gender value');
+        throw new Error('Gender must be M or F');
+      }
+      console.log('Gender valid');
     }
 
     // Validate amount is a positive number

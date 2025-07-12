@@ -331,12 +331,30 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
     console.log('Determining order status...');
     console.log('Response code:', response.ResponseCode);
     console.log('Response data:', response.ResponseData);
+    console.log('Auth result:', response.AuthResult);
+    console.log('Order result:', response.OrderResult);
+    console.log('Fulfillment result:', response.FulfillmentResult);
+    console.log('Fulfillment code:', response.FulfillmentCode);
+    console.log('Warnings:', response.Warnings);
     
     if (response.ResponseCode === 200) {
-      orderStatus = 'completed';
-      validationStatus = true;
-      statusMessage = 'Order processed successfully';
-      console.log('Order status: COMPLETED');
+      // Check individual results for more detailed status
+      if (response.AuthResult === 1 && response.OrderResult === 1) {
+        orderStatus = 'completed';
+        validationStatus = true;
+        statusMessage = 'Order processed successfully';
+        if (response.FulfillmentResult === 1) {
+          statusMessage += response.FulfillmentCode ? ` - Fulfillment Code: ${response.FulfillmentCode}` : ' - Order fulfilled';
+        }
+        console.log('Order status: COMPLETED');
+      } else {
+        orderStatus = 'cancelled';
+        validationStatus = false;
+        statusMessage = 'Order processing failed';
+        if (response.AuthResult !== 1) statusMessage += ' - Payment authorization failed';
+        if (response.OrderResult !== 1) statusMessage += ' - Order creation failed';
+        console.log('Order status: CANCELLED -', statusMessage);
+      }
     } else {
       orderStatus = 'cancelled';
       validationStatus = false;
@@ -371,7 +389,11 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
       status: orderStatus,
       validationStatus: validationStatus,
       validationMessage: statusMessage,
-      validationResponse: response,
+      validationResponse: {
+        ...response,
+        fulfillmentCode: response.FulfillmentCode,
+        warnings: response.Warnings
+      },
       validationDate: new Date()
     });
 

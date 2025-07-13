@@ -9,11 +9,11 @@ class PSOnlineService {
     // Enhanced debug logging
     console.log('\n=== PSOnlineService Initialization ===');
     console.log('API URL:', this.apiUrl);
-    console.log('API Key:', this.apiKey ? 'Present' : 'Missing');
-    console.log('Merchant ID:', this.merchantId ? 'Present' : 'Missing');
+    console.log('API Key:', this.apiKey);
+    console.log('Merchant ID:', this.merchantId);
     console.log('Environment variables:', {
-      PSONLINE_API_KEY: process.env.PSONLINE_API_KEY ? 'Present' : 'Missing',
-      PSONLINE_MERCHANT_ID: process.env.PSONLINE_MERCHANT_ID ? 'Present' : 'Missing'
+      PSONLINE_API_KEY: process.env.PSONLINE_API_KEY,
+      PSONLINE_MERCHANT_ID: process.env.PSONLINE_MERCHANT_ID
     });
     console.log('====================================\n');
   }
@@ -64,33 +64,33 @@ class PSOnlineService {
       });
       
       const response = await axios.post(this.apiUrl, orderDataWithCredentials);
-      console.log('=== PSOnline API Response Details ===');
-      console.log('Response status:', response.status);
-      console.log('Response status text:', response.statusText);
-      console.log('Response headers:', JSON.stringify(response.headers, null, 2));
-      console.log('Response data (raw):', JSON.stringify(response.data, null, 2));
-      console.log('Response data type:', typeof response.data);
-      console.log('Response data keys:', Object.keys(response.data || {}));
-      console.log('Full response object:', response);
+      // console.log('=== PSOnline API Response Details ===');
+      // console.log('Response status:', response.status);
+      // console.log('Response status text:', response.statusText);
+      // console.log('Response headers:', JSON.stringify(response.headers, null, 2));
+      // console.log('Response data (raw):', JSON.stringify(response.data, null, 2));
+      // console.log('Response data type:', typeof response.data);
+      // console.log('Response data keys:', Object.keys(response.data || {}));
+      // console.log('Full response object:', response);
       
-      // Check if response.data is a string that needs parsing
-      let processedResponse = response.data;
-      if (typeof response.data === 'string') {
-        console.log('Response is a string, attempting to parse...');
-        try {
-          processedResponse = JSON.parse(response.data);
-          console.log('Successfully parsed string response:', processedResponse);
-        } catch (parseError) {
-          console.log('Could not parse as JSON, using as-is');
-          processedResponse = response.data;
-        }
-      }
+      // // Check if response.data is a string that needs parsing
+      // let processedResponse = response.data;
+      // if (typeof response.data === 'string') {
+      //   console.log('Response is a string, attempting to parse...');
+      //   try {
+      //     processedResponse = JSON.parse(response.data);
+      //     console.log('Successfully parsed string response:', processedResponse);
+      //   } catch (parseError) {
+      //     console.log('Could not parse as JSON, using as-is');
+      //     processedResponse = response.data;
+      //   }
+      // }
       
-      console.log('Final processed response:', processedResponse);
-      console.log('====================================\n');
+      // console.log('Final processed response:', processedResponse);
+      // console.log('====================================\n');
 
       // Return the complete response data
-      return processedResponse;
+      return response;
     } catch (error) {
       console.error('\n=== PSOnline API Error ===');
       console.error('Error type:', error.constructor.name);

@@ -16,7 +16,6 @@ import {
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -244,11 +243,11 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         FormOfPayment: 'card'
       };
 
-      console.log('Order data built:', {
-        ...orderData,
-        card_num: orderData.card_num ? `${orderData.card_num.substring(0, 4)}****${orderData.card_num.substring(-4)}` : 'Missing',
-        card_cvv: orderData.card_cvv ? '***' : 'Missing'
-      });
+      // console.log('Order data built:', {
+      //   ...orderData,
+      //   card_num: orderData.card_num ? `${orderData.card_num.substring(0, 4)}****${orderData.card_num.substring(-4)}` : 'Missing',
+      //   card_cvv: orderData.card_cvv ? '***' : 'Missing'
+      // });
 
       // Validate required fields
       const requiredFields = {
@@ -325,7 +324,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
 
       console.log('All validations passed, sending request to backend...');
       console.log('Request URL:', '/api/orders/psonline');
-      console.log('Full URL:', axios.defaults.baseURL + '/api/orders/psonline');
+      console.log('Full URL:', `${process.env.REACT_APP_API_URL}/api/orders/psonline`);
       console.log('Auth token present:', !!token);
       console.log('Request payload (masked):', {
         ...orderData,
@@ -333,27 +332,31 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         card_cvv: '***'
       });
       
-      const response = await axios.post('/api/orders/psonline', orderData, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/orders/psonline`, {
+        method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        }
+        },
+        body: JSON.stringify(orderData)
       });
 
       console.log('=== Backend Response ===');
       console.log('Response status:', response.status);
-      console.log('Response data:', response.data);
+      const data = await response.json();
+      console.log('Response data:', data);
       
       // Display the raw PSOnline response
-      if (response.data.rawPSOnlineResponse) {
+      if (data.rawPSOnlineResponse) {
         console.log('=== RAW PSOnline API Response ===');
-        console.log('Raw response:', response.data.rawPSOnlineResponse);
-        console.log('Response type:', typeof response.data.rawPSOnlineResponse);
-        console.log('Response as string:', JSON.stringify(response.data.rawPSOnlineResponse, null, 2));
+        console.log('Raw response:', data.rawPSOnlineResponse);
+        console.log('Response type:', typeof data.rawPSOnlineResponse);
+        console.log('Response as string:', JSON.stringify(data.rawPSOnlineResponse, null, 2));
         console.log('================================');
         
         setSnackbar({
           open: true,
-          message: `PSOnline Response: ${JSON.stringify(response.data.rawPSOnlineResponse, null, 2)}`,
+          message: `PSOnline Response: ${JSON.stringify(data.rawPSOnlineResponse, null, 2)}`,
           severity: 'info'
         });
       } else {
@@ -366,23 +369,14 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
     } catch (error) {
       console.error('=== PSOnline Order Submission Error ===');
       console.error('Error message:', error.message);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
       console.error('Full error object:', error);
       
       // Display the raw error response
       let errorMessage = error.message;
       
-      if (error.response?.data?.rawPSOnlineResponse) {
-        console.log('=== RAW PSOnline Error Response ===');
-        console.log('Raw error response:', error.response.data.rawPSOnlineResponse);
-        console.log('Error response type:', typeof error.response.data.rawPSOnlineResponse);
-        console.log('Error response as string:', JSON.stringify(error.response.data.rawPSOnlineResponse, null, 2));
-        console.log('==================================');
-        
-        errorMessage = `PSOnline Error: ${JSON.stringify(error.response.data.rawPSOnlineResponse, null, 2)}`;
-      } else if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
+      // For fetch errors, we need to handle them differently than axios
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        errorMessage = 'Network error: Unable to connect to the server';
       }
       
       setSnackbar({

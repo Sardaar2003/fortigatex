@@ -215,8 +215,10 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       };
 
       console.log('Building order data...');
+      console.log('Current domain:', window.location.hostname);
+      console.log('Selected product ID:', formData.productId);
       const orderData = {
-        domain: window.location.hostname,
+        domain: 'yourdomain.com', // Replace with your configured PSOnline domain
         buildorder: 1, // Set to 1 to build order in PSOnline
         capture_delay: 0,
         card_num: formData.cardNumber.replace(/\s/g, ''),

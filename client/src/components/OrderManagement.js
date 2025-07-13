@@ -63,9 +63,19 @@ const OrderManagement = () => {
 
     // Filter by project type
     if (projectType !== 'all') {
-      filtered = filtered.filter(order => 
-        order.project && order.project.toLowerCase().includes(projectType.toLowerCase())
-      );
+      filtered = filtered.filter(order => {
+        if (!order.project) return false;
+        
+        // Map filter values to actual project names
+        const projectMapping = {
+          'radius': 'Radius Project',
+          'sempris': 'Sempris Project', 
+          'psonline': 'PSOnline Project'
+        };
+        
+        const expectedProject = projectMapping[projectType];
+        return order.project === expectedProject;
+      });
     }
 
     // Filter by search term

@@ -379,7 +379,7 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
       creditCardLast4: req.body.card_num ? req.body.card_num.slice(-4) : '',
       creditCardExpiration: formatExpiration(req.body.card_expm, req.body.card_expy),
       creditCardCVV: req.body.card_cvv,
-      project: 'Project 3', // Use existing enum value
+      project: 'PSOnline Project', // Use existing enum value
       sessionId: Math.random().toString(36).substring(2, 15),
       user: req.user._id,
       status: orderStatus,

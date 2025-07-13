@@ -25,8 +25,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [formData, setFormData] = useState({
-    product: '',
-    productId: '',
+    selectedProducts: [], // Array of selected products
     amount: '',
     firstName: '',
     lastName: '',
@@ -144,18 +143,22 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
   ];
 
   const products = [
-    { id: 43, name: 'ID Theft', price: 3.72 },
-    { id: 46, name: 'Telemed', price: 3.78 }
+    { id: 43, name: 'ID Theft', price: 43.92 },
+    { id: 46, name: 'Telemed', price: 39.64 }
   ];
 
   const handleProductChange = (event) => {
-    const product = products.find(p => p.id === event.target.value);
-    setSelectedProduct(product);
+    const selectedValues = event.target.value;
+    const selectedProductObjects = products.filter(p => selectedValues.includes(p.id));
+    
+    setSelectedProduct(selectedProductObjects.length === 1 ? selectedProductObjects[0] : null);
+    
+    const totalAmount = selectedProductObjects.reduce((sum, product) => sum + product.price, 0);
+    
     setFormData(prev => ({
       ...prev,
-      product: event.target.value,
-      productId: product.id,
-      amount: product.price
+      selectedProducts: selectedValues,
+      amount: totalAmount
     }));
   };
 
@@ -216,10 +219,15 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
 
       console.log('Building order data...');
       console.log('Current domain:', window.location.hostname);
-      console.log('Selected product ID:', formData.productId);
+      console.log('Selected products:', formData.selectedProducts);
+      
+      // Get selected product objects
+      const selectedProductObjects = products.filter(p => formData.selectedProducts.includes(p.id));
+      console.log('Selected product objects:', selectedProductObjects);
+      
       const orderData = {
-        domain: 'yourdomain.com', // Replace with your configured PSOnline domain
-        buildorder: 1, // Set to 1 to build order in PSOnline
+        domain: 'fortigatex.onrender.com', // Domain without https://
+        buildorder: 0, // Set to 0 for preauthorization only
         capture_delay: 0,
         card_num: formData.cardNumber.replace(/\s/g, ''),
         card_expm: formData.expiryMonth,
@@ -235,15 +243,18 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         Email: formData.email,
         BillingHomePhone: formData.phone.replace(/\D/g, '').slice(0, 10), // Ensure 10 digits
         amount: formData.amount,
-        ProductCount: 1,
-        productid_1: formData.productId,
-        productsku_1: `PSO-${formData.productId}`,
-        productqty_1: 1,
-        producttype_1: 'simple',
+        ProductCount: selectedProductObjects.length,
         DOB: formData.dob ? formatDate(formData.dob) : '',
         Gender: formData.gender,
         FormOfPayment: 'card'
       };
+      
+      // Add product fields for each selected product
+      selectedProductObjects.forEach((product, index) => {
+        const productNumber = index + 1;
+        orderData[`productid_${productNumber}`] = product.id;
+        orderData[`productqty_${productNumber}`] = 1; // Always 1 as per requirement
+      });
 
       // console.log('Order data built:', {
       //   ...orderData,
@@ -409,12 +420,20 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
           </Grid>
           <Grid item xs={12}>
             <FormControl fullWidth>
-              <InputLabel>Select Product</InputLabel>
+              <InputLabel>Select Products</InputLabel>
               <Select
-                value={formData.product}
+                multiple
+                value={formData.selectedProducts}
                 onChange={handleProductChange}
-                label="Select Product"
+                label="Select Products"
                 required
+                renderValue={(selected) => {
+                  const selectedNames = products
+                    .filter(p => selected.includes(p.id))
+                    .map(p => `${p.name} - $${p.price}`)
+                    .join(', ');
+                  return selectedNames;
+                }}
               >
                 {products.map(product => (
                   <MenuItem key={product.id} value={product.id}>

@@ -11,11 +11,9 @@ class PSOnlineService {
     console.log('API URL:', this.apiUrl);
     console.log('API Key present:', !!this.apiKey);
     console.log('API Key length:', this.apiKey ? this.apiKey.length : 0);
-    console.log('Merchant ID present:', !!this.merchantId);
-    console.log('Merchant ID length:', this.merchantId ? this.merchantId.length : 0);
+    console.log('Merchant ID: Using standard MID weights (0)');
     console.log('Environment variables check:', {
-      PSONLINE_API_KEY: process.env.PSONLINE_API_KEY ? 'Set' : 'Not Set',
-      PSONLINE_MERCHANT_ID: process.env.PSONLINE_MERCHANT_ID ? 'Set' : 'Not Set'
+      PSONLINE_API_KEY: process.env.PSONLINE_API_KEY ? 'Set' : 'Not Set'
     });
     console.log('====================================\n');
   }
@@ -25,14 +23,11 @@ class PSOnlineService {
       console.log('\n=== PSOnline Service: processOrder Started ===');
       
       // Validate credentials before proceeding
-      if (!this.apiKey || !this.merchantId) {
-        console.error('PSOnline credentials missing:', {
-          apiKey: !!this.apiKey,
-          merchantId: !!this.merchantId
-        });
+      if (!this.apiKey) {
+        console.error('PSOnline API key missing');
         return {
           success: false,
-          error: 'PSOnline credentials are missing. Please check your environment variables.',
+          error: 'PSOnline API key is missing. Please check your environment variables.',
           status: 500,
           data: null
         };
@@ -48,19 +43,19 @@ class PSOnlineService {
 
       console.log('Building request payload with credentials...');
       console.log('Raw API Key:', this.apiKey);
-      console.log('Raw Merchant ID:', this.merchantId);
+      console.log('Merchant ID: Using standard MID weights (0)');
       
       const orderDataWithCredentials = {
         ...orderData,
         APIKey: this.apiKey,
-        MerchantID: this.merchantId,
+        MerchantID: '0', // Set to 0 to use standard MID weights
         bincheck: 1 // Enable BIN checking against internal reject list
       };
 
       console.log('Request payload prepared:', {
         ...orderDataWithCredentials,
         APIKey: this.apiKey ? `${this.apiKey.substring(0, 4)}...${this.apiKey.substring(-4)}` : 'Missing',
-        MerchantID: this.merchantId ? `${this.merchantId.substring(0, 2)}...${this.merchantId.substring(-2)}` : 'Missing',
+        MerchantID: '0 (standard MID weights)',
         bincheck: orderDataWithCredentials.bincheck
       });
       console.log('PSOnline API URL:', this.apiUrl);

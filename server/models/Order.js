@@ -168,7 +168,7 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     required: true,
     default: 'Radius Project',
-    enum: ['Radius Project', 'Sempris Project', 'Project 3', 'radius', 'sempris']
+    enum: ['Radius Project', 'Sempris Project', 'Project 3', 'PSOnline Project', 'radius', 'sempris']
   },
   vendorId: {
     type: String,

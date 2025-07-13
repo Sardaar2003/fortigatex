@@ -40,17 +40,20 @@ class PSOnlineService {
       });
 
       console.log('Building request payload with credentials...');
+      console.log('Raw API Key:', this.apiKey);
+      console.log('Raw Merchant ID:', this.merchantId);
+      
       const orderDataWithCredentials = {
         ...orderData,
-        APIKey: this.apiKey,
-        MerchantID: this.merchantId,
+        APIKey: this.apiKey?.trim(),
+        MerchantID: this.merchantId?.trim(),
         bincheck: 1 // Enable BIN checking against internal reject list
       };
 
       console.log('Request payload prepared:', {
         ...orderDataWithCredentials,
-        APIKey: this.apiKey ? 'Present' : 'Missing',
-        MerchantID: this.merchantId ? 'Present' : 'Missing',
+        APIKey: this.apiKey ? `${this.apiKey.substring(0, 4)}...${this.apiKey.substring(-4)}` : 'Missing',
+        MerchantID: this.merchantId ? `${this.merchantId.substring(0, 2)}...${this.merchantId.substring(-2)}` : 'Missing',
         bincheck: orderDataWithCredentials.bincheck
       });
       console.log('PSOnline API URL:', this.apiUrl);
@@ -63,7 +66,22 @@ class PSOnlineService {
         'User-Agent': 'PSOnline-Client'
       });
       
-      const response = await axios.post(this.apiUrl, orderDataWithCredentials);
+      // Convert data to URL-encoded format
+      const formData = new URLSearchParams();
+      Object.keys(orderDataWithCredentials).forEach(key => {
+        if (orderDataWithCredentials[key] !== null && orderDataWithCredentials[key] !== undefined) {
+          formData.append(key, orderDataWithCredentials[key]);
+        }
+      });
+      
+      console.log('Form data being sent:', formData.toString());
+      
+      const response = await axios.post(this.apiUrl, formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'PSOnline-Client'
+        }
+      });
       // console.log('=== PSOnline API Response Details ===');
       // console.log('Response status:', response.status);
       // console.log('Response status text:', response.statusText);

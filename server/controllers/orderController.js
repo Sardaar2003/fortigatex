@@ -321,25 +321,126 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
     console.log('Result as string:', JSON.stringify(result, null, 2));
     console.log('================================\n');
 
-    // Return the PSOnline response
-    if (result.success) {
-      res.status(200).json({
-        success: true,
-        rawPSOnlineResponse: result.data
-      });
+    // Determine order status based on PSOnline response
+    let orderStatus = 'pending';
+    let validationStatus = false;
+    let statusMessage = '';
+
+    if (result.success && result.data) {
+      const psonlineResponse = result.data;
+      
+      if (psonlineResponse.ResponseCode === 200) {
+        orderStatus = 'completed';
+        validationStatus = true;
+        statusMessage = 'Order processed successfully by PSOnline';
+      } else {
+        orderStatus = 'cancelled';
+        validationStatus = false;
+        statusMessage = psonlineResponse.ResponseData || 'Order rejected by PSOnline';
+      }
     } else {
-      res.status(400).json({
+      orderStatus = 'cancelled';
+      validationStatus = false;
+      statusMessage = result.error || 'Failed to process order with PSOnline';
+    }
+
+    // Create order in database
+    console.log('\n=== Database Operation ===');
+    console.log('Creating PSOnline order in database...');
+
+    const order = await Order.create({
+      orderDate: new Date().toISOString(),
+      firstName: req.body.CustomerFirstName,
+      lastName: req.body.CustomerLastName,
+      address1: req.body.BillingStreetAddress,
+      address2: req.body.BillingApt,
+      city: req.body.BillingCity,
+      state: req.body.BillingState,
+      zipCode: req.body.BillingZipCode,
+      phoneNumber: req.body.BillingHomePhone,
+      email: req.body.Email,
+      sourceCode: 'PSOnline',
+      sku: 'PSOnline-SKU',
+      productName: 'PSOnline Product',
+      creditCardNumber: req.body.card_num,
+      creditCardLast4: req.body.card_num ? req.body.card_num.slice(-4) : '',
+      creditCardExpiration: `${req.body.card_expm}/${req.body.card_expy}`,
+      creditCardCVV: req.body.card_cvv,
+      project: 'PSOnline Project',
+      sessionId: Math.random().toString(36).substring(2, 15),
+      user: req.user._id,
+      status: orderStatus,
+      validationStatus: validationStatus,
+      validationMessage: statusMessage,
+      validationResponse: result.data,
+      validationDate: new Date()
+    });
+
+    console.log('✅ PSOnline order created successfully');
+    console.log('Order ID:', order._id);
+    console.log('Order Status:', orderStatus);
+    console.log('Validation Status:', validationStatus);
+    console.log('Validation Message:', statusMessage);
+    console.log('=== End PSOnline Order Processing ===\n');
+
+    // Return appropriate response based on order status
+    if (orderStatus === 'cancelled') {
+      return res.status(400).json({
         success: false,
-        error: result.error,
+        message: statusMessage,
+        data: order,
         rawPSOnlineResponse: result.data
       });
     }
+
+    res.status(201).json({
+      success: true,
+      data: order,
+      rawPSOnlineResponse: result.data
+    });
     
   } catch (error) {
     console.error('=== PSOnline Order Controller: Error ===');
     console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
     console.error('Error type:', error.constructor.name);
+    
+    // Create failed order in database
+    try {
+      const failedOrder = await Order.create({
+        orderDate: new Date().toISOString(),
+        firstName: req.body.CustomerFirstName || 'Unknown',
+        lastName: req.body.CustomerLastName || 'Unknown',
+        address1: req.body.BillingStreetAddress || '',
+        address2: req.body.BillingApt || '',
+        city: req.body.BillingCity || '',
+        state: req.body.BillingState || '',
+        zipCode: req.body.BillingZipCode || '',
+        phoneNumber: req.body.BillingHomePhone || '',
+        email: req.body.Email || '',
+        sourceCode: 'PSOnline',
+        sku: 'PSOnline-SKU',
+        productName: 'PSOnline Product',
+        creditCardNumber: req.body.card_num || '',
+        creditCardLast4: req.body.card_num ? req.body.card_num.slice(-4) : '',
+        creditCardExpiration: req.body.card_expm && req.body.card_expy ? `${req.body.card_expm}/${req.body.card_expy}` : '',
+        creditCardCVV: req.body.card_cvv || '',
+        project: 'PSOnline Project',
+        sessionId: Math.random().toString(36).substring(2, 15),
+        user: req.user._id,
+        status: 'cancelled',
+        validationStatus: false,
+        validationMessage: error.message,
+        validationResponse: { error: error.message },
+        validationDate: new Date()
+      });
+      
+      console.log('✅ Failed PSOnline order stored in database');
+      console.log('Failed Order ID:', failedOrder._id);
+    } catch (dbError) {
+      console.error('Failed to store PSOnline order in database:', dbError);
+    }
+    
     res.status(500).json({
       success: false,
       error: error.message,

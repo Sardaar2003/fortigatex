@@ -348,8 +348,21 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
     console.log('\n=== Database Operation ===');
     console.log('Creating PSOnline order in database...');
 
+    // Format date to MM/DD/YYYY
+    const formatDate = (date) => {
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${month}/${day}/${year}`;
+    };
+
+    // Format expiration to MMYY
+    const formatExpiration = (month, year) => {
+      return `${month}${year.slice(-2)}`;
+    };
+
     const order = await Order.create({
-      orderDate: new Date().toISOString(),
+      orderDate: formatDate(new Date()),
       firstName: req.body.CustomerFirstName,
       lastName: req.body.CustomerLastName,
       address1: req.body.BillingStreetAddress,
@@ -359,14 +372,14 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
       zipCode: req.body.BillingZipCode,
       phoneNumber: req.body.BillingHomePhone,
       email: req.body.Email,
-      sourceCode: 'PSOnline',
-      sku: 'PSOnline-SKU',
+      sourceCode: 'PSO', // Max 6 characters
+      sku: 'PSO-SKU', // Max 7 characters
       productName: 'PSOnline Product',
       creditCardNumber: req.body.card_num,
       creditCardLast4: req.body.card_num ? req.body.card_num.slice(-4) : '',
-      creditCardExpiration: `${req.body.card_expm}/${req.body.card_expy}`,
+      creditCardExpiration: formatExpiration(req.body.card_expm, req.body.card_expy),
       creditCardCVV: req.body.card_cvv,
-      project: 'PSOnline Project',
+      project: 'Project 3', // Use existing enum value
       sessionId: Math.random().toString(36).substring(2, 15),
       user: req.user._id,
       status: orderStatus,
@@ -407,8 +420,21 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
     
     // Create failed order in database
     try {
+      // Format date to MM/DD/YYYY
+      const formatDate = (date) => {
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${month}/${day}/${year}`;
+      };
+
+      // Format expiration to MMYY
+      const formatExpiration = (month, year) => {
+        return `${month}${year.slice(-2)}`;
+      };
+
       const failedOrder = await Order.create({
-        orderDate: new Date().toISOString(),
+        orderDate: formatDate(new Date()),
         firstName: req.body.CustomerFirstName || 'Unknown',
         lastName: req.body.CustomerLastName || 'Unknown',
         address1: req.body.BillingStreetAddress || '',
@@ -418,14 +444,14 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
         zipCode: req.body.BillingZipCode || '',
         phoneNumber: req.body.BillingHomePhone || '',
         email: req.body.Email || '',
-        sourceCode: 'PSOnline',
-        sku: 'PSOnline-SKU',
+        sourceCode: 'PSO', // Max 6 characters
+        sku: 'PSO-SKU', // Max 7 characters
         productName: 'PSOnline Product',
         creditCardNumber: req.body.card_num || '',
         creditCardLast4: req.body.card_num ? req.body.card_num.slice(-4) : '',
-        creditCardExpiration: req.body.card_expm && req.body.card_expy ? `${req.body.card_expm}/${req.body.card_expy}` : '',
+        creditCardExpiration: req.body.card_expm && req.body.card_expy ? formatExpiration(req.body.card_expm, req.body.card_expy) : '',
         creditCardCVV: req.body.card_cvv || '',
-        project: 'PSOnline Project',
+        project: 'Project 3', // Use existing enum value
         sessionId: Math.random().toString(36).substring(2, 15),
         user: req.user._id,
         status: 'cancelled',

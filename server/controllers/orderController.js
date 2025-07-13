@@ -313,19 +313,27 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
     console.log('Order data validated successfully');
     console.log('Processing order with PSOnline...');
     // Process order with PSOnline
-    const response = await psonlineService.processOrder(req.body);
+    const result = await psonlineService.processOrder(req.body);
     
-    console.log('\n=== RAW PSOnline API Response ===');
-    console.log('Response type:', typeof response);
-    console.log('Raw response:', response);
-    console.log('Response as string:', JSON.stringify(response, null, 2));
+    console.log('\n=== PSOnline API Result ===');
+    console.log('Result type:', typeof result);
+    console.log('Result:', result);
+    console.log('Result as string:', JSON.stringify(result, null, 2));
     console.log('================================\n');
 
-    // Simply return the raw PSOnline response
-    res.status(200).json({
-      success: true,
-      rawPSOnlineResponse: response
-    });
+    // Return the PSOnline response
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        rawPSOnlineResponse: result.data
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: result.error,
+        rawPSOnlineResponse: result.data
+      });
+    }
     
   } catch (error) {
     console.error('=== PSOnline Order Controller: Error ===');
@@ -335,7 +343,7 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message,
-      rawPSOnlineResponse: error.response?.data || error.message
+      rawPSOnlineResponse: error.message
     });
   }
 });

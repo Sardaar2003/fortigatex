@@ -9,11 +9,13 @@ class PSOnlineService {
     // Enhanced debug logging
     console.log('\n=== PSOnlineService Initialization ===');
     console.log('API URL:', this.apiUrl);
-    console.log('API Key:', this.apiKey);
-    console.log('Merchant ID:', this.merchantId);
-    console.log('Environment variables:', {
-      PSONLINE_API_KEY: process.env.PSONLINE_API_KEY,
-      PSONLINE_MERCHANT_ID: process.env.PSONLINE_MERCHANT_ID
+    console.log('API Key present:', !!this.apiKey);
+    console.log('API Key length:', this.apiKey ? this.apiKey.length : 0);
+    console.log('Merchant ID present:', !!this.merchantId);
+    console.log('Merchant ID length:', this.merchantId ? this.merchantId.length : 0);
+    console.log('Environment variables check:', {
+      PSONLINE_API_KEY: process.env.PSONLINE_API_KEY ? 'Set' : 'Not Set',
+      PSONLINE_MERCHANT_ID: process.env.PSONLINE_MERCHANT_ID ? 'Set' : 'Not Set'
     });
     console.log('====================================\n');
   }
@@ -28,7 +30,12 @@ class PSOnlineService {
           apiKey: !!this.apiKey,
           merchantId: !!this.merchantId
         });
-        throw new Error('PSOnline credentials are missing. Please check your environment variables.');
+        return {
+          success: false,
+          error: 'PSOnline credentials are missing. Please check your environment variables.',
+          status: 500,
+          data: null
+        };
       }
 
       console.log('PSOnline credentials validated successfully');
@@ -45,8 +52,8 @@ class PSOnlineService {
       
       const orderDataWithCredentials = {
         ...orderData,
-        APIKey: this.apiKey?.trim(),
-        MerchantID: this.merchantId?.trim(),
+        APIKey: this.apiKey,
+        MerchantID: this.merchantId,
         bincheck: 1 // Enable BIN checking against internal reject list
       };
 
@@ -75,6 +82,14 @@ class PSOnlineService {
       });
       
       console.log('Form data being sent:', formData.toString());
+      console.log('Form data entries:');
+      for (let [key, value] of formData.entries()) {
+        if (key === 'APIKey' || key === 'MerchantID') {
+          console.log(`  ${key}: ${value ? 'Present' : 'Missing'} (length: ${value ? value.length : 0})`);
+        } else {
+          console.log(`  ${key}: ${value}`);
+        }
+      }
       
       const response = await axios.post(this.apiUrl, formData, {
         headers: {
@@ -107,8 +122,13 @@ class PSOnlineService {
       // console.log('Final processed response:', processedResponse);
       // console.log('====================================\n');
 
-      // Return the complete response data
-      return response;
+      // Return the response data in a consistent format
+      return {
+        success: true,
+        status: response.status,
+        data: response.data,
+        headers: response.headers
+      };
     } catch (error) {
       console.error('\n=== PSOnline API Error ===');
       console.error('Error type:', error.constructor.name);
@@ -125,7 +145,13 @@ class PSOnlineService {
       });
       console.error('====================================\n');
 
-      throw new Error(error.response?.data?.ResponseData || 'Failed to process order with PSOnline');
+      // Return error in consistent format
+      return {
+        success: false,
+        error: error.response?.data?.ResponseData || error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      };
     }
   }
 

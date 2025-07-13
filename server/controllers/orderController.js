@@ -358,7 +358,7 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
 
     // Format expiration to MMYY
     const formatExpiration = (month, year) => {
-      return `${month}${year.slice(-2)}`;
+      return `${month}${String(year).slice(-2)}`;
     };
 
     const order = await Order.create({
@@ -430,7 +430,7 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
 
       // Format expiration to MMYY
       const formatExpiration = (month, year) => {
-        return `${month}${year.slice(-2)}`;
+        return `${month}${String(year).slice(-2)}`;
       };
 
       const failedOrder = await Order.create({

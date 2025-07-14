@@ -22,7 +22,7 @@ import {
   Box,
   Typography
 } from '@mui/material';
-import { AuthContext } from '../../context/AuthContext';
+import { AuthContext } from '../context/AuthContext';
 
 // Validation schema
 const EditUserSchema = Yup.object().shape({

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   Box,
   TextField,
@@ -12,8 +12,11 @@ import {
   Select,
   Paper,
   Divider,
-  Snackbar
+  Snackbar,
+  IconButton,
+  LinearProgress
 } from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
@@ -23,6 +26,8 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
   const { token, logout } = useContext(AuthContext);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [timerActive, setTimerActive] = useState(false);
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -49,6 +54,20 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
     message: '',
     severity: 'success'
   });
+
+  // Timer effect for notification
+  useEffect(() => {
+    let interval = null;
+    if (timerActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft(timeLeft - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      setSnackbar(prev => ({ ...prev, open: false }));
+      setTimerActive(false);
+    }
+    return () => clearInterval(interval);
+  }, [timerActive, timeLeft]);
 
   // Valid issuers as per Sempris API with proper formatting
   const validIssuers = [
@@ -144,19 +163,13 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
-      setSnackbar({
-        open: true,
-        message: 'Please fix the validation errors before submitting',
-        severity: 'error'
-      });
+      showNotification('error', 'Please fix the validation errors before submitting');
       return;
     }
 
     // Store form data before clearing
     const formDataToSubmit = { ...formData };
     
-    // Clear form immediately
-    handleClearForm();
     setError('');
     setLoading(true);
 
@@ -174,15 +187,10 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
       );
 
       if (response.status === 200) {
-        setSnackbar({
-          open: true,
-          message: 'Order submitted successfully!',
-          severity: 'success'
-        });
+        showNotification('success', 'Order submitted successfully!');
         if (onOrderSuccess) {
           onOrderSuccess(response.data);
         }
-        handleClearForm();
       }
     } catch (err) {
       console.error('Error submitting order:', err);
@@ -191,11 +199,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
         navigate('/login');
         return;
       }
-      setSnackbar({
-        open: true,
-        message: err.response?.data?.message || 'An error occurred while creating the order',
-        severity: 'error'
-      });
+      showNotification('error', err.response?.data?.message || 'An error occurred while creating the order');
     } finally {
       setLoading(false);
     }
@@ -226,6 +230,24 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
 
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
+    setTimerActive(false);
+    setTimeLeft(60);
+  };
+
+  const showNotification = (severity, message) => {
+    setSnackbar({
+      open: true,
+      message,
+      severity
+    });
+    setTimeLeft(60);
+    setTimerActive(true);
+    
+    // Scroll to top smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Clear form when notification shows
+    handleClearForm();
   };
 
   return (
@@ -437,7 +459,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
       {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={6000}
+        autoHideDuration={60000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         sx={{
@@ -447,13 +469,47 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
           }
         }}
       >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
+        <Box sx={{ width: '100%', position: 'relative' }}>
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={handleCloseSnackbar}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+            sx={{ width: '100%' }}
+          >
+            <Box sx={{ width: '100%' }}>
+              <Typography variant="body1" sx={{ mb: 1 }}>
+                {snackbar.message}
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="caption" sx={{ color: 'inherit', opacity: 0.8 }}>
+                  Auto-close in {timeLeft}s
+                </Typography>
+                <LinearProgress 
+                  variant="determinate" 
+                  value={((60 - timeLeft) / 60) * 100}
+                  sx={{ 
+                    flexGrow: 1, 
+                    height: 4, 
+                    borderRadius: 2,
+                    backgroundColor: 'rgba(255,255,255,0.3)',
+                    '& .MuiLinearProgress-bar': {
+                      backgroundColor: 'rgba(255,255,255,0.8)'
+                    }
+                  }}
+                />
+              </Box>
+            </Box>
+          </Alert>
+        </Box>
       </Snackbar>
     </Box>
   );

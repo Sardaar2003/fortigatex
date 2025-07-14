@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   Box,
   TextField,
@@ -11,8 +11,11 @@ import {
   MenuItem,
   Divider,
   Snackbar,
-  Alert
+  Alert,
+  IconButton,
+  LinearProgress
 } from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -24,6 +27,8 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
   const { token, logout } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [timerActive, setTimerActive] = useState(false);
   const [formData, setFormData] = useState({
     selectedProducts: [], // Array of selected products
     amount: '',
@@ -48,6 +53,20 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
     message: '',
     severity: 'success'
   });
+
+  // Timer effect for notification
+  useEffect(() => {
+    let interval = null;
+    if (timerActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft(timeLeft - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      setSnackbar(prev => ({ ...prev, open: false }));
+      setTimerActive(false);
+    }
+    return () => clearInterval(interval);
+  }, [timerActive, timeLeft]);
 
   // BIN Reject List - States that are not allowed for PSOnline orders
   const rejectedStates = ['ME', 'IA', 'UT', 'MN', 'VT', 'KS', 'WI', 'MO'];
@@ -179,6 +198,47 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
 
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
+    setTimerActive(false);
+    setTimeLeft(60);
+  };
+
+  const showNotification = (severity, message) => {
+    setSnackbar({
+      open: true,
+      message,
+      severity
+    });
+    setTimeLeft(60);
+    setTimerActive(true);
+    
+    // Scroll to top smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Clear form when notification shows
+    handleClearForm();
+  };
+
+  const handleClearForm = () => {
+    setFormData({
+      selectedProducts: [],
+      amount: '',
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      dob: null,
+      gender: '',
+      streetAddress: '',
+      apt: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      cardNumber: '',
+      expiryMonth: '',
+      expiryYear: '',
+      cvv: ''
+    });
+    setSelectedProduct(null);
   };
 
   // Generate month and year options
@@ -367,17 +427,9 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         console.log('Response as string:', JSON.stringify(data.rawPSOnlineResponse, null, 2));
         console.log('================================');
         
-        setSnackbar({
-          open: true,
-          message: `PSOnline Response: ${JSON.stringify(data.rawPSOnlineResponse, null, 2)}`,
-          severity: 'info'
-        });
+        showNotification('info', `PSOnline Response: ${JSON.stringify(data.rawPSOnlineResponse, null, 2)}`);
       } else {
-        setSnackbar({
-          open: true,
-          message: 'No PSOnline response received',
-          severity: 'warning'
-        });
+        showNotification('warning', 'No PSOnline response received');
       }
     } catch (error) {
       console.error('=== PSOnline Order Submission Error ===');
@@ -392,11 +444,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         errorMessage = 'Network error: Unable to connect to the server';
       }
       
-      setSnackbar({
-        open: true,
-        message: errorMessage || 'An error occurred while processing your order',
-        severity: 'error'
-      });
+      showNotification('error', errorMessage || 'An error occurred while processing your order');
     } finally {
       console.log('=== PSOnline Order Form Submission Ended ===');
       setLoading(false);
@@ -678,7 +726,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         {/* Snackbar for notifications */}
         <Snackbar
           open={snackbar.open}
-          autoHideDuration={6000}
+          autoHideDuration={60000}
           onClose={handleCloseSnackbar}
           anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
           sx={{
@@ -688,13 +736,47 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
             }
           }}
         >
-          <Alert
-            onClose={handleCloseSnackbar}
-            severity={snackbar.severity}
-            sx={{ width: '100%' }}
-          >
-            {snackbar.message}
-          </Alert>
+          <Box sx={{ width: '100%', position: 'relative' }}>
+            <Alert
+              onClose={handleCloseSnackbar}
+              severity={snackbar.severity}
+              action={
+                <IconButton
+                  aria-label="close"
+                  color="inherit"
+                  size="small"
+                  onClick={handleCloseSnackbar}
+                >
+                  <CloseIcon fontSize="inherit" />
+                </IconButton>
+              }
+              sx={{ width: '100%' }}
+            >
+              <Box sx={{ width: '100%' }}>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {snackbar.message}
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'inherit', opacity: 0.8 }}>
+                    Auto-close in {timeLeft}s
+                  </Typography>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={((60 - timeLeft) / 60) * 100}
+                    sx={{ 
+                      flexGrow: 1, 
+                      height: 4, 
+                      borderRadius: 2,
+                      backgroundColor: 'rgba(255,255,255,0.3)',
+                      '& .MuiLinearProgress-bar': {
+                        backgroundColor: 'rgba(255,255,255,0.8)'
+                      }
+                    }}
+                  />
+                </Box>
+              </Box>
+            </Alert>
+          </Box>
         </Snackbar>
       </Box>
     </LocalizationProvider>

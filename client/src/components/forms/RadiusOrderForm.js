@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   TextField,
@@ -22,8 +22,11 @@ import {
   TableContainer,
   TableRow,
   Snackbar,
-  FormHelperText
+  FormHelperText,
+  IconButton,
+  LinearProgress
 } from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -101,6 +104,9 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
   const [success, setSuccess] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [timerActive, setTimerActive] = useState(false);
+  const formRef = useRef(null);
   const [formData, setFormData] = useState({
     orderDate: new Date(),
     firstName: '',
@@ -121,6 +127,20 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
     project: 'Radius Project'
   });
   const [errors, setErrors] = useState({});
+
+  // Timer effect for notification
+  useEffect(() => {
+    let interval = null;
+    if (timerActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft(timeLeft - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      setShowMessage(false);
+      setTimerActive(false);
+    }
+    return () => clearInterval(interval);
+  }, [timerActive, timeLeft]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -209,10 +229,14 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
   const showNotification = (type, text) => {
     setMessage({ type, text });
     setShowMessage(true);
-    // Reset the message after 60 seconds
-    setTimeout(() => {
-      setShowMessage(false);
-    }, 60000);
+    setTimeLeft(60);
+    setTimerActive(true);
+    
+    // Scroll to top smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Clear form when notification shows
+    handleClearForm();
   };
 
   const handleCloseMessage = (event, reason) => {
@@ -220,6 +244,8 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
       return;
     }
     setShowMessage(false);
+    setTimerActive(false);
+    setTimeLeft(60);
   };
 
   const handleSubmit = async (e) => {
@@ -239,9 +265,6 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
       orderDate: format(formData.orderDate, 'MM/dd/yyyy'),
       creditCardExpiration: formData.creditCardExpiration
     };
-
-    // Clear form immediately
-    handleClearForm();
 
     try {
       console.log('Starting order submission process...');
@@ -568,20 +591,54 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
             }
           }}
         >
-          <MuiAlert
-            onClose={handleCloseMessage}
-            severity={message.type}
-            variant="filled"
-            sx={{
-              width: '100%',
-              fontSize: '1.1rem',
-              '& .MuiAlert-message': {
-                width: '100%'
+          <Box sx={{ width: '100%', position: 'relative' }}>
+            <MuiAlert
+              onClose={handleCloseMessage}
+              severity={message.type}
+              variant="filled"
+              action={
+                <IconButton
+                  aria-label="close"
+                  color="inherit"
+                  size="small"
+                  onClick={handleCloseMessage}
+                >
+                  <CloseIcon fontSize="inherit" />
+                </IconButton>
               }
-            }}
-          >
-            {message.text}
-          </MuiAlert>
+              sx={{
+                width: '100%',
+                fontSize: '1.1rem',
+                '& .MuiAlert-message': {
+                  width: '100%'
+                }
+              }}
+            >
+              <Box sx={{ width: '100%' }}>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {message.text}
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'inherit', opacity: 0.8 }}>
+                    Auto-close in {timeLeft}s
+                  </Typography>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={((60 - timeLeft) / 60) * 100}
+                    sx={{ 
+                      flexGrow: 1, 
+                      height: 4, 
+                      borderRadius: 2,
+                      backgroundColor: 'rgba(255,255,255,0.3)',
+                      '& .MuiLinearProgress-bar': {
+                        backgroundColor: 'rgba(255,255,255,0.8)'
+                      }
+                    }}
+                  />
+                </Box>
+              </Box>
+            </MuiAlert>
+          </Box>
         </Snackbar>
       </Box>
     </LocalizationProvider>

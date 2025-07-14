@@ -483,7 +483,39 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
                 <CloseIcon fontSize="inherit" />
               </IconButton>
             }
-            sx={{ width: '100%' }}
+            sx={{ 
+              width: '100%',
+              fontSize: '1.1rem',
+              fontWeight: 500,
+              '&.MuiAlert-standardSuccess': {
+                backgroundColor: '#4caf50',
+                color: '#ffffff',
+                '& .MuiAlert-icon': {
+                  color: '#ffffff'
+                }
+              },
+              '&.MuiAlert-standardError': {
+                backgroundColor: '#f44336',
+                color: '#ffffff',
+                '& .MuiAlert-icon': {
+                  color: '#ffffff'
+                }
+              },
+              '&.MuiAlert-standardWarning': {
+                backgroundColor: '#ff9800',
+                color: '#ffffff',
+                '& .MuiAlert-icon': {
+                  color: '#ffffff'
+                }
+              },
+              '&.MuiAlert-standardInfo': {
+                backgroundColor: '#2196f3',
+                color: '#ffffff',
+                '& .MuiAlert-icon': {
+                  color: '#ffffff'
+                }
+              }
+            }}
           >
             <Box sx={{ width: '100%' }}>
               <Typography variant="body1" sx={{ mb: 1 }}>

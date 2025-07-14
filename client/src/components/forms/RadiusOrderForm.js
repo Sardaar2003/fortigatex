@@ -226,24 +226,29 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
     setShowMessage(false);
   };
 
-  const showNotification = (type, text) => {
-    setMessage({ type, text });
-    setShowMessage(true);
+  // Replace showMessage/message with snackbar object for consistency
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
+  // Replace showNotification with unified version
+  const showNotification = (severity, message) => {
+    setSnackbar({
+      open: true,
+      message,
+      severity
+    });
     setTimeLeft(60);
     setTimerActive(true);
-    
-    // Scroll to top smoothly
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    // Clear form when notification shows
     handleClearForm();
   };
 
-  const handleCloseMessage = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-    setShowMessage(false);
+  // Replace handleCloseMessage with unified version
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
     setTimerActive(false);
     setTimeLeft(60);
   };
@@ -547,42 +552,30 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
             />
           </Grid>
 
-          <Grid container spacing={3} sx={{ mt: 2 }}>
-            <Grid item xs={12} sm={6}>
-              <Button
-                onClick={handleClearForm}
-                variant="outlined"
-                color="error"
-                fullWidth
-                size="large"
-              >
-                Clear Form
-              </Button>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Button
-                type="submit"
-                variant="contained"
-                fullWidth
-                size="large"
-                disabled={loading}
-                sx={{
-                  background: 'linear-gradient(135deg, #6F4CFF 0%, #402AD5 100%)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #8266FF 0%, #4F35FF 100%)',
-                  }
-                }}
-              >
-                {loading ? 'Submitting...' : 'Submit Order'}
-              </Button>
-            </Grid>
+          <Grid item xs={12}>
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              size="large"
+              disabled={loading}
+              sx={{
+                background: 'linear-gradient(135deg, #6F4CFF 0%, #402AD5 100%)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #8266FF 0%, #4F35FF 100%)',
+                }
+              }}
+            >
+              {loading ? 'Submitting...' : 'Submit Order'}
+            </Button>
           </Grid>
         </Grid>
 
+        {/* Snackbar for notifications */}
         <Snackbar
-          open={showMessage}
+          open={snackbar.open}
           autoHideDuration={60000}
-          onClose={handleCloseMessage}
+          onClose={handleCloseSnackbar}
           anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
           sx={{
             '& .MuiSnackbar-root': {
@@ -592,31 +585,56 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
           }}
         >
           <Box sx={{ width: '100%', position: 'relative' }}>
-            <MuiAlert
-              onClose={handleCloseMessage}
-              severity={message.type}
-              variant="filled"
+            <Alert
+              onClose={handleCloseSnackbar}
+              severity={snackbar.severity}
               action={
                 <IconButton
                   aria-label="close"
                   color="inherit"
                   size="small"
-                  onClick={handleCloseMessage}
+                  onClick={handleCloseSnackbar}
                 >
                   <CloseIcon fontSize="inherit" />
                 </IconButton>
               }
-              sx={{
+              sx={{ 
                 width: '100%',
                 fontSize: '1.1rem',
-                '& .MuiAlert-message': {
-                  width: '100%'
+                fontWeight: 500,
+                '&.MuiAlert-standardSuccess': {
+                  backgroundColor: '#4caf50',
+                  color: '#ffffff',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff'
+                  }
+                },
+                '&.MuiAlert-standardError': {
+                  backgroundColor: '#f44336',
+                  color: '#ffffff',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff'
+                  }
+                },
+                '&.MuiAlert-standardWarning': {
+                  backgroundColor: '#ff9800',
+                  color: '#ffffff',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff'
+                  }
+                },
+                '&.MuiAlert-standardInfo': {
+                  backgroundColor: '#2196f3',
+                  color: '#ffffff',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff'
+                  }
                 }
               }}
             >
               <Box sx={{ width: '100%' }}>
                 <Typography variant="body1" sx={{ mb: 1 }}>
-                  {message.text}
+                  {snackbar.message}
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Typography variant="caption" sx={{ color: 'inherit', opacity: 0.8 }}>
@@ -637,7 +655,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
                   />
                 </Box>
               </Box>
-            </MuiAlert>
+            </Alert>
           </Box>
         </Snackbar>
       </Box>

@@ -419,7 +419,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       const data = await response.json();
       console.log('Response data:', data);
       
-      // Display the raw PSOnline response
+      // Extract message from PSOnline response
       if (data.rawPSOnlineResponse) {
         console.log('=== RAW PSOnline API Response ===');
         console.log('Raw response:', data.rawPSOnlineResponse);
@@ -427,7 +427,23 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         console.log('Response as string:', JSON.stringify(data.rawPSOnlineResponse, null, 2));
         console.log('================================');
         
-        showNotification('info', `PSOnline Response: ${JSON.stringify(data.rawPSOnlineResponse, null, 2)}`);
+        // Extract the actual message from PSOnline response
+        const psOnlineResponse = data.rawPSOnlineResponse;
+        let message = '';
+        let severity = 'info';
+        
+        // Check if it's a success or failure based on ResponseCode
+        if (psOnlineResponse.ResponseCode === 200 || psOnlineResponse.ResponseCode === 0) {
+          // Success case
+          message = psOnlineResponse.ResponseData || 'Order processed successfully!';
+          severity = 'success';
+        } else {
+          // Failure case
+          message = psOnlineResponse.ResponseData || 'Order processing failed';
+          severity = 'error';
+        }
+        
+        showNotification(severity, message);
       } else {
         showNotification('warning', 'No PSOnline response received');
       }
@@ -750,7 +766,39 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
                   <CloseIcon fontSize="inherit" />
                 </IconButton>
               }
-              sx={{ width: '100%' }}
+              sx={{ 
+                width: '100%',
+                fontSize: '1.1rem',
+                fontWeight: 500,
+                '&.MuiAlert-standardSuccess': {
+                  backgroundColor: '#4caf50',
+                  color: '#ffffff',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff'
+                  }
+                },
+                '&.MuiAlert-standardError': {
+                  backgroundColor: '#f44336',
+                  color: '#ffffff',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff'
+                  }
+                },
+                '&.MuiAlert-standardWarning': {
+                  backgroundColor: '#ff9800',
+                  color: '#ffffff',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff'
+                  }
+                },
+                '&.MuiAlert-standardInfo': {
+                  backgroundColor: '#2196f3',
+                  color: '#ffffff',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff'
+                  }
+                }
+              }}
             >
               <Box sx={{ width: '100%' }}>
                 <Typography variant="body1" sx={{ mb: 1 }}>

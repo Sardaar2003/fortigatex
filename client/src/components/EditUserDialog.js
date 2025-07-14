@@ -22,6 +22,7 @@ import {
   Box,
   Typography
 } from '@mui/material';
+import { AuthContext } from '../../context/AuthContext';
 
 // Validation schema
 const EditUserSchema = Yup.object().shape({
@@ -56,6 +57,7 @@ function TabPanel(props) {
 }
 
 const EditUserDialog = ({ open, handleClose, user, onUserUpdated }) => {
+  const { token } = React.useContext(AuthContext);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -67,17 +69,19 @@ const EditUserDialog = ({ open, handleClose, user, onUserUpdated }) => {
     if (open && user) {
       const fetchRoles = async () => {
         try {
-          const res = await axios.get('/api/roles');
+          const res = await axios.get(
+            `${process.env.REACT_APP_API_URL}/api/roles`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
           setRoles(res.data.data);
         } catch (err) {
           setError('Failed to fetch roles. Please try again.');
           console.error(err);
         }
       };
-
       fetchRoles();
     }
-  }, [open, user]);
+  }, [open, user, token]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -87,32 +91,33 @@ const EditUserDialog = ({ open, handleClose, user, onUserUpdated }) => {
     setLoading(true);
     setError('');
     setSuccess(false);
-
     try {
       // Update basic info
-      await axios.put(`/api/users/${user._id}`, {
-        name: values.name,
-        email: values.email
-      });
-
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/users/${user._id}`,
+        { name: values.name, email: values.email },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       // Update role if changed
-      if (values.role !== user.role._id) {
-        await axios.put(`/api/users/${user._id}/role`, { role: values.role });
+      if (values.role !== (user.role?._id || '')) {
+        await axios.put(
+          `${process.env.REACT_APP_API_URL}/api/users/${user._id}/role`,
+          { role: values.role },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
       }
-
       // Update verification status if changed
       if (values.isVerified !== user.isVerified) {
-        await axios.put(`/api/users/${user._id}/verify`, { isVerified: values.isVerified });
+        await axios.put(
+          `${process.env.REACT_APP_API_URL}/api/users/${user._id}/verify`,
+          { isVerified: values.isVerified },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
       }
-
       setSuccess(true);
-
-      // Notify parent component that user has been updated
       if (onUserUpdated) {
         onUserUpdated();
       }
-
-      // Close dialog after short delay to show success message
       setTimeout(() => {
         handleClose();
       }, 1500);
@@ -126,6 +131,19 @@ const EditUserDialog = ({ open, handleClose, user, onUserUpdated }) => {
   };
 
   if (!user) return null;
+  if (!user.role || !user.role._id) {
+    return (
+      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+        <DialogTitle>Edit User</DialogTitle>
+        <DialogContent>
+          <Alert severity="error">User role information is missing or invalid. Cannot edit this user.</Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Close</Button>
+        </DialogActions>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
@@ -238,11 +256,15 @@ const EditUserDialog = ({ open, handleClose, user, onUserUpdated }) => {
                         disabled={loading}
                         error={touched.role && Boolean(errors.role)}
                       >
-                        {roles.map((role) => (
-                          <MenuItem key={role._id} value={role._id}>
-                            {role.name} - {role.description}
-                          </MenuItem>
-                        ))}
+                        {roles.length === 0 ? (
+                          <MenuItem value="" disabled>No roles available</MenuItem>
+                        ) : (
+                          roles.map((role) => (
+                            <MenuItem key={role._id} value={role._id}>
+                              {role.name} - {role.description}
+                            </MenuItem>
+                          ))
+                        )}
                       </Select>
                       {touched.role && errors.role && (
                         <div style={{ color: '#f44336', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px' }}>

@@ -19,6 +19,7 @@ import {
   InputAdornment
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { AuthContext } from '../../context/AuthContext';
 
 // Validation schema
 const AddUserSchema = Yup.object().shape({
@@ -39,6 +40,7 @@ const AddUserSchema = Yup.object().shape({
 });
 
 const AddUserDialog = ({ open, handleClose, onUserAdded }) => {
+  const { token } = React.useContext(AuthContext);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -50,7 +52,10 @@ const AddUserDialog = ({ open, handleClose, onUserAdded }) => {
     if (open) {
       const fetchRoles = async () => {
         try {
-          const res = await axios.get('/api/roles');
+          const res = await axios.get(
+            `${process.env.REACT_APP_API_URL}/api/roles`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
           setRoles(res.data.data);
         } catch (err) {
           setError('Failed to fetch roles. Please try again.');
@@ -60,7 +65,7 @@ const AddUserDialog = ({ open, handleClose, onUserAdded }) => {
 
       fetchRoles();
     }
-  }, [open]);
+  }, [open, token]);
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     setLoading(true);
@@ -70,7 +75,11 @@ const AddUserDialog = ({ open, handleClose, onUserAdded }) => {
     try {
       const { confirmPassword, ...userData } = values;
 
-      await axios.post('/api/users', userData);
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/users`,
+        userData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setSuccess(true);
       resetForm();
 
@@ -228,11 +237,15 @@ const AddUserDialog = ({ open, handleClose, onUserAdded }) => {
                       disabled={loading}
                       error={touched.role && Boolean(errors.role)}
                     >
-                      {roles.map((role) => (
-                        <MenuItem key={role._id} value={role._id}>
-                          {role.name} - {role.description}
-                        </MenuItem>
-                      ))}
+                      {roles.length === 0 ? (
+                        <MenuItem value="" disabled>No roles available</MenuItem>
+                      ) : (
+                        roles.map((role) => (
+                          <MenuItem key={role._id} value={role._id}>
+                            {role.name} - {role.description}
+                          </MenuItem>
+                        ))
+                      )}
                     </Select>
                     {touched.role && errors.role && (
                       <div style={{ color: '#f44336', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px' }}>

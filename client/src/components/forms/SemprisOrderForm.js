@@ -187,9 +187,18 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
       );
 
       if (response.status === 200) {
-        showNotification('success', 'Order submitted successfully!');
+        const data = response.data;
+        if (data.eligible === true) {
+          // Success: show transaction ID
+          const message = `Order accepted! Transaction ID: ${data.transactionId}`;
+          showNotification('success', message);
+        } else {
+          // Not eligible: show reason or error
+          const message = data.rawResponse?.error_msg || data.reason || 'Order not accepted';
+          showNotification('error', message);
+        }
         if (onOrderSuccess) {
-          onOrderSuccess(response.data);
+          onOrderSuccess(data);
         }
       }
     } catch (err) {

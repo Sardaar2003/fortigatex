@@ -162,8 +162,8 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
   ];
 
   const products = [
-    { id: 43, name: 'ID Theft', price: 43.92 },
-    { id: 46, name: 'Telemed', price: 39.64 }
+    { id: 43, name: 'ID Theft', price: 3.82 },
+    { id: 46, name: 'Telemed', price: 3.78 }
   ];
 
   const handleProductChange = (event) => {

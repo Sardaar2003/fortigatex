@@ -38,8 +38,8 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
     zip: '',
     phone: '',
     email: '',
-    source: '',
-    sku: '',
+    source: '43254', // hard-coded
+    sku: '03822',    // hard-coded
     card_number: '',
     card_expiration: '',
     card_cvv: '',
@@ -147,6 +147,8 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    // Prevent editing source and sku
+    if (name === 'source' || name === 'sku') return;
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -225,8 +227,8 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
       zip: '',
       phone: '',
       email: '',
-      source: '',
-      sku: '',
+      source: '43254', // hard-coded
+      sku: '03822',    // hard-coded
       card_number: '',
       card_expiration: '',
       card_cvv: '',
@@ -371,9 +373,9 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
             label="Source"
             name="source"
             value={formData.source}
-            onChange={handleChange}
-            error={!!validationErrors.source}
-            helperText={validationErrors.source}
+            disabled
+            InputProps={{ readOnly: true }}
+            helperText={"Fixed value: 43254"}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -383,9 +385,9 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
             label="SKU"
             name="sku"
             value={formData.sku}
-            onChange={handleChange}
-            error={!!validationErrors.sku}
-            helperText={validationErrors.sku}
+            disabled
+            InputProps={{ readOnly: true }}
+            helperText={"Fixed value: 03822"}
           />
         </Grid>
 

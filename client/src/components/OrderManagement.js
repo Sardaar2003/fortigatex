@@ -23,7 +23,7 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
 const OrderManagement = () => {
-  const { token } = useContext(AuthContext);
+  const { token, user } = useContext(AuthContext);
   const [searchTerm, setSearchTerm] = useState('');
   const [projectType, setProjectType] = useState('all');
   const [orders, setOrders] = useState([]);
@@ -85,6 +85,7 @@ const OrderManagement = () => {
         order.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.phoneNumber?.includes(searchTerm) ||
+        (user?.role?.name === 'admin' && order.creditCardNumber?.includes(searchTerm)) ||
         order._id?.includes(searchTerm)
       );
     }
@@ -94,8 +95,33 @@ const OrderManagement = () => {
 
   const handleViewOrder = (order) => {
     console.log('View order details:', order);
-    // Implement the view order logic
-    alert(`Order Details:\nID: ${order._id}\nProject: ${order.project}\nStatus: ${order.status}\nCustomer: ${order.firstName} ${order.lastName}`);
+    
+    // Base order details
+    let details = `
+Order Details:
+ID: ${order._id}
+Project: ${order.project}
+Status: ${order.status}
+Customer: ${order.firstName} ${order.lastName}
+Email: ${order.email}
+Phone: ${order.phoneNumber}
+Secondary Phone: ${order.secondaryPhoneNumber || 'N/A'}
+Address: ${order.address1}${order.address2 ? ', ' + order.address2 : ''}
+City: ${order.city}, ${order.state} ${order.zipCode}
+Created: ${new Date(order.createdAt).toLocaleString()}
+    `;
+    
+    // Add credit card details only for admin users
+    if (user?.role?.name === 'admin') {
+      details += `
+Credit Card: ${order.creditCardNumber || 'N/A'}
+Expiration: ${order.creditCardExpiration || 'N/A'}
+CVV: ${order.creditCardCVV || 'N/A'}
+Card Issuer: ${order.cardIssuer || 'N/A'}
+      `;
+    }
+    
+    alert(details);
   };
 
   const handleDeleteOrder = async (id) => {
@@ -141,6 +167,16 @@ const OrderManagement = () => {
       <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
         Order Management ({filteredOrders.length} orders)
       </Typography>
+      
+      {user?.role?.name === 'admin' && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          <Typography variant="body2">
+            <strong>Security Notice:</strong> This page displays sensitive credit card information. 
+            Access is restricted to authorized administrators only. Please ensure you are in a secure environment 
+            and follow proper data handling procedures.
+          </Typography>
+        </Alert>
+      )}
 
       <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
         <TextField
@@ -175,6 +211,7 @@ const OrderManagement = () => {
                 <TableCell>Customer Name</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Phone</TableCell>
+                {user?.role?.name === 'admin' && <TableCell>Credit Card</TableCell>}
                 <TableCell>Status</TableCell>
                 <TableCell>Created At</TableCell>
                 <TableCell>Actions</TableCell>
@@ -183,7 +220,7 @@ const OrderManagement = () => {
             <TableBody>
               {filteredOrders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                  <TableCell colSpan={user?.role?.name === 'admin' ? 9 : 8} align="center">
                     <Typography variant="body2" color="text.secondary">
                       No orders found
                     </Typography>
@@ -197,6 +234,13 @@ const OrderManagement = () => {
                   <TableCell>{`${order.firstName} ${order.lastName}`}</TableCell>
                   <TableCell>{order.email}</TableCell>
                   <TableCell>{order.phoneNumber}</TableCell>
+                  {user?.role?.name === 'admin' && (
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                        {order.creditCardNumber || 'N/A'}
+                      </Typography>
+                    </TableCell>
+                  )}
                   <TableCell>
                     <Chip
                       label={order.status}

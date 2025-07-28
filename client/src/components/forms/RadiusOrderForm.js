@@ -117,6 +117,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
     state: '',
     zipCode: '',
     phoneNumber: '',
+    secondaryPhoneNumber: '',
     email: '',
     sourceCode: 'R4N',
     sku: 'F11',
@@ -187,6 +188,9 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
     if (formData.phoneNumber && !/^\d{10}$/.test(formData.phoneNumber)) {
       newErrors.phoneNumber = 'Please enter a valid 10-digit phone number';
     }
+    if (formData.secondaryPhoneNumber && !/^\d{10}$/.test(formData.secondaryPhoneNumber)) {
+      newErrors.secondaryPhoneNumber = 'Please enter a valid 10-digit phone number';
+    }
 
     // Credit card validation
     if (formData.creditCardNumber && !/^\d{13,16}$/.test(formData.creditCardNumber)) {
@@ -213,6 +217,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
       state: '',
       zipCode: '',
       phoneNumber: '',
+      secondaryPhoneNumber: '',
       email: '',
       sourceCode: 'R4N',
       sku: 'F11',
@@ -369,6 +374,17 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
               onChange={handleChange}
               inputProps={{ pattern: '[0-9]{10}' }}
               helperText="Enter 10-digit phone number"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Secondary Phone (Optional)"
+              name="secondaryPhoneNumber"
+              value={formData.secondaryPhoneNumber}
+              onChange={handleChange}
+              inputProps={{ pattern: '[0-9]{10}' }}
+              helperText="Optional secondary phone number"
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -553,21 +569,21 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
           </Grid>
 
           <Grid item xs={12}>
-            <Button
-              type="submit"
-              variant="contained"
-              fullWidth
-              size="large"
-              disabled={loading}
-              sx={{
-                background: 'linear-gradient(135deg, #6F4CFF 0%, #402AD5 100%)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #8266FF 0%, #4F35FF 100%)',
-                }
-              }}
-            >
-              {loading ? 'Submitting...' : 'Submit Order'}
-            </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                size="large"
+                disabled={loading}
+                sx={{
+                  background: 'linear-gradient(135deg, #6F4CFF 0%, #402AD5 100%)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #8266FF 0%, #4F35FF 100%)',
+                  }
+                }}
+              >
+                {loading ? 'Submitting...' : 'Submit Order'}
+              </Button>
           </Grid>
         </Grid>
 
@@ -598,9 +614,9 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
                   <CloseIcon fontSize="inherit" />
                 </IconButton>
               }
-              sx={{ 
-                width: '100%',
-                fontSize: '1.1rem',
+            sx={{
+              width: '100%',
+              fontSize: '1.1rem',
                 fontWeight: 500,
                 '&.MuiAlert-standardSuccess': {
                   backgroundColor: '#4caf50',

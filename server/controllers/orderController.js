@@ -147,6 +147,7 @@ const processRadiusOrder = asyncHandler(async (req, res) => {
       state,
       zipCode,
       phoneNumber,
+      secondaryPhoneNumber: req.body.secondaryPhoneNumber,
       email,
       sourceCode,
       sku,
@@ -372,6 +373,7 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
       state: req.body.BillingState,
       zipCode: req.body.BillingZipCode,
       phoneNumber: req.body.BillingHomePhone,
+      secondaryPhoneNumber: req.body.secondaryPhone,
       email: req.body.Email,
       sourceCode: 'PSO', // Max 6 characters
       sku: 'PSO-SKU', // Max 7 characters
@@ -444,6 +446,7 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
         state: req.body.BillingState || '',
         zipCode: req.body.BillingZipCode || '',
         phoneNumber: req.body.BillingHomePhone || '',
+        secondaryPhoneNumber: req.body.secondaryPhone || '',
         email: req.body.Email || '',
         sourceCode: 'PSO', // Max 6 characters
         sku: 'PSO-SKU', // Max 7 characters

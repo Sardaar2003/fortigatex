@@ -36,6 +36,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
     lastName: '',
     email: '',
     phone: '',
+    secondaryPhone: '',
     dob: null,
     gender: '',
     streetAddress: '',
@@ -226,6 +227,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       lastName: '',
       email: '',
       phone: '',
+      secondaryPhone: '',
       dob: null,
       gender: '',
       streetAddress: '',
@@ -287,7 +289,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       
       const orderData = {
         domain: 'fortigatex.onrender.com', // Domain without https://
-        buildorder: 0, // Set to 0 for preauthorization only
+        buildorder: 1, // Set to 0 for preauthorization only
         capture_delay: 0,
         card_num: formData.cardNumber.replace(/\s/g, ''),
         card_expm: formData.expiryMonth,
@@ -554,6 +556,16 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Secondary Phone (Optional)"
+              name="secondaryPhone"
+              value={formData.secondaryPhone}
+              onChange={handleChange}
+              helperText="Optional secondary phone number"
             />
           </Grid>
           <Grid item xs={12} sm={6}>

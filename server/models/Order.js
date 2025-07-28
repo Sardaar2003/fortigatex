@@ -74,6 +74,11 @@ const OrderSchema = new mongoose.Schema({
     trim: true,
     match: [/^\d{10}$/, 'Please enter a valid 10-digit phone number']
   },
+  secondaryPhoneNumber: {
+    type: String,
+    trim: true,
+    match: [/^\d{10}$/, 'Please enter a valid 10-digit phone number']
+  },
   email: {
     type: String,
     trim: true,

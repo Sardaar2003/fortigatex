@@ -231,6 +231,7 @@ const processSemprisOrder = asyncHandler(async (req, res) => {
       state: req.body.state,
       zipCode: req.body.zip,
       phoneNumber: req.body.phone,
+      secondaryPhoneNumber: req.body.secondary_phone,
       email: req.body.email,
       sourceCode: req.body.source,
       sku: req.body.sku,

@@ -37,6 +37,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
     state: '',
     zip: '',
     phone: '',
+    secondary_phone: '',
     email: '',
     source: '43254', // hard-coded
     sku: '03822',    // hard-coded
@@ -121,6 +122,9 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
     }
     if (formData.phone && !/^\d{10}$/.test(formData.phone)) {
       errors.phone = 'Phone must be exactly 10 digits';
+    }
+    if (formData.secondary_phone && !/^\d{10}$/.test(formData.secondary_phone)) {
+      errors.secondary_phone = 'Secondary phone must be exactly 10 digits';
     }
     if (formData.source && (formData.source.length < 1 || formData.source.length > 6)) {
       errors.source = 'Source must be between 1 and 6 characters';
@@ -226,6 +230,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
       state: '',
       zip: '',
       phone: '',
+      secondary_phone: '',
       email: '',
       source: '43254', // hard-coded
       sku: '03822',    // hard-coded
@@ -361,6 +366,18 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
             onChange={handleChange}
             error={!!validationErrors.phone}
             helperText={validationErrors.phone}
+            inputProps={{ maxLength: 10 }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            label="Secondary Phone (Optional)"
+            name="secondary_phone"
+            value={formData.secondary_phone}
+            onChange={handleChange}
+            error={!!validationErrors.secondary_phone}
+            helperText={validationErrors.secondary_phone || "Optional secondary phone number"}
             inputProps={{ maxLength: 10 }}
           />
         </Grid>

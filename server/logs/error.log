@@ -26,3 +26,8 @@
 [2025-07-14T05:32:36.411Z] [ERROR] Radius API error for user 686d3a939ac027007907826f: Request failed with status code 500
 [2025-07-14T05:41:01.354Z] [ERROR] Radius API error for user 686d3a939ac027007907826f: Request failed with status code 500
 [2025-07-14T05:42:51.566Z] [ERROR] Radius API error for user 686d3a939ac027007907826f: Request failed with status code 500
+[2025-07-28T03:41:17.199Z] [ERROR] Radius API error for user 686d3a939ac027007907826f: Request failed with status code 500
+[2025-07-28T03:41:50.496Z] [ERROR] Radius API error for user 686d3a939ac027007907826f: Request failed with status code 500
+[2025-07-29T09:11:23.681Z] [ERROR] Radius API error for user 686d3a939ac027007907826f: Request failed with status code 500
+[2025-07-29T09:25:44.050Z] [ERROR] Radius API error for user 686d3a939ac027007907826f: Request failed with status code 401
+[2025-07-29T09:26:39.854Z] [ERROR] Radius API error for user 686d3a939ac027007907826f: Request failed with status code 401

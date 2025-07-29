@@ -241,9 +241,9 @@ const AddUserDialog = ({ open, handleClose, onUserAdded }) => {
                         <MenuItem value="" disabled>No roles available</MenuItem>
                       ) : (
                         roles.map((role) => (
-                          <MenuItem key={role._id} value={role._id}>
-                            {role.name} - {role.description}
-                          </MenuItem>
+                        <MenuItem key={role._id} value={role._id}>
+                          {role.name} - {role.description}
+                        </MenuItem>
                         ))
                       )}
                     </Select>

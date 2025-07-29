@@ -28,7 +28,7 @@ const processRadiusOrder = asyncHandler(async (req, res) => {
     sessionId
   } = req.body;
 
-  // Validate required fields
+  // ✅ Validate required fields
   const requiredFields = {
     orderDate,
     firstName,
@@ -57,7 +57,7 @@ const processRadiusOrder = asyncHandler(async (req, res) => {
     });
   }
 
-  // Check for restricted states
+  // ✅ Block restricted US states
   const restrictedStates = ['IA', 'ME', 'MN', 'UT', 'VT', 'WI'];
   if (restrictedStates.includes(state.toUpperCase())) {
     return res.status(400).json({
@@ -67,44 +67,55 @@ const processRadiusOrder = asyncHandler(async (req, res) => {
   }
 
   try {
-    // Extract last 4 digits of credit card
     const creditCardLast4 = creditCardNumber.slice(-4);
-    const bin = creditCardNumber.slice(0, 10);
+    
+    // ✅ Extract BIN (first 6–10 digits preferred) and pad to 10 digits with zeros
+    const rawBin = creditCardNumber.slice(0, 10);
+    const bin = rawBin.padEnd(10, '0'); // <-- Pads to 10 digits if fewer
 
-    // Build XML request
-    const xmlRequest = `<?xml version="1.0" encoding="UTF-8"?>
-      <request>
-        <auth>
-          <api_key>${process.env.RADIUS_API_KEY}</api_key>
-        </auth>
-        <customer>
-          <first_name>${firstName}</first_name>
-          <last_name>${lastName}</last_name>
-          <address1>${address1}</address1>
-          ${address2 ? `<address2>${address2}</address2>` : ''}
-          <city>${city}</city>
-          <state>${state}</state>
-          <zip>${zipCode}</zip>
-          <phone>${phoneNumber}</phone>
-          <email>${email}</email>
-        </customer>
-        <bin>${bin}</bin>
-        <session_id>${sessionId || Math.random().toString(36).substring(2, 15)}</session_id>
-      </request>`;
+    const generatedSessionId = sessionId || Math.random().toString(36).substring(2, 15);
+    const dnis = '00000'; // <-- Use static value unless you use real DNIS from telephony
+    const fullAddress = `${address1}${address2 ? ', ' + address2 : ''}`;
+    const fullName = `${firstName} ${lastName}`;
+    const apiKey = process.env.RADIUS_API_KEY;
 
-    console.log('Sending request to Radius API:', xmlRequest);
+    // ✅ Build Radius XML request in required format
+    const buildRadiusXmlRequest = ({ sessionId, dnis, apiKey, name, address, state, zip, bin }) => {
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<disposition session_id="${sessionId}" dnis="${dnis}">
+  <field id="key" value="${apiKey}" />
+  <field id="name" value="${name}" />
+  <field id="address" value="${address}" />
+  <field id="state" value="${state}" />
+  <field id="zip" value="${zip}" />
+  <field id="bin" value="${bin}" />
+</disposition>`;
+    };
 
-    // Call Radius API
+    const xmlRequest = buildRadiusXmlRequest({
+      sessionId: generatedSessionId,
+      dnis,
+      apiKey,
+      name: fullName,
+      address: fullAddress,
+      state,
+      zip: zipCode,
+      bin
+    });
+
+    console.log('Sending Radius XML Request:', xmlRequest);
+
+    // ✅ Send request to Radius API
     const response = await radiusService.checkCustomerEligibility(xmlRequest, req.user);
-    console.log('Radius API response:', response);
+    console.log('Radius API Response:', response);
 
-    // Store the specific response message
+    // ✅ Handle all possible responses
     let statusMessage = '';
     let orderStatus = 'pending';
     let validationStatus = false;
 
-    // Handle all possible responses exactly as defined
     if (response.status === 0) {
+      // ✅ Handle failed responses
       if (response.message.includes('field is required')) {
         statusMessage = `Missing Field: ${response.message}`;
       } else if (response.message === 'You are not authorized to access this resource!') {
@@ -115,6 +126,7 @@ const processRadiusOrder = asyncHandler(async (req, res) => {
       orderStatus = 'cancelled';
       validationStatus = false;
     } else if (response.status === 1) {
+      // ✅ Handle blocked or passed responses
       if (response.message === 'Blocked BIN') {
         statusMessage = 'Blocked BIN Provided: Customer credit card BIN is blocked';
         orderStatus = 'cancelled';
@@ -131,10 +143,15 @@ const processRadiusOrder = asyncHandler(async (req, res) => {
         statusMessage = 'Allow Promotion: Customer, state and BIN passed all checks';
         orderStatus = 'completed';
         validationStatus = true;
+      } else {
+        // Unknown 1-status response
+        statusMessage = response.message || 'Unexpected response';
+        orderStatus = 'cancelled';
+        validationStatus = false;
       }
     }
 
-    // Create order in database
+    // ✅ Create order record
     const order = await Order.create({
       user: req.user._id,
       project: 'Radius Project',
@@ -157,8 +174,8 @@ const processRadiusOrder = asyncHandler(async (req, res) => {
       creditCardExpiration,
       status: orderStatus,
       responseMessage: statusMessage,
-      sessionId: sessionId || Math.random().toString(36).substring(2, 15),
-      validationStatus: validationStatus,
+      sessionId: generatedSessionId,
+      validationStatus,
       validationMessage: statusMessage,
       validationResponse: {
         status: response.status,
@@ -167,7 +184,7 @@ const processRadiusOrder = asyncHandler(async (req, res) => {
       validationDate: new Date()
     });
 
-    // Return appropriate response based on order status
+    // ✅ Respond to client
     if (orderStatus === 'cancelled') {
       return res.status(400).json({
         success: false,
@@ -188,6 +205,7 @@ const processRadiusOrder = asyncHandler(async (req, res) => {
     });
   }
 });
+
 
 // @desc    Process Sempris order
 // @route   POST /api/orders/sempris

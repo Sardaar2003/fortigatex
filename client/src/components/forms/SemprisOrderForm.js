@@ -233,7 +233,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
       secondary_phone: '',
       email: '',
       source: '43254', // hard-coded
-      sku: '03822',    // hard-coded
+      sku: '103822',    // hard-coded
       card_number: '',
       card_expiration: '',
       card_cvv: '',

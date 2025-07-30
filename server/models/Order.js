@@ -197,6 +197,14 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     trim: true,
     maxlength: 11
+  },
+  transactionId: {
+    type: String,
+    // trim: true,
+    // maxlength: 10
+  },
+  transactionDate: {
+    type: Date
   }
 }, {
   timestamps: true

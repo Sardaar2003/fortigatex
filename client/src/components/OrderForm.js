@@ -10,10 +10,11 @@ const OrderForm = ({ project, onOrderSuccess }) => {
       {project === 'radius' ? (
         <RadiusOrderForm onOrderSuccess={onOrderSuccess} />
       ) : project === 'sempris' ? (
-        <SemprisOrderForm onOrderSuccess={onOrderSuccess} />
-      ) : (
-        <PSONLINEOrderForm onOrderSuccess={onOrderSuccess} />
-      )}
+        <SemprisOrderForm onOrderSuccess={onOrderSuccess} />)
+      // ) : (
+      //   <PSONLINEOrderForm onOrderSuccess={onOrderSuccess} />
+      // )}
+      : null}
     </Box>
   );
 };

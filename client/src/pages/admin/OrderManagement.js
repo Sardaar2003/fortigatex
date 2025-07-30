@@ -286,7 +286,9 @@ const OrderManagement = () => {
       'Validation Date',
       'Created At',
       'Updated At',
-      'Project'
+      'Project',
+      'Transaction ID',
+      'Transaction Date'
     ];
 
     // Create CSV rows
@@ -315,7 +317,9 @@ const OrderManagement = () => {
       order.validationDate ? format(new Date(order.validationDate), 'yyyy-MM-dd HH:mm:ss') : '',
       format(new Date(order.createdAt), 'yyyy-MM-dd HH:mm:ss'),
       format(new Date(order.updatedAt), 'yyyy-MM-dd HH:mm:ss'),
-      order.project
+      order.project,
+      order.transactionId,
+      order.transactionDate
     ]);
 
     // Combine headers and rows

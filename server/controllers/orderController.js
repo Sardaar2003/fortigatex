@@ -271,7 +271,9 @@ const processSemprisOrder = asyncHandler(async (req, res) => {
       validationStatus: validationStatus,
       validationMessage: statusMessage,
       validationResponse: validationResult.rawResponse,
-      validationDate: new Date()
+      validationDate: new Date(),
+      transactionId: validationResult.transactionId,
+      transactionDate: new Date()
     });
 
     console.log('✅ Order created successfully');

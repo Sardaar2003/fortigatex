@@ -65,7 +65,7 @@ const Dashboard = () => {
 
   const renderProjectSelection = () => {
     return (
-      <Box sx={{ mt: 4 }}>
+      <Box sx={{ mt: 2}}>
         <Typography
           variant="h5"
           sx={{
@@ -75,7 +75,7 @@ const Dashboard = () => {
             fontWeight: 700,
             letterSpacing: '-0.025em',
             filter: 'drop-shadow(0 2px 4px rgba(111, 76, 255, 0.3))',
-            mb: 4
+            mb: 2
           }}
         >
           Select a Project
@@ -124,7 +124,7 @@ const Dashboard = () => {
             </GlassCard>
           </Grid>
 
-          <Grid item xs={12} md={4}>
+          {/* <Grid item xs={12} md={4}>
             <GlassCard
               onClick={() => handleProjectSelect('psonline')}
               sx={{
@@ -143,7 +143,7 @@ const Dashboard = () => {
                 Submit orders for PSONLINE products and services
               </Typography>
             </GlassCard>
-          </Grid>
+          </Grid> */}
         </Grid>
       </Box>
     );
@@ -191,12 +191,14 @@ const Dashboard = () => {
                 <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />
                 Sempris Order Form
               </>
-            ) : (
-              <>
-                <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />
-                PSONLINE Order Form
-              </>
-            )}
+            ):null
+            // ) : (
+            //   <>
+            //     <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />
+            //     PSONLINE Order Form
+            //   </>
+            // )
+            }
           </Typography>
           <Button
             onClick={handleBackToProjects}

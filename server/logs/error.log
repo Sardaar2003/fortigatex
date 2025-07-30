@@ -31,3 +31,5 @@
 [2025-07-29T09:11:23.681Z] [ERROR] Radius API error for user 686d3a939ac027007907826f: Request failed with status code 500
 [2025-07-29T09:25:44.050Z] [ERROR] Radius API error for user 686d3a939ac027007907826f: Request failed with status code 401
 [2025-07-29T09:26:39.854Z] [ERROR] Radius API error for user 686d3a939ac027007907826f: Request failed with status code 401
+[2025-07-30T09:42:04.852Z] [ERROR] Sempris API error: Request failed with status code 401
+[2025-07-30T09:47:58.661Z] [ERROR] Sempris API error: Request failed with status code 401

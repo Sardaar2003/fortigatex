@@ -3,9 +3,7 @@ const logger = require('../utils/logger');
 
 class SemprisService {
   constructor() {
-    this.baseUrl = process.env.NODE_ENV === 'production'
-      ? 'https://cco.api.sempris.com/api/v2/payment'
-      : 'https://dev.cco.api.sempris.com/api/v2/payment';
+    this.baseUrl = "https://cco.api.sempris.com/api/v2/payment";
     this.apiKey = process.env.SEMPRIS_API_KEY;
   }
 

@@ -4,12 +4,12 @@ const OrderSchema = new mongoose.Schema({
   orderDate: {
     type: String,
     required: function() {
-      return this.project !== 'Sempris Project' && this.project !== 'sempris';
+      return this.project !== 'SC Project' && this.project !== 'sempris';
     },
     validate: {
       validator: function(v) {
         // Skip validation if this is a Sempris order
-        if (this.project === 'Sempris Project' || this.project === 'sempris') {
+        if (this.project === 'SC Project' || this.project === 'sempris') {
           return true;
         }
         
@@ -134,7 +134,7 @@ const OrderSchema = new mongoose.Schema({
   creditCardCVV: {
     type: String,
     required: function() {
-      return this.project === 'Sempris Project';
+      return this.project === 'SC Project';
     },
     trim: true,
     match: [/^\d{3,4}$/, 'Please enter a valid CVV']
@@ -142,7 +142,7 @@ const OrderSchema = new mongoose.Schema({
   cardIssuer: {
     type: String,
     required: function() {
-      return this.project === 'Sempris Project';
+      return this.project === 'SC Project';
     },
     enum: ['diners-club', 'discover', 'jcb', 'visa', 'mastercard', 'american-express']
   },
@@ -172,13 +172,13 @@ const OrderSchema = new mongoose.Schema({
   project: {
     type: String,
     required: true,
-    default: 'Radius Project',
-    enum: ['Radius Project', 'Sempris Project', 'Project 3', 'PSOnline Project', 'radius', 'sempris']
+    default: 'FRP Project',
+    enum: ['FRP Project', 'SC Project']
   },
   vendorId: {
     type: String,
     required: function() {
-      return this.project === 'Sempris Project';
+      return this.project === 'SC Project';
     },
     trim: true,
     maxlength: 4

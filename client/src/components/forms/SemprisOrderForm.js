@@ -269,6 +269,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
       <Grid container spacing={3}>
+        
         {/* Personal Information */}
         <Grid item xs={12} sm={6}>
           <TextField

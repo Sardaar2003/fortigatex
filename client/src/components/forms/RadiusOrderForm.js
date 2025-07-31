@@ -312,9 +312,9 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-        <Typography variant="h4" gutterBottom sx={{ mb: 4, textAlign: 'center' }}>
-          Radius Order Form
-        </Typography>
+        {/* <Typography variant="h4" gutterBottom sx={{ mb: 4, textAlign: 'center' }}>
+          FRP API Order Form
+        </Typography> */}
 
         <Grid container spacing={3}>
           {/* Order Date at the top */}

@@ -172,6 +172,15 @@ class SemprisService {
           rawResponse: response.data
         };
       }
+      if (response.status === 400) {
+          return {
+            eligible: false,
+            reason: response.data.error_msg?.[0]?.message || 'Unknown error',
+            transactionId: response.data.transaction_id,
+            rawResponse: response.data
+          };
+      }
+
 
     } catch (error) {
       // Log error
@@ -182,28 +191,28 @@ class SemprisService {
 
       // Handle different types of errors
       if (error.response) {
-        // API returned an error response
-        const responseData = error.response.data;
-        return {
-          eligible: false,
-          reason: responseData.error_msg || responseData.message || 'API validation failed',
-          transactionId: responseData.transaction_id,
-          rawResponse: responseData
-        };
-      } else if (error.request) {
-        // Request was made but no response received
-        return {
-          eligible: false,
-          reason: 'No response from Sempris API',
-          rawResponse: null
-        };
+            const responseData = error.response.data;
+            return {
+              eligible: false,
+              reason: responseData.error_msg?.[0]?.message || 'Unknown error',
+              transactionId: responseData.transaction_id,
+              rawResponse: responseData
+            };
+      }
+      else if (error.request) {
+            // Request was made but no response received
+            return {
+              eligible: false,
+              reason: 'No response from Sempris API',
+              rawResponse: null
+            };
       } else {
-        // Error in request setup
-        return {
-          eligible: false,
-          reason: 'Error setting up Sempris API request',
-          rawResponse: null
-        };
+            // Error in request setup
+            return {
+              eligible: false,
+              reason: 'Error setting up Sempris API request',
+              rawResponse: null
+            };
       }
     }
   }

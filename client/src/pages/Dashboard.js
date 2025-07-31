@@ -95,10 +95,10 @@ const Dashboard = () => {
             >
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <RadioIcon sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
-                <Typography variant="h6">Radius</Typography>
+                <Typography variant="h6">FRP API</Typography>
               </Box>
               <Typography variant="body2" color="text.secondary">
-                Submit orders for Radius products and services
+                Submit orders for XML Format API Call
               </Typography>
             </GlassCard>
           </Grid>
@@ -116,10 +116,10 @@ const Dashboard = () => {
             >
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
-                <Typography variant="h6">Sempris</Typography>
+                <Typography variant="h6">SC API</Typography>
               </Box>
               <Typography variant="body2" color="text.secondary">
-                Submit orders for Sempris products and services
+                Submit orders for Call Center Online API
               </Typography>
             </GlassCard>
           </Grid>
@@ -184,12 +184,12 @@ const Dashboard = () => {
             {selectedProject === 'radius' ? (
               <>
                 <RadioIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />
-                Radius Order Form
+                FRP API Order Form
               </>
             ) : selectedProject === 'sempris' ? (
               <>
                 <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />
-                Sempris Order Form
+                SC API Order Form
               </>
             ):null
             // ) : (

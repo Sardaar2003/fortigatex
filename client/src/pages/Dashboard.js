@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import GlassCard from '../components/GlassCard';
 import OrderForm from '../components/OrderForm';
+// import { Assignment } from '@mui/icons-material';
+import { FolderSpecial } from '@mui/icons-material';
 import { AccountCircle as AccountCircleIcon, RadioButtonChecked as RadioIcon, Memory as MemoryIcon } from '@mui/icons-material';
 
 // TabPanel component for tab content
@@ -144,6 +146,27 @@ const Dashboard = () => {
               </Typography>
             </GlassCard>
           </Grid> */}
+
+          <Grid item xs={12} md={4}>
+            <GlassCard
+              onClick={() => handleProjectSelect('sublytics')}
+              sx={{
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-5px)'
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <FolderSpecial sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
+                <Typography variant="h6">Sub API</Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Submit orders for Global Marketing API
+              </Typography>
+            </GlassCard>
+          </Grid>
         </Grid>
       </Box>
     );
@@ -190,6 +213,11 @@ const Dashboard = () => {
               <>
                 <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />
                 SC API Order Form
+              </>
+            ):selectedProject === 'sublytics' ? (
+              <>
+                <FolderSpecial sx={{ fontSize: 32, color: '#6F4CFF' }} />
+                Sub API Order Form
               </>
             ):null
             // ) : (

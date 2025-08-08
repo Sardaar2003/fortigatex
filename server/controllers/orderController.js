@@ -4,6 +4,7 @@ const logger = require('../utils/logger');
 const radiusService = require('../services/radiusService');
 const semprisService = require('../services/semprisService');
 const psonlineService = require('../services/psonlineService');
+const sublyticsService = require('../services/sublyticsService');
 
 // @desc    Process Radius order
 // @route   POST /api/orders/radius
@@ -499,6 +500,158 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
   }
 });
 
+const processSublyticsOrder = asyncHandler(async (req, res) => {
+  console.log('Processing Sublytics order...');
+  console.log('Request body:', req.body);
+  console.log('User ID:', req.user._id);
+  const formatDate = (date) => {
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${month}/${day}/${year}`;
+    };
+ try {
+    // Validate customer with Sempris service
+    console.log('\n=== Sublytics Service Validation ===');
+    const validationResult = await sublyticsService.validateCustomer(req.body, req.user);
+    console.log('Sublytics API Response:', validationResult);
+
+    // Determine order status based on Sempris response
+    let orderStatus = 'pending';
+    let validationStatus = false;
+    let statusMessage = '';
+
+    if (validationResult.eligible) {
+      orderStatus = 'completed';
+      validationStatus = true;
+      statusMessage = 'Order accepted by Sublytics';
+    } else {
+      orderStatus = 'cancelled';
+      validationStatus = false;
+      statusMessage = validationResult.reason || 'Order rejected by Sublytics';
+    }
+
+    // Extract transaction details if available
+const transaction = validationResult.rawResponse?.data?.transaction || {};
+const orderData = validationResult.rawResponse?.data?.order || {};
+
+console.log('\n=== Database Operation ===');
+console.log('Creating Sublytics order in database...');
+
+const project = 'SUB Project'; // or 'SC Project', 'sempris', etc.
+const cardTypeMap = {
+  1: 'mastercard',
+  2: 'visa',
+  3: 'discover',
+  4: 'american-express'
+};
+   const month = req.body.card_exp_month.padStart(2, '0'); // Ensures 2-digit month
+const year = req.body.card_exp_year.slice(-2);          // Takes last two digits of year
+
+const creditCardExpiration = month + year;              // e.g., '0527'
+
+const orderPayload = {
+  orderDate: formatDate(new Date()),  // Use correct format for validation
+  firstName: req.body.bill_fname,
+  lastName: req.body.bill_lname,
+  address1: req.body.bill_address1,
+  address2: req.body.bill_address2 || '',
+  city: req.body.bill_city,
+  state: req.body.bill_state,
+  zipCode: req.body.bill_zipcode,
+  phoneNumber: req.body.phone,
+  email: req.body.email || null,
+  productName: 'SUB Product',
+  creditCardNumber: req.body.card_number,         // ADD THIS (required field)
+  creditCardLast4: req.body.card_number?.slice(-4),
+  creditCardExpiration: creditCardExpiration, // REQUIRED
+  creditCardCVV: req.body.card_cvv,
+  cardIssuer: cardTypeMap[req.body.card_type_id],
+
+  sourceCode: req.body.source_code || '',         // If required for project
+  sku: req.body.sku || '',                        // Same
+  sessionId: req.body.session_id || '',           // Same
+
+  project: project, // make sure this is "SUB Project"
+
+  user: req.user.id,
+
+  transactionId: transaction.gateway_response_id || validationResult.transactionId || null,
+  transactionDate: transaction.date_response || new Date(),
+  customerId: transaction.customer_id || null,
+  sublyticssOrderId: orderData.id || transaction.order_id || null,
+
+  gatewayResponse: {
+    gatewayId: transaction.gateway_response_gateway_id,
+    responseCode: transaction.gateway_response_code,
+    description: transaction.gateway_response_description,
+    authCode: transaction.gateway_auth_code,
+    avs: transaction.gateway_response_avs,
+    cvv: transaction.gateway_response_cvv
+  },
+
+  status: orderStatus,
+  validationStatus: validationStatus,
+  validationMessage: statusMessage,
+  validationResponse: validationResult.rawResponse,
+  validationDate: new Date()
+};
+
+
+// ✅ Add these conditionally
+if (project === 'SC Project' || project === 'sempris') {
+  orderPayload.sourceCode = req.body.source;
+  orderPayload.sku = req.body.sku;
+}
+
+if (project === 'SC Project') {
+  orderPayload.vendorId = req.body.vendor_id;
+  orderPayload.sessionId = req.body.tracking_number;
+}
+
+const order = await Order.create(orderPayload);
+
+
+    console.log('✅ Order created successfully');
+    console.log('Order ID:', order._id);
+    console.log('Order Status:', orderStatus);
+    console.log('Validation Status:', validationStatus);
+    console.log('Validation Message:', statusMessage);
+    console.log('=== End Sempris Order Processing ===\n');
+
+    // Return appropriate response based on order status
+    if (orderStatus === 'cancelled') {
+      return res.status(400).json({
+        success: false,
+        message: statusMessage,
+        data: order
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      data: order
+    });
+  } catch (err) {
+    console.error('\n❌ Error in Sublytics Order Processing');
+    console.error('Error message:', err.message);
+    console.error('Error stack:', err.stack);
+    console.error('Error details:', {
+      message: err.message,
+      response: err.response?.data,
+      status: err.response?.status
+    });
+    console.log('=== End Sublytics Order Processing with Error ===\n');
+    
+    res.status(500).json({
+      success: false,
+      message: 'Error processing Sublytics order',
+      error: err.message
+    });
+  }
+  
+});
+
 // @desc    Get all orders
 // @route   GET /api/orders
 // @access  Private
@@ -592,6 +745,7 @@ module.exports = {
   processRadiusOrder,
   processSemprisOrder,
   processPSOnlineOrder,
+  processSublyticsOrder,
   getOrders,
   getOrderById,
   updateOrder,

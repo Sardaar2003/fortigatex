@@ -11,16 +11,6 @@ import {
   Typography,
   Alert,
   Divider,
-  Paper,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableRow,
   Snackbar,
   FormHelperText,
   IconButton,
@@ -206,6 +196,56 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    if (!validateForm()) {
+      showNotification('error', 'Please fix the validation errors');
+      setLoading(false);
+      return;
+    }
+
+    // Store form data before clearing
+    const formDataToSubmit = {
+      ...formData,
+      orderDate: format(formData.orderDate, 'MM/dd/yyyy'),
+      creditCardExpiration: formData.creditCardExpiration
+    };
+
+    try {
+      console.log('Starting order submission process...');
+      console.log('Form data:', {
+        ...formDataToSubmit,
+        creditCardNumber: formDataToSubmit.creditCardNumber.replace(/\d(?=\d{4})/g, '*')
+      });
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/orders/radius`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formDataToSubmit)
+      });
+
+      console.log('Server response status:', response.status);
+      const data = await response.json();
+      console.log('Server response data:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create order');
+      }
+
+      showNotification('success', 'Order created successfully!');
+    } catch (err) {
+      console.error('Error submitting order:', err);
+      showNotification('error', err.message || 'Failed to create order');
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleClearForm = () => {
     setFormData({
       orderDate: new Date(),
@@ -258,56 +298,6 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
     setTimeLeft(60);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    if (!validateForm()) {
-      showNotification('error', 'Please fix the validation errors');
-      setLoading(false);
-      return;
-    }
-
-    // Store form data before clearing
-    const formDataToSubmit = {
-      ...formData,
-      orderDate: format(formData.orderDate, 'MM/dd/yyyy'),
-      creditCardExpiration: formData.creditCardExpiration
-    };
-
-    try {
-      console.log('Starting order submission process...');
-      console.log('Form data:', {
-        ...formDataToSubmit,
-        creditCardNumber: formDataToSubmit.creditCardNumber.replace(/\d(?=\d{4})/g, '*')
-      });
-
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/orders/radius`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formDataToSubmit)
-      });
-
-      console.log('Server response status:', response.status);
-      const data = await response.json();
-      console.log('Server response data:', data);
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create order');
-      }
-
-      showNotification('success', 'Order created successfully!');
-    } catch (err) {
-      console.error('Error submitting order:', err);
-      showNotification('error', err.message || 'Failed to create order');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>

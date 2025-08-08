@@ -87,13 +87,17 @@ const OrderSchema = new mongoose.Schema({
   },
   sourceCode: {
     type: String,
-    required: true,
+    required: function () {
+    return this.project === 'SC Project' || this.project === 'FRP Project';
+  },
     trim: true,
     maxlength: 6
   },
   sku: {
     type: String,
-    required: true,
+    required: function () {
+    return this.project === 'SC Project' || this.project === 'FRP Project';
+    },
     trim: true,
     maxlength: 7
   },
@@ -104,7 +108,9 @@ const OrderSchema = new mongoose.Schema({
   },
   sessionId: {
     type: String,
-    required: true,
+    required: function () {
+    return this.project === 'SC Project';
+  },
     trim: true,
     maxlength: 36
   },
@@ -114,6 +120,11 @@ const OrderSchema = new mongoose.Schema({
     enum: ['pending', 'processing', 'completed', 'cancelled', 'refunded', 'failed'],
     default: 'pending'
   },
+  sublyticssOrderId: {
+  type: String,
+  trim: true
+}
+,
   creditCardNumber: {
     type: String,
     required: true,
@@ -134,7 +145,7 @@ const OrderSchema = new mongoose.Schema({
   creditCardCVV: {
     type: String,
     required: function() {
-      return this.project === 'SC Project';
+      return this.project === 'SC Project' || this.project==='SUB Project';
     },
     trim: true,
     match: [/^\d{3,4}$/, 'Please enter a valid CVV']
@@ -142,7 +153,7 @@ const OrderSchema = new mongoose.Schema({
   cardIssuer: {
     type: String,
     required: function() {
-      return this.project === 'SC Project';
+      return this.project === 'SC Project' || this.project==='SUB Project';
     },
     enum: ['diners-club', 'discover', 'jcb', 'visa', 'mastercard', 'american-express']
   },
@@ -150,6 +161,10 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  customerId: {
+  type: String,
+  trim: true
+},
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -173,7 +188,7 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     required: true,
     default: 'FRP Project',
-    enum: ['FRP Project', 'SC Project']
+    enum: ['FRP Project', 'SC Project','SUB Project']
   },
   vendorId: {
     type: String,

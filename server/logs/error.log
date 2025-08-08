@@ -41,3 +41,7 @@
 [2025-08-08T17:03:52.940Z] [ERROR] Sublytics API error: Request failed with status code 400
 [2025-08-08T17:05:28.093Z] [ERROR] Sublytics API error: Request failed with status code 400
 [2025-08-08T17:10:12.575Z] [ERROR] Sublytics API error: Request failed with status code 400
+[2025-08-08T17:29:57.118Z] [ERROR] Sublytics API error: Request failed with status code 400
+[2025-08-08T17:30:46.179Z] [ERROR] Sublytics API error: Request failed with status code 400
+[2025-08-08T17:32:23.268Z] [ERROR] Sublytics API error: This card type is not currently accepted. Please use a different payment method.
+[2025-08-08T17:37:22.385Z] [ERROR] Sublytics API error: Request failed with status code 400

@@ -160,7 +160,7 @@ const Dashboard = () => {
             >
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <FolderSpecial sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
-                <Typography variant="h6">Sub API</Typography>
+                <Typography variant="h6">HPP API</Typography>
               </Box>
               <Typography variant="body2" color="text.secondary">
                 Submit orders for Global Marketing API
@@ -217,7 +217,7 @@ const Dashboard = () => {
             ):selectedProject === 'sublytics' ? (
               <>
                 <FolderSpecial sx={{ fontSize: 32, color: '#6F4CFF' }} />
-                Sub API Order Form
+                HPP API Order Form
               </>
             ):null
             // ) : (

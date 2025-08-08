@@ -29,6 +29,74 @@ import { AuthContext } from '../../context/AuthContext';
 import { format } from 'date-fns';
 import MuiAlert from '@mui/material/Alert';
 
+const states = [
+  { value: 'AL', label: 'Alabama' },
+  { value: 'AK', label: 'Alaska' },
+  { value: 'AZ', label: 'Arizona' },
+  { value: 'AR', label: 'Arkansas' },
+  { value: 'CA', label: 'California' },
+  { value: 'CO', label: 'Colorado' },
+  { value: 'CT', label: 'Connecticut' },
+  { value: 'DE', label: 'Delaware' },
+  { value: 'FL', label: 'Florida' },
+  { value: 'GA', label: 'Georgia' },
+  { value: 'HI', label: 'Hawaii' },
+  { value: 'ID', label: 'Idaho' },
+  { value: 'IL', label: 'Illinois' },
+  { value: 'IN', label: 'Indiana' },
+  { value: 'IA', label: 'Iowa' },
+  { value: 'KS', label: 'Kansas' },
+  { value: 'KY', label: 'Kentucky' },
+  { value: 'LA', label: 'Louisiana' },
+  { value: 'MA', label: 'Massachusetts' },
+  { value: 'MD', label: 'Maryland' },
+  { value: 'ME', label: 'Maine' },
+  { value: 'MI', label: 'Michigan' },
+  { value: 'MN', label: 'Minnesota' },
+  { value: 'MS', label: 'Mississippi' },
+  { value: 'MO', label: 'Missouri' },
+  { value: 'MT', label: 'Montana' },
+  { value: 'NE', label: 'Nebraska' },
+  { value: 'NV', label: 'Nevada' },
+  { value: 'NH', label: 'New Hampshire' },
+  { value: 'NJ', label: 'New Jersey' },
+  { value: 'NM', label: 'New Mexico' },
+  { value: 'NY', label: 'New York' },
+  { value: 'NC', label: 'North Carolina' },
+  { value: 'ND', label: 'North Dakota' },
+  { value: 'OH', label: 'Ohio' },
+  { value: 'OK', label: 'Oklahoma' },
+  { value: 'OR', label: 'Oregon' },
+  { value: 'PA', label: 'Pennsylvania' },
+  { value: 'RI', label: 'Rhode Island' },
+  { value: 'SC', label: 'South Carolina' },
+  { value: 'SD', label: 'South Dakota' },
+  { value: 'TN', label: 'Tennessee' },
+  { value: 'TX', label: 'Texas' },
+  { value: 'UT', label: 'Utah' },
+  { value: 'VT', label: 'Vermont' },
+  { value: 'VA', label: 'Virginia' },
+  { value: 'WA', label: 'Washington' },
+  { value: 'WV', label: 'West Virginia' },
+  { value: 'WI', label: 'Wisconsin' },
+  { value: 'WY', label: 'Wyoming' },
+  { value: 'DC', label: 'District of Columbia' }
+];
+
+const binNumbers = [
+  "533248", "542418", "518941", "517805", "410040", "426937", "498563", "481582",
+  "414740", "474476", "423980", "601100", "528432", "483316", "552433", "537811",
+  "555426", "529062", "544768", "510855", "510889", "554869", "411600", "434340",
+  "411238", "414397", "546993", "555753", "545660", "522992", "549345", "554885",
+  "542543", "524913", "434257", "446542", "407221", "482812", "445170", "474165",
+  "411384", "442644", "470727", "473702", "434256", "473703", "434258", "521333",
+  "524366", "546680", "524300", "524306", "521853", "552330", "524008", "524363",
+  "524364", "444796", "470793", "525362", "511332", "510404", "539483", "532802",
+  "434769", "483312", "406032", "474472", "412197", "461046", "444296", "400022",
+  "486796", "526219"
+];
+
+
 const SubProjectOrderForm = ({ onOrderSuccess }) => {
   const navigate = useNavigate();
   const { token } = React.useContext(AuthContext);
@@ -79,7 +147,8 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
     tracking2: '01',
     // ... add other fields as needed
   });
-  const [errors, setErrors] = useState({});
+    const [errors, setErrors] = useState({});
+    const restrictedStates = ['IA', 'OH', 'AK', 'HI', 'ME', 'MN', 'UT', 'VT', 'WI'];
 
   // Timer effect for notification
   useEffect(() => {
@@ -446,17 +515,29 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
             />
             </Grid>
             <Grid item xs={12} sm={4}>
-            <TextField
-                required
-                fullWidth
-                label="State"
-                name="bill_state"
+            <FormControl fullWidth error={!!errors.state}>
+              <InputLabel>State</InputLabel>
+              <Select
                 value={formData.bill_state}
                 onChange={handleChange}
-                // error={!!errors.bill_state}
-                // helperText={errors.bill_state}
-                maxLength={30}
-            />
+                name="bill_state"
+                label="State"
+              >
+                {states.map((state) => (
+                  <MenuItem 
+                    key={state.value} 
+                    value={state.value}
+                    disabled={restrictedStates.includes(state.value)}
+                  >
+                    {state.label}
+                    {restrictedStates.includes(state.value) && ' (Restricted)'}
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.state && (
+                <FormHelperText>{errors.state}</FormHelperText>
+              )}
+            </FormControl>
             </Grid>
             <Grid item xs={12} sm={4}>
             <TextField
@@ -561,15 +642,29 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                 />
                 </Grid>
                 <Grid item xs={12} sm={4}>
-                <TextField
-                    required
-                    fullWidth
-                    label="State"
-                    name="ship_state"
-                    value={formData.ship_state}
-                    onChange={handleChange}
-                    maxLength={30}
-                />
+                <FormControl fullWidth error={!!errors.state}>
+              <InputLabel>State</InputLabel>
+              <Select
+                value={formData.ship_state}
+                onChange={handleChange}
+                name="ship_state"
+                label="State"
+              >
+                {states.map((state) => (
+                  <MenuItem 
+                    key={state.value} 
+                    value={state.value}
+                    disabled={restrictedStates.includes(state.value)}
+                  >
+                    {state.label}
+                    {restrictedStates.includes(state.value) && ' (Restricted)'}
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.state && (
+                <FormHelperText>{errors.state}</FormHelperText>
+              )}
+            </FormControl>
                 </Grid>
                 <Grid item xs={12} sm={4}>
                 <TextField

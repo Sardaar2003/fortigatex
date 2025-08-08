@@ -538,7 +538,7 @@ const orderData = validationResult.rawResponse?.data?.order || {};
 console.log('\n=== Database Operation ===');
 console.log('Creating Sublytics order in database...');
 
-const project = 'SUB Project'; // or 'SC Project', 'sempris', etc.
+const project = 'HPP Project'; // or 'SC Project', 'sempris', etc.
 const cardTypeMap = {
   1: 'mastercard',
   2: 'visa',
@@ -572,7 +572,7 @@ const orderPayload = {
   sku: req.body.sku || '',                        // Same
   sessionId: req.body.session_id || '',           // Same
 
-  project: project, // make sure this is "SUB Project"
+  project: project, // make sure this is "HPP Project"
 
   user: req.user.id,
 
@@ -645,7 +645,7 @@ const order = await Order.create(orderPayload);
     
     res.status(500).json({
       success: false,
-      message: 'Error processing Sublytics order',
+      message: err.response?.data,
       error: err.message
     });
   }

@@ -145,7 +145,7 @@ const OrderSchema = new mongoose.Schema({
   creditCardCVV: {
     type: String,
     required: function() {
-      return this.project === 'SC Project' || this.project==='SUB Project';
+      return this.project === 'SC Project' || this.project==='HPP Project';
     },
     trim: true,
     match: [/^\d{3,4}$/, 'Please enter a valid CVV']
@@ -153,7 +153,7 @@ const OrderSchema = new mongoose.Schema({
   cardIssuer: {
     type: String,
     required: function() {
-      return this.project === 'SC Project' || this.project==='SUB Project';
+      return this.project === 'SC Project' || this.project==='HPP Project';
     },
     enum: ['diners-club', 'discover', 'jcb', 'visa', 'mastercard', 'american-express']
   },
@@ -188,7 +188,7 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     required: true,
     default: 'FRP Project',
-    enum: ['FRP Project', 'SC Project','SUB Project']
+    enum: ['FRP Project', 'SC Project','HPP Project']
   },
   vendorId: {
     type: String,

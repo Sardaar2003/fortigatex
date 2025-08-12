@@ -617,7 +617,7 @@ const order = await Order.create(orderPayload);
     console.log('Order Status:', orderStatus);
     console.log('Validation Status:', validationStatus);
     console.log('Validation Message:', statusMessage);
-    console.log('=== End Sempris Order Processing ===\n');
+    console.log('=== End Sublytics Order Processing ===\n');
 
     // Return appropriate response based on order status
     if (orderStatus === 'cancelled') {

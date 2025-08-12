@@ -181,7 +181,11 @@ if (validationErrors.length > 0) {
     console.log('Card BIN:', cardBin);
     if (binNumbers.includes(cardBin)) {
       console.error('BIN rejected:', cardBin);
-      throw new Error(`This card type is not currently accepted. Please use a different payment method.`);
+      return {
+      eligible: false,
+      reason: 'BIN List Reject. Try another card',
+      rawResponse: null
+    };
     }
     console.log('BIN validation passed');
         console.log('payload', payload);
@@ -252,7 +256,7 @@ if (validationErrors.length > 0) {
 
 
 
-    } catch (error) {
+    } catch (error) { 
   // Log error
   logger.error(`Sublytics API error: ${error.message}`, {
     tracking_number: orderData.tracking_number,

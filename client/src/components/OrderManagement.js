@@ -44,7 +44,7 @@ const OrderManagement = () => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/api/orders', {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/orders`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -129,13 +129,13 @@ const OrderManagement = () => {
   const handleDeleteOrder = async (id) => {
     if (window.confirm('Are you sure you want to delete this order?')) {
       try {
-        await axios.delete(`/api/orders/${id}`, {
+        await axios.delete(`${process.env.REACT_APP_API_URL}/api/orders/${id}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
         // Refresh orders after deletion
-        const response = await axios.get('/api/orders', {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/orders`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

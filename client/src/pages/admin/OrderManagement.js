@@ -71,7 +71,7 @@ const OrderManagement = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get('/api/orders', {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/orders`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -103,7 +103,7 @@ const OrderManagement = () => {
   const handleDelete = async (orderId) => {
     if (window.confirm('Are you sure you want to delete this order?')) {
       try {
-        await axios.delete(`/api/orders/${orderId}`, {
+        await axios.delete(`${process.env.REACT_APP_API_URL}/api/orders/${orderId}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -126,7 +126,7 @@ const OrderManagement = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(`/api/orders/${selectedOrder._id}`, editForm, {
+      await axios.put(`${process.env.REACT_APP_API_URL}/api/orders/${selectedOrder._id}`, editForm, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -258,7 +258,7 @@ const OrderManagement = () => {
     if (window.confirm('This will update project names in the database:\n• Sempris Project → SC Project\n• Radius Project → FRP Project\n• PSOnline Project → MDI Project\n\nAre you sure you want to proceed?')) {
       try {
         setLoading(true);
-        const response = await axios.post('/api/admin/fix-project-names', {}, {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/admin/fix-project-names`, {}, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

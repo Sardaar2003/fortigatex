@@ -139,10 +139,10 @@ const Dashboard = () => {
             >
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
-                <Typography variant="h6">PSONLINE</Typography>
+                <Typography variant="h6">MDI API</Typography>
               </Box>
               <Typography variant="body2" color="text.secondary">
-                Submit orders for PSONLINE products and services
+                Submit orders for MDI products and services
               </Typography>
             </GlassCard>
           </Grid>

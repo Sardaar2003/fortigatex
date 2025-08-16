@@ -63,7 +63,7 @@ const OrderManagement = () => {
   const [deleteSuccess, setDeleteSuccess] = useState('');
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
 
-  const projects = ['all', 'Radius Project', 'Sempris Project'];
+  const projects = ['all', 'FRP Project', 'SC Project', 'HPP Project', 'MDI Project'];
 
   useEffect(() => {
     fetchOrders();
@@ -71,14 +71,12 @@ const OrderManagement = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/orders`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+      const response = await axios.get('/api/orders', {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      );
+      });
+      console.log('Fetched orders with user data:', response.data.data[0]); // Debug log
       setOrders(response.data.data);
       setLoading(false);
     } catch (err) {
@@ -105,14 +103,11 @@ const OrderManagement = () => {
   const handleDelete = async (orderId) => {
     if (window.confirm('Are you sure you want to delete this order?')) {
       try {
-        await axios.delete(
-          `${process.env.REACT_APP_API_URL}/api/orders/${orderId}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
+        await axios.delete(`/api/orders/${orderId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
           }
-        );
+        });
         setDeleteSuccess('Order deleted successfully');
         setTimeout(() => setDeleteSuccess(''), 3000);
         fetchOrders();
@@ -131,15 +126,11 @@ const OrderManagement = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/orders/${selectedOrder._id}`,
-        editForm,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+      await axios.put(`/api/orders/${selectedOrder._id}`, editForm, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      );
+      });
       handleDialogClose();
       fetchOrders();
     } catch (err) {
@@ -160,6 +151,8 @@ const OrderManagement = () => {
       ...prev,
       [field]: event.target.value
     }));
+    // Reset to first page when filters change
+    setPage(0);
   };
 
   const handleReset = () => {
@@ -169,6 +162,8 @@ const OrderManagement = () => {
       validation: '',
       project: 'all'
     });
+    // Reset to first page when resetting filters
+    setPage(0);
   };
 
   const getStatusColor = (status) => {
@@ -259,16 +254,51 @@ const OrderManagement = () => {
     setSelectedOrder(null);
   };
 
+  const handleFixProjectNames = async () => {
+    if (window.confirm('This will update project names in the database:\n• Sempris Project → SC Project\n• Radius Project → FRP Project\n• PSOnline Project → MDI Project\n\nAre you sure you want to proceed?')) {
+      try {
+        setLoading(true);
+        const response = await axios.post('/api/admin/fix-project-names', {}, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.data.success) {
+          const { updates, totalUpdated } = response.data.data;
+          let message = `✅ Successfully updated ${totalUpdated} orders:\n\n`;
+          updates.forEach(update => {
+            if (update.count > 0) {
+              message += `• ${update.from} → ${update.to}: ${update.count} orders\n`;
+            }
+          });
+          
+          alert(message);
+          
+          // Refresh the orders to show updated data
+          await fetchOrders();
+        }
+      } catch (err) {
+        console.error('Error fixing project names:', err);
+        alert('Failed to fix project names: ' + (err.response?.data?.message || err.message));
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const handleDownloadCSV = () => {
-    // Create CSV headers
+    // Create CSV headers - including ALL database fields
     const headers = [
       'Order ID',
       'Order Date',
       'First Name',
       'Last Name',
       'Email',
-      'Phone',
-      'Address',
+      'Phone Number',
+      'Secondary Phone Number',
+      'Address Line 1',
+      'Address Line 2',
       'City',
       'State',
       'Zip Code',
@@ -277,49 +307,75 @@ const OrderManagement = () => {
       'Product Name',
       'Session ID',
       'Status',
-      'credit Card Number',
+      'SubLytics Order ID',
+      'Credit Card Number',
       'Credit Card Expiration',
+      'Credit Card Last 4',
+      'Credit Card CVV',
+      'Card Issuer',
       'Voice Recording ID',
+      'Customer ID',
+      'User ID',
+      'User Name',
+      'User Email',
       'Validation Status',
       'Validation Message',
       'Validation Response',
       'Validation Date',
-      'Created At',
-      'Updated At',
       'Project',
+      'Vendor ID',
+      'Client Order Number',
+      'Client Data',
+      'Pitch ID',
       'Transaction ID',
-      'Transaction Date'
+      'Transaction Date',
+      'Created At',
+      'Updated At'
     ];
 
-    // Create CSV rows
+    // Create CSV rows - including ALL database fields and user info
     const rows = orders.map(order => [
       order._id,
-      format(new Date(order.orderDate), 'yyyy-MM-dd HH:mm:ss'),
-      order.firstName,
-      order.lastName,
-      order.email,
-      order.phoneNumber,
-      order.address1,
-      order.city,
-      order.state,
-      order.zipCode,
-      order.sourceCode,
-      order.sku,
-      order.productName,
-      order.sessionId,
-      order.status,
-      order.creditCardNumber,
-      order.creditCardExpiration,
-      order.voiceRecordingId,
-      order.validationStatus,
-      order.validationMessage,
-      order.validationResponse,
+      order.orderDate || '',
+      order.firstName || '',
+      order.lastName || '',
+      order.email || '',
+      order.phoneNumber || '',
+      order.secondaryPhoneNumber || '',
+      order.address1 || '',
+      order.address2 || '',
+      order.city || '',
+      order.state || '',
+      order.zipCode || '',
+      order.sourceCode || '',
+      order.sku || '',
+      order.productName || '',
+      order.sessionId || '',
+      order.status || '',
+      order.sublyticssOrderId || '',
+      order.creditCardNumber || '',
+      order.creditCardExpiration || '',
+      order.creditCardLast4 || '',
+      order.creditCardCVV || '',
+      order.cardIssuer || '',
+      order.voiceRecordingId || '',
+      order.customerId || '',
+      order.user?._id || '',
+      order.user?.name || '',
+      order.user?.email || '',
+      order.validationStatus || '',
+      order.validationMessage || '',
+      order.validationResponse ? JSON.stringify(order.validationResponse) : '',
       order.validationDate ? format(new Date(order.validationDate), 'yyyy-MM-dd HH:mm:ss') : '',
-      format(new Date(order.createdAt), 'yyyy-MM-dd HH:mm:ss'),
-      format(new Date(order.updatedAt), 'yyyy-MM-dd HH:mm:ss'),
-      order.project,
-      order.transactionId,
-      order.transactionDate
+      order.project || '',
+      order.vendorId || '',
+      order.clientOrderNumber || '',
+      order.clientData || '',
+      order.pitchId || '',
+      order.transactionId || '',
+      order.transactionDate ? format(new Date(order.transactionDate), 'yyyy-MM-dd HH:mm:ss') : '',
+      order.createdAt ? format(new Date(order.createdAt), 'yyyy-MM-dd HH:mm:ss') : '',
+      order.updatedAt ? format(new Date(order.updatedAt), 'yyyy-MM-dd HH:mm:ss') : ''
     ]);
 
     // Combine headers and rows
@@ -333,7 +389,7 @@ const OrderManagement = () => {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `orders_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.setAttribute('download', `complete_orders_export_${format(new Date(), 'yyyy-MM-dd_HH-mm-ss')}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -364,19 +420,34 @@ const OrderManagement = () => {
           <Typography variant="h4" component="h1" sx={{ color: 'white' }}>
             Order Management
           </Typography>
-          <Button
-            startIcon={<DownloadIcon />}
-            onClick={handleDownloadCSV}
-            sx={{
-              background: 'rgba(111, 76, 255, 0.2)',
-              color: '#6F4CFF',
-              '&:hover': {
-                background: 'rgba(111, 76, 255, 0.3)',
-              },
-            }}
-          >
-            Download CSV
-          </Button>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              startIcon={<RefreshIcon />}
+              onClick={handleFixProjectNames}
+              sx={{
+                background: 'rgba(255, 152, 0, 0.2)',
+                color: '#FF9800',
+                '&:hover': {
+                  background: 'rgba(255, 152, 0, 0.3)',
+                },
+              }}
+            >
+              Fix Project Names
+            </Button>
+            <Button
+              startIcon={<DownloadIcon />}
+              onClick={handleDownloadCSV}
+              sx={{
+                background: 'rgba(111, 76, 255, 0.2)',
+                color: '#6F4CFF',
+                '&:hover': {
+                  background: 'rgba(111, 76, 255, 0.3)',
+                },
+              }}
+            >
+              Download CSV
+            </Button>
+          </Box>
         </Box>
 
         <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -483,8 +554,10 @@ const OrderManagement = () => {
                 }}
               >
                 <MenuItem value="all">All Projects</MenuItem>
-                <MenuItem value="Radius Project">Radius Project</MenuItem>
-                <MenuItem value="Sempris Project">Sempris Project</MenuItem>
+                <MenuItem value="FRP Project">FRP Project</MenuItem>
+                <MenuItem value="SC Project">SC Project</MenuItem>
+                <MenuItem value="HPP Project">HPP Project</MenuItem>
+                <MenuItem value="MDI Project">MDI Project</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -526,7 +599,9 @@ const OrderManagement = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredOrders.map((order) => (
+                {filteredOrders
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((order) => (
                   <TableRow
                     key={order._id}
                     sx={{
@@ -545,12 +620,24 @@ const OrderManagement = () => {
                         label={order.project}
                         size="small"
                         sx={{
-                          background: order.project === 'Radius Project'
+                          background: order.project === 'FRP Project'
                             ? 'rgba(111, 76, 255, 0.2)'
-                            : 'rgba(156, 39, 176, 0.2)',
-                          color: order.project === 'Radius Project'
+                            : order.project === 'SC Project'
+                            ? 'rgba(156, 39, 176, 0.2)'
+                            : order.project === 'HPP Project'
+                            ? 'rgba(244, 67, 54, 0.2)'
+                            : order.project === 'MDI Project'
+                            ? 'rgba(76, 175, 80, 0.2)'
+                            : 'rgba(158, 158, 158, 0.2)',
+                          color: order.project === 'FRP Project'
                             ? '#6F4CFF'
-                            : '#9C27B0',
+                            : order.project === 'SC Project'
+                            ? '#9C27B0'
+                            : order.project === 'HPP Project'
+                            ? '#F44336'
+                            : order.project === 'MDI Project'
+                            ? '#4CAF50'
+                            : '#9E9E9E',
                           backdropFilter: 'blur(5px)',
                           border: '1px solid rgba(255, 255, 255, 0.1)'
                         }}
@@ -610,6 +697,31 @@ const OrderManagement = () => {
                 ))}
               </TableBody>
             </Table>
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25, 50]}
+              component="div"
+              count={filteredOrders.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              sx={{
+                color: 'white',
+                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+                  color: 'white',
+                },
+                '& .MuiTablePagination-select': {
+                  color: 'white',
+                },
+                '& .MuiTablePagination-actions button': {
+                  color: 'white',
+                },
+                '& .MuiTablePagination-actions button:disabled': {
+                  color: 'rgba(255, 255, 255, 0.3)',
+                },
+              }}
+            />
           </TableContainer>
         )}
 

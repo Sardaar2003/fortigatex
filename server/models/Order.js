@@ -188,7 +188,7 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     required: true,
     default: 'FRP Project',
-    enum: ['FRP Project', 'SC Project','HPP Project']
+    enum: ['FRP Project', 'SC Project','HPP Project','MDI Project']
   },
   vendorId: {
     type: String,

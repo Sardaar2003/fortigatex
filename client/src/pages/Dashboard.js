@@ -126,7 +126,7 @@ const Dashboard = () => {
             </GlassCard>
           </Grid>
 
-          {/* <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={4}>
             <GlassCard
               onClick={() => handleProjectSelect('psonline')}
               sx={{
@@ -145,7 +145,7 @@ const Dashboard = () => {
                 Submit orders for PSONLINE products and services
               </Typography>
             </GlassCard>
-          </Grid> */}
+          </Grid>
 
           <Grid item xs={12} md={4}>
             <GlassCard

@@ -17,7 +17,9 @@ import {
   Chip,
   Button,
   CircularProgress,
-  Alert
+  Alert,
+  Pagination,
+  Stack
 } from '@mui/material';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
@@ -29,10 +31,13 @@ const OrderManagement = () => {
   const [projectType, setProjectType] = useState('all');
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
+  const [paginatedOrders, setPaginatedOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // You can make this configurable if needed
 
   // Fetch orders from API
   useEffect(() => {
@@ -71,9 +76,10 @@ const OrderManagement = () => {
         
         // Map filter values to actual project names
         const projectMapping = {
-          'radius': 'Radius Project',
-          'sempris': 'Sempris Project', 
-          'psonline': 'PSOnline Project'
+          'frp': 'FRP Project',
+          'sc': 'SC Project', 
+          'hpp': 'HPP Project',
+          'mdi': 'MDI Project'
         };
         
         const expectedProject = projectMapping[projectType];
@@ -93,7 +99,17 @@ const OrderManagement = () => {
     }
 
     setFilteredOrders(filtered);
+    // Reset to first page when filters change
+    setCurrentPage(1);
   }, [orders, searchTerm, projectType]);
+
+  // Paginate filtered orders
+  useEffect(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginated = filteredOrders.slice(startIndex, endIndex);
+    setPaginatedOrders(paginated);
+  }, [filteredOrders, currentPage, itemsPerPage]);
 
   const handleViewOrder = (order) => {
     console.log('View order details:', order);
@@ -104,6 +120,10 @@ const OrderManagement = () => {
   const handleCloseDetailDialog = () => {
     setDetailDialogOpen(false);
     setSelectedOrder(null);
+  };
+
+  const handlePageChange = (event, newPage) => {
+    setCurrentPage(newPage);
   };
 
   const handleDeleteOrder = async (id) => {
@@ -144,11 +164,21 @@ const OrderManagement = () => {
     );
   }
 
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * itemsPerPage, filteredOrders.length);
+
   return (
     <Box sx={{ width: '100%', p: 3 }}>
       <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
         Order Management ({filteredOrders.length} orders)
       </Typography>
+      
+      {filteredOrders.length > 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Showing {startIndex}-{endIndex} of {filteredOrders.length} orders
+        </Typography>
+      )}
 
       <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
         <TextField
@@ -166,9 +196,10 @@ const OrderManagement = () => {
             label="Project Type"
           >
             <MenuItem value="all">All Projects</MenuItem>
-            <MenuItem value="radius">Radius Project</MenuItem>
-            <MenuItem value="sempris">Sempris Project</MenuItem>
-            <MenuItem value="psonline">PSOnline Project</MenuItem>
+            <MenuItem value="frp">FRP Project</MenuItem>
+            <MenuItem value="sc">SC Project</MenuItem>
+            <MenuItem value="hpp">HPP Project</MenuItem>
+            <MenuItem value="mdi">MDI Project</MenuItem>
           </Select>
         </FormControl>
       </Box>
@@ -198,7 +229,7 @@ const OrderManagement = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredOrders.map((order) => (
+                paginatedOrders.map((order) => (
                 <TableRow key={order._id}>
                   <TableCell>{order._id}</TableCell>
                   <TableCell>{order.project}</TableCell>
@@ -243,6 +274,21 @@ const OrderManagement = () => {
           </Table>
         </TableContainer>
       </Paper>
+
+      {/* Pagination */}
+      {filteredOrders.length > itemsPerPage && (
+        <Stack spacing={2} sx={{ mt: 3, alignItems: 'center' }}>
+          <Pagination
+            count={totalPages}
+            page={currentPage}
+            onChange={handlePageChange}
+            color="primary"
+            size="large"
+            showFirstButton
+            showLastButton
+          />
+        </Stack>
+      )}
       
       {/* Order Detail Dialog */}
       <OrderDetailDialog

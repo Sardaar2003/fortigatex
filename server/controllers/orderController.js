@@ -741,11 +741,148 @@ const getMyOrders = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Process MI order
+// @route   POST /api/orders/mi
+// @access  Private
+const processMIOrder = asyncHandler(async (req, res) => {
+  const {
+    callDate,
+    firstName,
+    lastName,
+    address1,
+    address2,
+    city,
+    state,
+    zipCode,
+    phoneNumber,
+    checkingAccountName,
+    bankName,
+    routingNumber,
+    checkingAccountNumber,
+    authorizedSigner,
+    ageConfirmation,
+    email,
+    dateOfBirth,
+    consent
+  } = req.body;
+
+  // ✅ Validate required fields
+  const requiredFields = {
+    callDate,
+    firstName,
+    lastName,
+    address1,
+    city,
+    state,
+    zipCode,
+    phoneNumber,
+    checkingAccountName,
+    bankName,
+    routingNumber,
+    checkingAccountNumber,
+    authorizedSigner,
+    ageConfirmation,
+    email,
+    dateOfBirth,
+    consent
+  };
+
+  const missingFields = Object.entries(requiredFields)
+    .filter(([key, value]) => {
+      // Check if field is missing or empty
+      if (!value) return true;
+      
+      // Special validation for specific fields
+      if (key === 'authorizedSigner' && value !== 'YES') return true;
+      if (key === 'ageConfirmation' && value !== 'YES') return true;
+      if (key === 'consent') {
+        // Check if consent is an object with at least one service selected
+        if (typeof value === 'object' && value !== null) {
+          const consentValues = Object.values(value);
+          if (!consentValues.some(v => v === true)) return true;
+        } else {
+          return true;
+        }
+      }
+      return false;
+    })
+    .map(([key]) => key);
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: `Missing or invalid required fields: ${missingFields.join(', ')}`
+    });
+  }
+
+  // ✅ Block restricted US states
+  const restrictedStates = ['IA', 'WI', 'MS', 'MN'];
+  if (restrictedStates.includes(state.toUpperCase())) {
+    return res.status(400).json({
+      success: false,
+      message: `Orders from ${state} cannot be accepted`
+    });
+  }
+
+  try {
+    // Create the order in the database
+    const order = await Order.create({
+      user: req.user.id,
+      project: 'MI Project',
+      callDate,
+      firstName,
+      lastName,
+      address1,
+      address2,
+      city,
+      state,
+      zipCode,
+      phoneNumber,
+      email,
+      dateOfBirth,
+      // MI-specific fields
+      checkingAccountName,
+      bankName,
+      routingNumber,
+      checkingAccountNumber,
+      authorizedSigner,
+      ageConfirmation,
+      consent,
+      // Store individual consent options
+      consentBenefitsSavings: consent.benefitsSavings || false,
+      consentIdTheftProtection: consent.idTheftProtection || false,
+      consentMyTelemedicine: consent.myTelemedicine || false,
+      status: 'completed',
+      source: 'MI Project'
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'MI Order created successfully',
+      data: {
+        orderId: order._id,
+        project: order.project,
+        status: order.status
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error creating MI order:', error);
+    logger.error('Request body:', req.body);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create MI order',
+      error: error.message
+    });
+  }
+});
+
 module.exports = {
   processRadiusOrder,
   processSemprisOrder,
   processPSOnlineOrder,
   processSublyticsOrder,
+  processMIOrder,
   getOrders,
   getOrderById,
   updateOrder,

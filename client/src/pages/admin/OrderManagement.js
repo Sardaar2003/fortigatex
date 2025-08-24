@@ -558,6 +558,7 @@ const OrderManagement = () => {
                 <MenuItem value="SC Project">SC Project</MenuItem>
                 <MenuItem value="HPP Project">HPP Project</MenuItem>
                 <MenuItem value="MDI Project">MDI Project</MenuItem>
+                <MenuItem value="MI Project">MI Project</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -628,6 +629,8 @@ const OrderManagement = () => {
                             ? 'rgba(244, 67, 54, 0.2)'
                             : order.project === 'MDI Project'
                             ? 'rgba(76, 175, 80, 0.2)'
+                            : order.project === 'MI Project'
+                            ? 'rgba(255, 152, 0, 0.2)'
                             : 'rgba(158, 158, 158, 0.2)',
                           color: order.project === 'FRP Project'
                             ? '#6F4CFF'
@@ -637,6 +640,8 @@ const OrderManagement = () => {
                             ? '#F44336'
                             : order.project === 'MDI Project'
                             ? '#4CAF50'
+                            : order.project === 'MI Project'
+                            ? '#FF9800'
                             : '#9E9E9E',
                           backdropFilter: 'blur(5px)',
                           border: '1px solid rgba(255, 255, 255, 0.1)'

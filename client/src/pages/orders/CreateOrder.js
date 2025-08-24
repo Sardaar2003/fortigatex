@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import RadiusOrderForm from '../../components/forms/RadiusOrderForm';
 import SemprisOrderForm from '../../components/forms/SemprisOrderForm';
+import MIOrderForm from '../../components/forms/MIOrderForm';
 
 const CreateOrder = () => {
   const [selectedProject, setSelectedProject] = useState('Radius Project');
@@ -36,7 +37,7 @@ const CreateOrder = () => {
             >
               <MenuItem value="Radius Project">Radius Project</MenuItem>
               <MenuItem value="Sempris Project">Sempris Project</MenuItem>
-              <MenuItem value="Project 3">Project 3</MenuItem>
+              <MenuItem value="MI Project">MI Project</MenuItem>
             </Select>
           </FormControl>
         </Paper>
@@ -45,9 +46,11 @@ const CreateOrder = () => {
           <RadiusOrderForm />
         ) : selectedProject === 'Sempris Project' ? (
           <SemprisOrderForm />
+        ) : selectedProject === 'MI Project' ? (
+          <MIOrderForm />
         ) : (
           <Typography variant="h6" sx={{ textAlign: 'center', color: 'text.secondary' }}>
-            Project 3 form coming soon...
+            Select a project to continue...
           </Typography>
         )}
       </Box>

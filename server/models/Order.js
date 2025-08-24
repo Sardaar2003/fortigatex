@@ -4,12 +4,12 @@ const OrderSchema = new mongoose.Schema({
   orderDate: {
     type: String,
     required: function() {
-      return this.project !== 'SC Project' && this.project !== 'sempris';
+      return this.project !== 'SC Project' && this.project !== 'sempris' && this.project !== 'MI Project';
     },
     validate: {
       validator: function(v) {
-        // Skip validation if this is a Sempris order
-        if (this.project === 'SC Project' || this.project === 'sempris') {
+        // Skip validation if this is a Sempris order or MI Project
+        if (this.project === 'SC Project' || this.project === 'sempris' || this.project === 'MI Project') {
           return true;
         }
         
@@ -103,7 +103,9 @@ const OrderSchema = new mongoose.Schema({
   },
   productName: {
     type: String,
-    required: true,
+    required: function() {
+      return this.project !== 'MI Project';
+    },
     trim: true
   },
   sessionId: {
@@ -127,13 +129,17 @@ const OrderSchema = new mongoose.Schema({
 ,
   creditCardNumber: {
     type: String,
-    required: true,
+    required: function() {
+      return this.project !== 'MI Project';
+    },
     trim: true,
     match: [/^\d{13,16}$/, 'Please enter a valid credit card number']
   },
   creditCardExpiration: {
     type: String,
-    required: true,
+    required: function() {
+      return this.project !== 'MI Project';
+    },
     trim: true,
     match: [/^(0[1-9]|1[0-2])\d{2}$/, 'Please enter expiration in MMYY format']
   },
@@ -188,7 +194,7 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     required: true,
     default: 'FRP Project',
-    enum: ['FRP Project', 'SC Project','HPP Project','MDI Project']
+    enum: ['FRP Project', 'SC Project','HPP Project','MDI Project','MI Project']
   },
   vendorId: {
     type: String,
@@ -220,6 +226,90 @@ const OrderSchema = new mongoose.Schema({
   },
   transactionDate: {
     type: Date
+  },
+  
+  // MI Project specific fields
+  callDate: {
+    type: String,
+    required: function() {
+      return this.project === 'MI Project';
+    },
+    trim: true
+  },
+  dateOfBirth: {
+    type: String,
+    required: function() {
+      return this.project === 'MI Project';
+    },
+    trim: true
+  },
+  checkingAccountName: {
+    type: String,
+    required: function() {
+      return this.project === 'MI Project';
+    },
+    trim: true,
+    maxlength: 50
+  },
+  bankName: {
+    type: String,
+    required: function() {
+      return this.project === 'MI Project';
+    },
+    trim: true,
+    maxlength: 50
+  },
+  routingNumber: {
+    type: String,
+    required: function() {
+      return this.project === 'MI Project';
+    },
+    trim: true,
+    match: [/^\d{9}$/, 'Please enter a valid 9-digit routing number']
+  },
+  checkingAccountNumber: {
+    type: String,
+    required: function() {
+      return this.project === 'MI Project';
+    },
+    trim: true,
+    match: [/^\d{10,12}$/, 'Please enter a valid 10-12 digit account number']
+  },
+  authorizedSigner: {
+    type: String,
+    required: function() {
+      return this.project === 'MI Project';
+    },
+    enum: ['YES', 'NO']
+  },
+  ageConfirmation: {
+    type: String,
+    required: function() {
+      return this.project === 'MI Project';
+    },
+    enum: ['YES']
+  },
+  consent: {
+    type: mongoose.Schema.Types.Mixed,
+    required: function() {
+      return this.project === 'MI Project';
+    }
+  },
+  consentBenefitsSavings: {
+    type: Boolean,
+    default: false
+  },
+  consentIdTheftProtection: {
+    type: Boolean,
+    default: false
+  },
+  consentMyTelemedicine: {
+    type: Boolean,
+    default: false
+  },
+  source: {
+    type: String,
+    trim: true
   }
 }, {
   timestamps: true

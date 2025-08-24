@@ -17,6 +17,8 @@ import UserManagement from './pages/admin/UserManagement';
 import PrivateRoute from './components/PrivateRoute';
 import { AuthProvider } from './context/AuthContext';
 import SubProjectOrderForm from './components/forms/SubProjectOrderForm';
+import MIOrderForm from './components/forms/MIOrderForm';
+import CreateOrder from './pages/orders/CreateOrder';
 
 const BackgroundGradient = () => (
   <>
@@ -206,6 +208,20 @@ function App() {
                     <PrivateRoute>
                       <Box sx={{ p: 3 }}>
                         <UserManagement />
+                      </Box>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/orders/mi" element={
+                    <PrivateRoute>
+                      <Box sx={{ p: 3 }}>
+                        <MIOrderForm />
+                      </Box>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/create-order" element={
+                    <PrivateRoute>
+                      <Box sx={{ p: 3 }}>
+                        <CreateOrder />
                       </Box>
                     </PrivateRoute>
                   } />

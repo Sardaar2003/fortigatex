@@ -6,7 +6,7 @@ import GlassCard from '../components/GlassCard';
 import OrderForm from '../components/OrderForm';
 // import { Assignment } from '@mui/icons-material';
 import { FolderSpecial } from '@mui/icons-material';
-import { AccountCircle as AccountCircleIcon, RadioButtonChecked as RadioIcon, Memory as MemoryIcon } from '@mui/icons-material';
+import { AccountCircle as AccountCircleIcon, RadioButtonChecked as RadioIcon, Memory as MemoryIcon, AccountBalance as AccountBalanceIcon } from '@mui/icons-material';
 
 // TabPanel component for tab content
 function TabPanel(props) {
@@ -167,6 +167,27 @@ const Dashboard = () => {
               </Typography>
             </GlassCard>
           </Grid>
+
+          <Grid item xs={12} md={4}>
+            <GlassCard
+              onClick={() => handleProjectSelect('mi')}
+              sx={{
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-5px)'
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <AccountBalanceIcon sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
+                <Typography variant="h6">MI API</Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Submit orders for MI Project services
+              </Typography>
+            </GlassCard>
+          </Grid>
         </Grid>
       </Box>
     );
@@ -214,12 +235,22 @@ const Dashboard = () => {
                 <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />
                 SC API Order Form
               </>
-            ):selectedProject === 'sublytics' ? (
+            ) : selectedProject === 'psonline' ? (
+              <>
+                <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />
+                MDI API Order Form
+              </>
+            ) : selectedProject === 'sublytics' ? (
               <>
                 <FolderSpecial sx={{ fontSize: 32, color: '#6F4CFF' }} />
                 HPP API Order Form
               </>
-            ):null
+            ) : selectedProject === 'mi' ? (
+              <>
+                <AccountBalanceIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />
+                MI API Order Form
+              </>
+            ) : null
             // ) : (
             //   <>
             //     <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />

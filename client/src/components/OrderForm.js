@@ -4,6 +4,7 @@ import RadiusOrderForm from './forms/RadiusOrderForm';
 import SemprisOrderForm from './forms/SemprisOrderForm';
 import PSONLINEOrderForm from './forms/PSONLINEOrderForm';
 import SubProjectOrderForm from './forms/SubProjectOrderForm';
+import MIOrderForm from './forms/MIOrderForm';
 
 const OrderForm = ({ project, onOrderSuccess }) => {
   return (
@@ -14,9 +15,10 @@ const OrderForm = ({ project, onOrderSuccess }) => {
         <SemprisOrderForm onOrderSuccess={onOrderSuccess} />
       ) : project === 'psonline'? (
         <PSONLINEOrderForm onOrderSuccess={onOrderSuccess} />
-      )
-      : project === 'sublytics' ? (
+      ) : project === 'sublytics' ? (
         <SubProjectOrderForm onOrderSuccess={onOrderSuccess} />
+      ) : project === 'mi' ? (
+        <MIOrderForm onOrderSuccess={onOrderSuccess} />
       ) : null
       }
     </Box>

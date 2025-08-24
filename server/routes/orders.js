@@ -5,6 +5,7 @@ const {
   processSemprisOrder,
   processPSOnlineOrder,
   processSublyticsOrder,
+  processMIOrder,
   getOrders,
   getOrderById,
   updateOrder,
@@ -22,6 +23,7 @@ router.post('/sempris', protect, processSemprisOrder);
 router.post('/radius', protect, processRadiusOrder);
 router.post('/psonline', protect, processPSOnlineOrder);
 router.post('/sublytics', protect, processSublyticsOrder);
+router.post('/mi', protect, processMIOrder);
 
 // Admin only routes
 router.get('/', protect, authorize('admin'), getOrders);

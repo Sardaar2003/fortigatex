@@ -119,8 +119,7 @@ const MIOrderForm = ({ onOrderSuccess }) => {
     email: '',
     dateOfBirth: new Date(),
     consent: {
-      benefitsSavings: false,
-      idTheftProtection: false,
+      benefitsIdTheft: false,
       myTelemedicine: false
     }
   });
@@ -318,8 +317,7 @@ const MIOrderForm = ({ onOrderSuccess }) => {
       email: '',
       dateOfBirth: new Date(),
       consent: {
-        benefitsSavings: false,
-        idTheftProtection: false,
+        benefitsIdTheft: false,
         myTelemedicine: false
       }
     });
@@ -655,49 +653,28 @@ const MIOrderForm = ({ onOrderSuccess }) => {
                 Select the services you consent to for trial enrollments & billing:
               </Typography>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={4}>
+                <Grid item xs={12} sm={6}>
                   <FormControlLabel
                     control={
                       <Checkbox
-                        checked={formData.consent.benefitsSavings}
-                        onChange={() => handleConsentChange('benefitsSavings')}
+                        checked={formData.consent.benefitsIdTheft}
+                        onChange={() => handleConsentChange('benefitsIdTheft')}
                         color="primary"
                       />
                     }
                     label={
                       <Box>
                         <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          Benefits Savings
+                          Benefits Savings + ID Theft Protection
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          $2.95 trial → $41.27 monthly
+                          Trial applies to both; billed per combined offer
                         </Typography>
                       </Box>
                     }
                   />
                 </Grid>
-                <Grid item xs={12} sm={4}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={formData.consent.idTheftProtection}
-                        onChange={() => handleConsentChange('idTheftProtection')}
-                        color="primary"
-                      />
-                    }
-                    label={
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          ID Theft Protection
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          $3.49 trial → $44.99 monthly
-                        </Typography>
-                      </Box>
-                    }
-                  />
-                </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid item xs={12} sm={6}>
                   <FormControlLabel
                     control={
                       <Checkbox

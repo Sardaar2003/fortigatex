@@ -796,10 +796,18 @@ const processMIOrder = asyncHandler(async (req, res) => {
       if (key === 'authorizedSigner' && value !== 'YES') return true;
       if (key === 'ageConfirmation' && value !== 'YES') return true;
       if (key === 'consent') {
-        // Check if consent is an object with at least one service selected
+        // Support combined Benefits+ID Theft consent
         if (typeof value === 'object' && value !== null) {
-          const consentValues = Object.values(value);
-          if (!consentValues.some(v => v === true)) return true;
+          const {
+            benefitsSavings,
+            idTheftProtection,
+            benefitsIdTheft,
+            myTelemedicine
+          } = value;
+          const normalizedBenefits = benefitsIdTheft || benefitsSavings || false;
+          const normalizedIdTheft = benefitsIdTheft || idTheftProtection || false;
+          const anySelected = Boolean(normalizedBenefits || normalizedIdTheft || myTelemedicine);
+          if (!anySelected) return true;
         } else {
           return true;
         }
@@ -826,6 +834,12 @@ const processMIOrder = asyncHandler(async (req, res) => {
 
   try {
     // Create the order in the database
+    // Normalize consent for storage
+    const normalizedConsent = {
+      ...consent,
+      benefitsIdTheft: Boolean(consent?.benefitsIdTheft || consent?.benefitsSavings || consent?.idTheftProtection)
+    };
+
     const order = await Order.create({
       user: req.user.id,
       project: 'MI Project',
@@ -847,11 +861,11 @@ const processMIOrder = asyncHandler(async (req, res) => {
       checkingAccountNumber,
       authorizedSigner,
       ageConfirmation,
-      consent,
-      // Store individual consent options
-      consentBenefitsSavings: consent.benefitsSavings || false,
-      consentIdTheftProtection: consent.idTheftProtection || false,
-      consentMyTelemedicine: consent.myTelemedicine || false,
+      consent: normalizedConsent,
+      // Store individual consent options (legacy fields)
+      consentBenefitsSavings: Boolean(consent?.benefitsIdTheft || consent?.benefitsSavings),
+      consentIdTheftProtection: Boolean(consent?.benefitsIdTheft || consent?.idTheftProtection),
+      consentMyTelemedicine: Boolean(consent?.myTelemedicine),
       status: 'completed',
       source: 'MI Project'
     });

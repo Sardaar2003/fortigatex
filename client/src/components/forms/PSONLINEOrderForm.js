@@ -20,13 +20,10 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AuthContext } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 const PSONLINEOrderForm = ({ onOrderSuccess }) => {
-  const navigate = useNavigate();
-  const { token, logout } = useContext(AuthContext);
+  const { token } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [timeLeft, setTimeLeft] = useState(60);
   const [timerActive, setTimerActive] = useState(false);
   const [formData, setFormData] = useState({
@@ -171,8 +168,6 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
     const selectedValues = event.target.value;
     const selectedProductObjects = products.filter(p => selectedValues.includes(p.id));
     
-    setSelectedProduct(selectedProductObjects.length === 1 ? selectedProductObjects[0] : null);
-    
     const totalAmount = selectedProductObjects.reduce((sum, product) => sum + product.price, 0);
     
     setFormData(prev => ({
@@ -240,7 +235,6 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       expiryYear: '',
       cvv: ''
     });
-    setSelectedProduct(null);
   };
 
   // Generate month and year options
@@ -573,6 +567,11 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
               label="Date of Birth"
               value={formData.dob}
               onChange={handleDateChange('dob')}
+              openTo="year"
+              views={['year', 'month', 'day']}
+              disableFuture
+              minDate={new Date(1900, 0, 1)}
+              maxDate={new Date()}
               renderInput={(params) => <TextField {...params} fullWidth />}
             />
           </Grid>

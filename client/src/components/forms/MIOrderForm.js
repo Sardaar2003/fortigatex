@@ -367,6 +367,9 @@ const MIOrderForm = ({ onOrderSuccess }) => {
               label="Date of Call"
               value={formData.callDate}
               onChange={handleDateChange}
+              openTo="year"
+              views={["year", "month", "day"]}
+              disableFuture
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -444,6 +447,11 @@ const MIOrderForm = ({ onOrderSuccess }) => {
               label="Date of Birth"
               value={formData.dateOfBirth}
               onChange={handleDateOfBirthChange}
+              openTo="year"
+              views={["year", "month", "day"]}
+              disableFuture
+              minDate={new Date(1900, 0, 1)}
+              maxDate={new Date()}
               renderInput={(params) => (
                 <TextField
                   {...params}

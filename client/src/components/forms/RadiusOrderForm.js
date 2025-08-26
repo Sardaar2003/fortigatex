@@ -313,6 +313,9 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
               label="Order Date"
               value={formData.orderDate}
               onChange={handleDateChange}
+              openTo="year"
+              views={["year", "month", "day"]}
+              disableFuture
               renderInput={(params) => (
                 <TextField
                   {...params}

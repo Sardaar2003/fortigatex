@@ -70,3 +70,5 @@
 [2025-07-31T14:50:10.014Z] [INFO] Radius API structured response for user 686d3a939ac027007907826f: {"status":1,"message":"true"}
 [2025-07-31T14:50:28.662Z] [USER_ACTION] SEMPRIS_API_CALL - {"tracking_number":"1024699d-11ed-4a8c-8430-89e2c64f6038","vendor_id":"STAR"}
 [2025-07-31T14:50:33.596Z] [USER_ACTION] SEMPRIS_API_RESPONSE - {"tracking_number":"1024699d-11ed-4a8c-8430-89e2c64f6038","status":200,"transaction_id":"e001a29a-ddc0-4f0c-9b6a-f837ebb6f72a"}
+[2025-08-25T17:25:41.761Z] [INFO] Radius API raw response for user 686d3a939ac027007907826f: "<results status=\"1\" message=\"true\"></results>"
+[2025-08-25T17:25:41.766Z] [INFO] Radius API structured response for user 686d3a939ac027007907826f: {"status":1,"message":"true"}

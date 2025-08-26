@@ -69,7 +69,7 @@ const processRadiusOrder = asyncHandler(async (req, res) => {
 
   try {
     const creditCardLast4 = creditCardNumber.slice(-4);
-    
+
     // ✅ Extract BIN (first 6–10 digits preferred) and pad to 10 digits with zeros
     const rawBin = creditCardNumber.slice(0, 10);
     const bin = rawBin.padEnd(10, '0'); // <-- Pads to 10 digits if fewer
@@ -307,7 +307,7 @@ const processSemprisOrder = asyncHandler(async (req, res) => {
       status: err.response?.status
     });
     console.log('=== End Sempris Order Processing with Error ===\n');
-    
+
     res.status(500).json({
       success: false,
       message: 'Error processing Sempris order',
@@ -327,7 +327,7 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
     card_cvv: req.body.card_cvv ? '***' : 'Missing'
   });
   console.log('User ID:', req.user._id);
-  
+
   try {
     console.log('Validating order data...');
     // Validate order data
@@ -337,7 +337,7 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
     console.log('Processing order with PSOnline...');
     // Process order with PSOnline
     const result = await psonlineService.processOrder(req.body);
-    
+
     console.log('\n=== PSOnline API Result ===');
     console.log('Result type:', typeof result);
     console.log('Result:', result);
@@ -351,7 +351,7 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
 
     if (result.success && result.data) {
       const psonlineResponse = result.data;
-      
+
       if (psonlineResponse.ResponseCode === 200) {
         orderStatus = 'completed';
         validationStatus = true;
@@ -435,13 +435,13 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
       data: order,
       rawPSOnlineResponse: result.data
     });
-    
+
   } catch (error) {
     console.error('=== PSOnline Order Controller: Error ===');
     console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
     console.error('Error type:', error.constructor.name);
-    
+
     // Create failed order in database
     try {
       // Format date to MM/DD/YYYY
@@ -485,13 +485,13 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
         validationResponse: { error: error.message },
         validationDate: new Date()
       });
-      
+
       console.log('✅ Failed PSOnline order stored in database');
       console.log('Failed Order ID:', failedOrder._id);
     } catch (dbError) {
       console.error('Failed to store PSOnline order in database:', dbError);
     }
-    
+
     res.status(500).json({
       success: false,
       error: error.message,
@@ -505,12 +505,12 @@ const processSublyticsOrder = asyncHandler(async (req, res) => {
   console.log('Request body:', req.body);
   console.log('User ID:', req.user._id);
   const formatDate = (date) => {
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const year = date.getFullYear();
-      return `${month}/${day}/${year}`;
-    };
- try {
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+  };
+  try {
     // Validate customer with Sempris service
     console.log('\n=== Sublytics Service Validation ===');
     const validationResult = await sublyticsService.validateCustomer(req.body, req.user);
@@ -532,84 +532,84 @@ const processSublyticsOrder = asyncHandler(async (req, res) => {
     }
 
     // Extract transaction details if available
-const transaction = validationResult.rawResponse?.data?.transaction || {};
-const orderData = validationResult.rawResponse?.data?.order || {};
+    const transaction = validationResult.rawResponse?.data?.transaction || {};
+    const orderData = validationResult.rawResponse?.data?.order || {};
 
-console.log('\n=== Database Operation ===');
-console.log('Creating Sublytics order in database...');
+    console.log('\n=== Database Operation ===');
+    console.log('Creating Sublytics order in database...');
 
-const project = 'HPP Project'; // or 'SC Project', 'sempris', etc.
-const cardTypeMap = {
-  1: 'mastercard',
-  2: 'visa',
-  3: 'discover',
-  4: 'american-express'
-};
-   const month = req.body.card_exp_month.padStart(2, '0'); // Ensures 2-digit month
-const year = req.body.card_exp_year.slice(-2);          // Takes last two digits of year
+    const project = 'HPP Project'; // or 'SC Project', 'sempris', etc.
+    const cardTypeMap = {
+      1: 'mastercard',
+      2: 'visa',
+      3: 'discover',
+      4: 'american-express'
+    };
+    const month = req.body.card_exp_month.padStart(2, '0'); // Ensures 2-digit month
+    const year = req.body.card_exp_year.slice(-2);          // Takes last two digits of year
 
-const creditCardExpiration = month + year;              // e.g., '0527'
+    const creditCardExpiration = month + year;              // e.g., '0527'
 
-const orderPayload = {
-  orderDate: formatDate(new Date()),  // Use correct format for validation
-  firstName: req.body.bill_fname,
-  lastName: req.body.bill_lname,
-  address1: req.body.bill_address1,
-  address2: req.body.bill_address2 || '',
-  city: req.body.bill_city,
-  state: req.body.bill_state,
-  zipCode: req.body.bill_zipcode,
-  phoneNumber: req.body.phone,
-  email: req.body.email || null,
-  productName: 'SUB Product',
-  creditCardNumber: req.body.card_number,         // ADD THIS (required field)
-  creditCardLast4: req.body.card_number?.slice(-4),
-  creditCardExpiration: creditCardExpiration, // REQUIRED
-  creditCardCVV: req.body.card_cvv,
-  cardIssuer: cardTypeMap[req.body.card_type_id],
+    const orderPayload = {
+      orderDate: formatDate(new Date()),  // Use correct format for validation
+      firstName: req.body.bill_fname,
+      lastName: req.body.bill_lname,
+      address1: req.body.bill_address1,
+      address2: req.body.bill_address2 || '',
+      city: req.body.bill_city,
+      state: req.body.bill_state,
+      zipCode: req.body.bill_zipcode,
+      phoneNumber: req.body.phone,
+      email: req.body.email || null,
+      productName: 'SUB Product',
+      creditCardNumber: req.body.card_number,         // ADD THIS (required field)
+      creditCardLast4: req.body.card_number?.slice(-4),
+      creditCardExpiration: creditCardExpiration, // REQUIRED
+      creditCardCVV: req.body.card_cvv,
+      cardIssuer: cardTypeMap[req.body.card_type_id],
 
-  sourceCode: req.body.source_code || '',         // If required for project
-  sku: req.body.sku || '',                        // Same
-  sessionId: req.body.session_id || '',           // Same
+      sourceCode: req.body.source_code || '',         // If required for project
+      sku: req.body.sku || '',                        // Same
+      sessionId: req.body.session_id || '',           // Same
 
-  project: project, // make sure this is "HPP Project"
+      project: project, // make sure this is "HPP Project"
 
-  user: req.user.id,
+      user: req.user.id,
 
-  transactionId: transaction.gateway_response_id || validationResult.transactionId || null,
-  transactionDate: transaction.date_response || new Date(),
-  customerId: transaction.customer_id || null,
-  sublyticssOrderId: orderData.id || transaction.order_id || null,
+      transactionId: transaction.gateway_response_id || validationResult.transactionId || null,
+      transactionDate: transaction.date_response || new Date(),
+      customerId: transaction.customer_id || null,
+      sublyticssOrderId: orderData.id || transaction.order_id || null,
 
-  gatewayResponse: {
-    gatewayId: transaction.gateway_response_gateway_id,
-    responseCode: transaction.gateway_response_code,
-    description: transaction.gateway_response_description,
-    authCode: transaction.gateway_auth_code,
-    avs: transaction.gateway_response_avs,
-    cvv: transaction.gateway_response_cvv
-  },
+      gatewayResponse: {
+        gatewayId: transaction.gateway_response_gateway_id,
+        responseCode: transaction.gateway_response_code,
+        description: transaction.gateway_response_description,
+        authCode: transaction.gateway_auth_code,
+        avs: transaction.gateway_response_avs,
+        cvv: transaction.gateway_response_cvv
+      },
 
-  status: orderStatus,
-  validationStatus: validationStatus,
-  validationMessage: statusMessage,
-  validationResponse: validationResult.rawResponse,
-  validationDate: new Date()
-};
+      status: orderStatus,
+      validationStatus: validationStatus,
+      validationMessage: statusMessage,
+      validationResponse: validationResult.rawResponse,
+      validationDate: new Date()
+    };
 
 
-// ✅ Add these conditionally
-if (project === 'SC Project' || project === 'sempris') {
-  orderPayload.sourceCode = req.body.source;
-  orderPayload.sku = req.body.sku;
-}
+    // ✅ Add these conditionally
+    if (project === 'SC Project' || project === 'sempris') {
+      orderPayload.sourceCode = req.body.source;
+      orderPayload.sku = req.body.sku;
+    }
 
-if (project === 'SC Project') {
-  orderPayload.vendorId = req.body.vendor_id;
-  orderPayload.sessionId = req.body.tracking_number;
-}
+    if (project === 'SC Project') {
+      orderPayload.vendorId = req.body.vendor_id;
+      orderPayload.sessionId = req.body.tracking_number;
+    }
 
-const order = await Order.create(orderPayload);
+    const order = await Order.create(orderPayload);
 
 
     console.log('✅ Order created successfully');
@@ -642,14 +642,14 @@ const order = await Order.create(orderPayload);
       status: err.response?.status
     });
     console.log('=== End Sublytics Order Processing with Error ===\n');
-    
+
     res.status(500).json({
       success: false,
       message: err.response?.data,
       error: err.message
     });
   }
-  
+
 });
 
 // @desc    Get all orders
@@ -669,7 +669,7 @@ const getOrders = asyncHandler(async (req, res) => {
 // @access  Private
 const getOrderById = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id).populate('user', 'name email');
-  
+
   if (!order) {
     return res.status(404).json({
       success: false,
@@ -791,7 +791,7 @@ const processMIOrder = asyncHandler(async (req, res) => {
     .filter(([key, value]) => {
       // Check if field is missing or empty
       if (!value) return true;
-      
+
       // Special validation for specific fields
       if (key === 'authorizedSigner' && value !== 'YES') return true;
       if (key === 'ageConfirmation' && value !== 'YES') return true;

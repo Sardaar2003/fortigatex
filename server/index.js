@@ -4,6 +4,9 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 const seedRoles = require('./config/db-seeder');
+const { createProxyMiddleware } =require("http-proxy-middleware");
+
+
 
 // Load environment variables
 dotenv.config();
@@ -17,6 +20,19 @@ console.log('Environment file path:', path.resolve('.env'));
 
 // Create Express app
 const app = express();
+
+
+app.use(
+  "/mi-form",
+  createProxyMiddleware({
+    target: "https://app.periodicalservices.com", // just the base domain
+    changeOrigin: true,
+    pathRewrite: {
+      "^/mi-form": "/PSOnlineAGM/dialer/newSaleNoVerifierOnePACid3r.asp", // the actual path
+    },
+  })
+);
+
 
 // --- CORS CONFIGURATION: MUST BE FIRST MIDDLEWARE ---
 const corsOptions = {

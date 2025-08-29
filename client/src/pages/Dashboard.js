@@ -275,7 +275,7 @@ const Dashboard = () => {
           </Button>
         </Box>
 
-        {selectedProject === 'mi' ? (
+        {/* {selectedProject === 'mi' ? (
   <Box sx={{ height: "80vh" }}>
     <iframe
       src="https://fortigatex.onrender.com/mi-form"   // 🚀 goes to your backend, not external site
@@ -286,9 +286,9 @@ const Dashboard = () => {
       style={{ border: "none", borderRadius: "8px" }}
     />
   </Box>
-) : (
+) : ( */}
         <OrderForm project={selectedProject} onOrderSuccess={handleOrderSuccess} />
-      )}
+      {/* )} */}
     </Box>);
   };
 

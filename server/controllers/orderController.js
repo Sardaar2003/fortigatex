@@ -763,7 +763,8 @@ const processMIOrder = asyncHandler(async (req, res) => {
     ageConfirmation,
     email,
     dateOfBirth,
-    consent
+    consent,
+    orderNumber
   } = req.body;
 
   // ✅ Validate required fields
@@ -867,6 +868,7 @@ const processMIOrder = asyncHandler(async (req, res) => {
       consentIdTheftProtection: Boolean(consent?.benefitsIdTheft || consent?.idTheftProtection),
       consentMyTelemedicine: Boolean(consent?.myTelemedicine),
       status: 'completed',
+      OrderID:orderNumber,
       source: 'MI Project'
     });
 
@@ -883,6 +885,7 @@ const processMIOrder = asyncHandler(async (req, res) => {
   } catch (error) {
     logger.error('Error creating MI order:', error);
     logger.error('Request body:', req.body);
+    console.log(error);
     res.status(500).json({
       success: false,
       message: 'Failed to create MI order',

@@ -121,7 +121,8 @@ const MIOrderForm = ({ onOrderSuccess }) => {
     consent: {
       benefitsIdTheft: false,
       myTelemedicine: false
-    }
+    },
+    orderNumber:''
   });
   const [errors, setErrors] = useState({});
 
@@ -319,7 +320,8 @@ const MIOrderForm = ({ onOrderSuccess }) => {
       consent: {
         benefitsIdTheft: false,
         myTelemedicine: false
-      }
+      },
+      orderNumber:''
     });
     setError('');
     setSuccess(false);
@@ -612,6 +614,7 @@ const MIOrderForm = ({ onOrderSuccess }) => {
               error={!!errors.checkingAccountNumber}
             />
           </Grid>
+          
 
           {/* Confirmations and Consents */}
           <Grid item xs={12}>
@@ -653,7 +656,8 @@ const MIOrderForm = ({ onOrderSuccess }) => {
                  <FormHelperText>{errors.ageConfirmation}</FormHelperText>
                )}
              </FormControl>
-           </Grid>
+          </Grid>
+          
           <Grid item xs={12}>
             <FormControl required error={!!errors.consent}>
               <FormLabel>Consent/Authorization for trial enrollments & billing</FormLabel>
@@ -708,6 +712,19 @@ const MIOrderForm = ({ onOrderSuccess }) => {
                 <FormHelperText>{errors.consent}</FormHelperText>
               )}
             </FormControl>
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required
+              fullWidth
+              label="Order Number"
+              name="orderNumber"
+              value={formData.orderNumber}
+              onChange={handleChange}
+              helperText="Enter Order Number"
+              // error={!!errors.routingNumber}
+            />
           </Grid>
 
           <Grid item xs={12}>

@@ -251,6 +251,10 @@ const OrderSchema = new mongoose.Schema({
     trim: true,
     maxlength: 50
   },
+  OrderID:{
+  type: String,
+    default:"NULL"
+  },
   bankName: {
     type: String,
     required: function() {

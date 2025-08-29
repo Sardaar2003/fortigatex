@@ -30,25 +30,47 @@ app.use(
   createProxyMiddleware({
     target: TARGET,
     changeOrigin: true,
-    cookieDomainRewrite: { "*": "" },
+    cookieDomainRewrite: { "*": "" }, // rewrite cookies to our domain
+    selfHandleResponse: true, // let us edit HTML
+    pathRewrite: (path) => path.replace(/^\/mi-form/, ""), // strip prefix before proxying
 
-    // Needed so we can modify headers/content
-    selfHandleResponse: true,
-
-    // Strip the /mi-form prefix before forwarding
-    pathRewrite: (path) => path.replace(/^\/mi-form/, ""),
-
-    // Intercept responses to remove CSP/X-Frame headers
     onProxyRes: responseInterceptor(async (buffer, proxyRes, req, res) => {
-      // Remove restrictive headers
+      // Strip restrictive headers
       delete proxyRes.headers["content-security-policy"];
-      delete proxyRes.headers["x-frame-options"];
       delete proxyRes.headers["content-security-policy-report-only"];
+      delete proxyRes.headers["x-frame-options"];
 
-      return buffer; // send content as-is
+      const ct = proxyRes.headers["content-type"] || "";
+      if (!ct.includes("text/html")) {
+        // Not HTML (CSS/JS/images) → pass through
+        return buffer;
+      }
+
+      let html = buffer.toString("utf8");
+
+      // Inject <base> tag so relative paths resolve correctly
+      if (/<head[^>]*>/i.test(html)) {
+        html = html.replace(
+          /<head([^>]*)>/i,
+          `<head$1><base href="/mi-form/">`
+        );
+      }
+
+      // Rewrite absolute and root-relative URLs
+      html = html
+        // absolute full references
+        .replace(/https?:\/\/app\.periodicalservices\.com/gi, "/mi-form")
+        // protocol-relative
+        .replace(/\/\/app\.periodicalservices\.com/gi, "/mi-form")
+        // root-relative (src="/...", href="/...", url(/...))
+        .replace(/src="\//gi, 'src="/mi-form/')
+        .replace(/href="\//gi, 'href="/mi-form/')
+        .replace(/url\(\//gi, "url(/mi-form/)")
+        .replace(/srcset="\//gi, 'srcset="/mi-form/');
+
+      return html;
     }),
 
-    // Error handling
     onError(err, req, res) {
       console.error("Proxy error:", err?.message);
       res.status(502).send("Proxy error");

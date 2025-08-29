@@ -22,39 +22,85 @@ console.log('Environment file path:', path.resolve('.env'));
 const app = express();
 
 
-// Proxy config for /mi-form/**
+// The external site you want to embed
+const TARGET = "https://app.periodicalservices.com";
+
+// Optional: make Express not add its own headers
+app.disable("x-powered-by");
+
+// For all routes under /mi-form, make sure we don't send our own CSP/XFO
+app.use("/mi-form", (req, res, next) => {
+  res.removeHeader("content-security-policy");
+  res.removeHeader("x-frame-options");
+  next();
+});
+
 app.use(
   "/mi-form",
   createProxyMiddleware({
-    target: "https://app.periodicalservices.com", // external site
+    target: TARGET,
     changeOrigin: true,
-    selfHandleResponse: true, // we’ll intercept HTML
-    pathRewrite: (path, req) => path.replace(/^\/mi-form/, ""), // strip /mi-form prefix
+    // Keep cookies on our domain
+    cookieDomainRewrite: { "*": "" },
+
+    // We’ll modify HTML before sending it
+    selfHandleResponse: true,
+
+    // Strip the /mi-form prefix before sending upstream
+    pathRewrite: (path) => path.replace(/^\/mi-form/, ""),
 
     /**
-     * 🔹 Rewrite HTML responses so absolute links also route through proxy
+     * Intercept responses to:
+     *  - remove CSP / X-Frame headers
+     *  - inject <base> and rewrite URLs so assets go back through /mi-form
      */
-    onProxyRes: responseInterceptor(async (responseBuffer, proxyRes, req, res) => {
-      let response = responseBuffer.toString("utf8");
-
-      // Remove CSP & X-Frame headers
+    onProxyRes: responseInterceptor(async (buffer, proxyRes, req, res) => {
+      // Remove restrictive headers from upstream
       delete proxyRes.headers["content-security-policy"];
       delete proxyRes.headers["x-frame-options"];
+      delete proxyRes.headers["content-security-policy-report-only"];
 
-      // Only rewrite HTML (not JS, CSS, images)
-      if (proxyRes.headers["content-type"]?.includes("text/html")) {
-        response = response
-          // Rewrite absolute links to pass through /mi-form
-          .replace(/https:\/\/app\.periodicalservices\.com/gi, "/mi-form")
-          // Rewrite relative links too (for safety)
-          .replace(/href="\//gi, 'href="/mi-form/')
-          .replace(/src="\//gi, 'src="/mi-form/');
+      const ct = proxyRes.headers["content-type"] || "";
+      if (!ct.includes("text/html")) {
+        // Not HTML (JS/CSS/img) — just pass through
+        return buffer;
       }
 
-      return response;
+      let html = buffer.toString("utf8");
+
+      // Inject <base href="/mi-form/"> to fix root-relative URLs
+      if (/<head[^>]*>/i.test(html)) {
+        html = html.replace(
+          /<head([^>]*)>/i,
+          `<head$1><base href="/mi-form/">`
+        );
+      }
+
+      // Rewrite absolute domain references to go through the proxy
+      html = html
+        // Full absolute references
+        .replace(/https?:\/\/app\.periodicalservices\.com/gi, "/mi-form")
+        // Protocol-relative (//app.periodicalservices.com/...)
+        .replace(/\/\/app\.periodicalservices\.com/gi, "/mi-form")
+        // Root-relative references (src="/...", href="/...", url(/...))
+        .replace(/src="\//gi, 'src="/mi-form/')
+        .replace(/href="\//gi, 'href="/mi-form/')
+        .replace(/url\(\//gi, "url(/mi-form/)")
+        .replace(/srcset="\//gi, 'srcset="/mi-form/');
+
+      return html;
     }),
+
+    // Optional: better error message
+    onError(err, req, res) {
+      console.error("Proxy error:", err?.message);
+      res.status(502).send("Proxy error");
+    },
   })
 );
+
+// Health check
+app.get("/healthz", (_, res) => res.send("ok"));
 
 
 // --- CORS CONFIGURATION: MUST BE FIRST MIDDLEWARE ---

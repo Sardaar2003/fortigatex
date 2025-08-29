@@ -40,64 +40,50 @@ app.use(
   createProxyMiddleware({
     target: TARGET,
     changeOrigin: true,
-    // Keep cookies on our domain
     cookieDomainRewrite: { "*": "" },
-
-    // We’ll modify HTML before sending it
     selfHandleResponse: true,
-
-    // Strip the /mi-form prefix before sending upstream
     pathRewrite: (path) => path.replace(/^\/mi-form/, ""),
 
-    /**
-     * Intercept responses to:
-     *  - remove CSP / X-Frame headers
-     *  - inject <base> and rewrite URLs so assets go back through /mi-form
-     */
     onProxyRes: responseInterceptor(async (buffer, proxyRes, req, res) => {
-      // Remove restrictive headers from upstream
+      // Preserve correct content type
+      if (proxyRes.headers["content-type"]) {
+        res.setHeader("content-type", proxyRes.headers["content-type"]);
+      }
+
+      // Remove restrictive headers
       delete proxyRes.headers["content-security-policy"];
       delete proxyRes.headers["x-frame-options"];
       delete proxyRes.headers["content-security-policy-report-only"];
 
       const ct = proxyRes.headers["content-type"] || "";
       if (!ct.includes("text/html")) {
-        // Not HTML (JS/CSS/img) — just pass through
-        return buffer;
+        return buffer; // CSS/JS/images untouched
       }
 
       let html = buffer.toString("utf8");
 
-      // Inject <base href="/mi-form/"> to fix root-relative URLs
-      if (/<head[^>]*>/i.test(html)) {
-        html = html.replace(
-          /<head([^>]*)>/i,
-          `<head$1><base href="/mi-form/">`
-        );
-      }
-
-      // Rewrite absolute domain references to go through the proxy
+      // Rewrites for assets
       html = html
-        // Full absolute references
         .replace(/https?:\/\/app\.periodicalservices\.com/gi, "/mi-form")
-        // Protocol-relative (//app.periodicalservices.com/...)
         .replace(/\/\/app\.periodicalservices\.com/gi, "/mi-form")
-        // Root-relative references (src="/...", href="/...", url(/...))
-        .replace(/src="\//gi, 'src="/mi-form/')
-        .replace(/href="\//gi, 'href="/mi-form/')
-        .replace(/url\(\//gi, "url(/mi-form/)")
-        .replace(/srcset="\//gi, 'srcset="/mi-form/');
+        .replace(/(src|href|action)=["']\/(?!\/)/gi, '$1="/mi-form/')
+        .replace(/url\(\//gi, "url(/mi-form/")
+        .replace(/srcset=["']\/(?!\/)/gi, 'srcset="/mi-form/');
 
       return html;
     }),
 
-    // Optional: better error message
     onError(err, req, res) {
       console.error("Proxy error:", err?.message);
       res.status(502).send("Proxy error");
     },
+
+    onProxyReq(proxyReq, req, res) {
+      console.log("➡️ Proxying:", req.url);
+    },
   })
 );
+
 
 // Health check
 app.get("/healthz", (_, res) => res.send("ok"));

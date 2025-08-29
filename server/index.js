@@ -4,7 +4,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 const seedRoles = require('./config/db-seeder');
-const { createProxyMiddleware } =require("http-proxy-middleware");
+const { createProxyMiddleware,responseInterceptor } =require("http-proxy-middleware");
 
 
 

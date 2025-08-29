@@ -32,6 +32,22 @@ app.use(
     },
   })
 );
+// Also proxy static assets
+app.use(
+  "/css",
+  createProxyMiddleware({
+    target: "https://app.periodicalservices.com",
+    changeOrigin: true,
+  })
+);
+
+app.use(
+  "/js",
+  createProxyMiddleware({
+    target: "https://app.periodicalservices.com",
+    changeOrigin: true,
+  })
+);
 
 
 // --- CORS CONFIGURATION: MUST BE FIRST MIDDLEWARE ---

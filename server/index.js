@@ -25,54 +25,37 @@ const app = express();
 // The external site you want to embed
 const TARGET = "https://app.periodicalservices.com";
 
-// Optional: make Express not add its own headers
-app.disable("x-powered-by");
-
-// For all routes under /mi-form, make sure we don't send our own CSP/XFO
 app.use(
   "/mi-form",
   createProxyMiddleware({
     target: TARGET,
     changeOrigin: true,
+    cookieDomainRewrite: { "*": "" },
 
-    // Strip /mi-form before sending upstream
+    // Needed so we can modify headers/content
+    selfHandleResponse: true,
+
+    // Strip the /mi-form prefix before forwarding
     pathRewrite: (path) => path.replace(/^\/mi-form/, ""),
 
-    selfHandleResponse: true, // so we can modify HTML
-
+    // Intercept responses to remove CSP/X-Frame headers
     onProxyRes: responseInterceptor(async (buffer, proxyRes, req, res) => {
-      // Remove blocking headers
+      // Remove restrictive headers
       delete proxyRes.headers["content-security-policy"];
       delete proxyRes.headers["x-frame-options"];
       delete proxyRes.headers["content-security-policy-report-only"];
 
-      const ct = proxyRes.headers["content-type"] || "";
-      if (!ct.includes("text/html")) {
-        return buffer; // not HTML, just return raw
-      }
-
-      let html = buffer.toString("utf8");
-
-      // Inject <base> so relative links work
-      html = html.replace(/<head([^>]*)>/i, `<head$1><base href="/mi-form/">`);
-
-      // Rewrite URLs so assets also proxy through /mi-form
-      html = html
-        .replace(/https?:\/\/app\.periodicalservices\.com/gi, "/mi-form")
-        .replace(/src="\//gi, 'src="/mi-form/')
-        .replace(/href="\//gi, 'href="/mi-form/')
-        .replace(/url\(\//gi, "url(/mi-form/)")
-        .replace(/srcset="\//gi, 'srcset="/mi-form/');
-
-      return html;
+      return buffer; // send content as-is
     }),
 
+    // Error handling
     onError(err, req, res) {
       console.error("Proxy error:", err?.message);
       res.status(502).send("Proxy error");
     },
   })
 );
+
 
 
 // --- CORS CONFIGURATION: MUST BE FIRST MIDDLEWARE ---

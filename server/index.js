@@ -23,58 +23,34 @@ const app = express();
 
 
 // The external site you want to embed
-const TARGET = "https://app.periodicalservices.com";
+// const TARGET = "https://app.periodicalservices.com";
+const TARGET = 'https://app.periodicalservices.com';
 
 app.use(
-  "/mi-form",
+  '/mi-form',
   createProxyMiddleware({
     target: TARGET,
     changeOrigin: true,
-    cookieDomainRewrite: { "*": "" }, // rewrite cookies to our domain
-    selfHandleResponse: true, // let us edit HTML
-    pathRewrite: (path) => path.replace(/^\/mi-form/, ""), // strip prefix before proxying
+    selfHandleResponse: true, // so we can rewrite HTML
+    pathRewrite: { '^/mi-form': '/PSOnlineAGM/dialer/newSaleNoVerifierOnePACid3r.asp' },
+    onProxyRes: responseInterceptor(async (buffer, proxyRes) => {
+      const contentType = proxyRes.headers['content-type'] || '';
+      if (!contentType.includes('text/html')) return buffer;
 
-    onProxyRes: responseInterceptor(async (buffer, proxyRes, req, res) => {
-      // Strip restrictive headers
-      delete proxyRes.headers["content-security-policy"];
-      delete proxyRes.headers["content-security-policy-report-only"];
-      delete proxyRes.headers["x-frame-options"];
+      let html = buffer.toString('utf8');
 
-      const ct = proxyRes.headers["content-type"] || "";
-      if (!ct.includes("text/html")) {
-        // Not HTML (CSS/JS/images) → pass through
-        return buffer;
-      }
+      // Inject <base> to fix asset URLs
+      html = html.replace(/<head([^>]*)>/i, '<head$1><base href="/mi-form/">');
 
-      let html = buffer.toString("utf8");
-
-      // Inject <base> tag so relative paths resolve correctly
-      if (/<head[^>]*>/i.test(html)) {
-        html = html.replace(
-          /<head([^>]*)>/i,
-          `<head$1><base href="/mi-form/">`
-        );
-      }
-
-      // Rewrite absolute and root-relative URLs
+      // Rewrite asset URLs to go through the proxy
       html = html
-        // absolute full references
-        .replace(/https?:\/\/app\.periodicalservices\.com/gi, "/mi-form")
-        // protocol-relative
-        .replace(/\/\/app\.periodicalservices\.com/gi, "/mi-form")
-        // root-relative (src="/...", href="/...", url(/...))
+        .replace(/https?:\/\/app\.periodicalservices\.com/gi, '/mi-form')
         .replace(/src="\//gi, 'src="/mi-form/')
         .replace(/href="\//gi, 'href="/mi-form/')
-        .replace(/url\(\//gi, "url(/mi-form/)")
-        .replace(/srcset="\//gi, 'srcset="/mi-form/');
+        .replace(/url\(\//gi, 'url(/mi-form/)');
 
       return html;
     }),
-
-    onError(err, req, res) {
-      console.error("Proxy error:", err?.message);
-      res.status(502).send("Proxy error");
-    },
   })
 );
 

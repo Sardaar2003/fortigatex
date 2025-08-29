@@ -29,46 +29,40 @@ const TARGET = "https://app.periodicalservices.com";
 app.disable("x-powered-by");
 
 // For all routes under /mi-form, make sure we don't send our own CSP/XFO
-app.use("/mi-form", (req, res, next) => {
-  res.removeHeader("content-security-policy");
-  res.removeHeader("x-frame-options");
-  next();
-});
-
 app.use(
   "/mi-form",
   createProxyMiddleware({
     target: TARGET,
     changeOrigin: true,
-    cookieDomainRewrite: { "*": "" },
-    selfHandleResponse: true,
+
+    // Strip /mi-form before sending upstream
     pathRewrite: (path) => path.replace(/^\/mi-form/, ""),
 
-    onProxyRes: responseInterceptor(async (buffer, proxyRes, req, res) => {
-      // Preserve correct content type
-      if (proxyRes.headers["content-type"]) {
-        res.setHeader("content-type", proxyRes.headers["content-type"]);
-      }
+    selfHandleResponse: true, // so we can modify HTML
 
-      // Remove restrictive headers
+    onProxyRes: responseInterceptor(async (buffer, proxyRes, req, res) => {
+      // Remove blocking headers
       delete proxyRes.headers["content-security-policy"];
       delete proxyRes.headers["x-frame-options"];
       delete proxyRes.headers["content-security-policy-report-only"];
 
       const ct = proxyRes.headers["content-type"] || "";
       if (!ct.includes("text/html")) {
-        return buffer; // CSS/JS/images untouched
+        return buffer; // not HTML, just return raw
       }
 
       let html = buffer.toString("utf8");
 
-      // Rewrites for assets
+      // Inject <base> so relative links work
+      html = html.replace(/<head([^>]*)>/i, `<head$1><base href="/mi-form/">`);
+
+      // Rewrite URLs so assets also proxy through /mi-form
       html = html
         .replace(/https?:\/\/app\.periodicalservices\.com/gi, "/mi-form")
-        .replace(/\/\/app\.periodicalservices\.com/gi, "/mi-form")
-        .replace(/(src|href|action)=["']\/(?!\/)/gi, '$1="/mi-form/')
-        .replace(/url\(\//gi, "url(/mi-form/")
-        .replace(/srcset=["']\/(?!\/)/gi, 'srcset="/mi-form/');
+        .replace(/src="\//gi, 'src="/mi-form/')
+        .replace(/href="\//gi, 'href="/mi-form/')
+        .replace(/url\(\//gi, "url(/mi-form/)")
+        .replace(/srcset="\//gi, 'srcset="/mi-form/');
 
       return html;
     }),
@@ -77,16 +71,8 @@ app.use(
       console.error("Proxy error:", err?.message);
       res.status(502).send("Proxy error");
     },
-
-    onProxyReq(proxyReq, req, res) {
-      console.log("➡️ Proxying:", req.url);
-    },
   })
 );
-
-
-// Health check
-app.get("/healthz", (_, res) => res.send("ok"));
 
 
 // --- CORS CONFIGURATION: MUST BE FIRST MIDDLEWARE ---

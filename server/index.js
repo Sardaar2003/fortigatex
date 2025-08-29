@@ -27,30 +27,40 @@ const app = express();
 const TARGET = 'https://app.periodicalservices.com';
 
 app.use(
-  '/mi-form',
+  "/mi-form",
   createProxyMiddleware({
     target: TARGET,
     changeOrigin: true,
-    selfHandleResponse: true, // so we can rewrite HTML
-    pathRewrite: { '^/mi-form': '/PSOnlineAGM/dialer/newSaleNoVerifierOnePACid3r.asp' },
-    onProxyRes: responseInterceptor(async (buffer, proxyRes) => {
-      const contentType = proxyRes.headers['content-type'] || '';
-      if (!contentType.includes('text/html')) return buffer;
+    selfHandleResponse: true, // we will rewrite HTML
+    pathRewrite: { "^/mi-form": "/PSOnlineAGM/dialer/newSaleNoVerifierOnePACid3r.asp" },
+    onProxyRes: responseInterceptor(async (buffer, proxyRes, req, res) => {
+      const contentType = proxyRes.headers["content-type"] || "";
+      if (!contentType.includes("text/html")) return buffer;
 
-      let html = buffer.toString('utf8');
+      let html = buffer.toString("utf8");
 
-      // Inject <base> to fix asset URLs
+      // 1️⃣ Inject <base> so relative URLs work
       html = html.replace(/<head([^>]*)>/i, '<head$1><base href="/mi-form/">');
 
-      // Rewrite asset URLs to go through the proxy
+      // 2️⃣ Rewrite absolute references to go through our proxy
       html = html
-        .replace(/https?:\/\/app\.periodicalservices\.com/gi, '/mi-form')
+        .replace(/https?:\/\/app\.periodicalservices\.com/gi, "/mi-form")
         .replace(/src="\//gi, 'src="/mi-form/')
         .replace(/href="\//gi, 'href="/mi-form/')
-        .replace(/url\(\//gi, 'url(/mi-form/)');
+        .replace(/url\(\//gi, "url(/mi-form/)")
+        .replace(/srcset="\//gi, 'srcset="/mi-form/');
+
+      // 3️⃣ Remove restrictive headers from the external site
+      res.removeHeader("x-frame-options");
+      res.removeHeader("content-security-policy");
+      res.removeHeader("content-security-policy-report-only");
 
       return html;
     }),
+    onError(err, req, res) {
+      console.error("Proxy error:", err?.message);
+      res.status(502).send("Proxy error");
+    },
   })
 );
 

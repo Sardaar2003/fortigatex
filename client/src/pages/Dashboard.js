@@ -278,7 +278,7 @@ const Dashboard = () => {
         {selectedProject === 'mi' ? (
   <Box sx={{ height: "80vh" }}>
     <iframe
-      src="https://fortigatex.onrender.com/mi-form/PSOnlineAGM/dialer/newSaleNoVerifierOnePACid3r.asp"   // 🚀 goes to your backend, not external site
+      src="/mi-form"   // 🚀 goes to your backend, not external site
       // src="https://localhost:5000/mi-form/PSOnlineAGM/dialer/newSaleNoVerifierOnePACid3r.asp"
               title="MI Project"
       width="100%"

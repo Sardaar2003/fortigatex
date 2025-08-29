@@ -22,30 +22,37 @@ console.log('Environment file path:', path.resolve('.env'));
 const app = express();
 
 
+// Proxy config for /mi-form/**
 app.use(
   "/mi-form",
   createProxyMiddleware({
-    target: "https://app.periodicalservices.com", // just the base domain
+    target: "https://app.periodicalservices.com", // external site
     changeOrigin: true,
-    pathRewrite: {
-      "^/mi-form": "/PSOnlineAGM/dialer/newSaleNoVerifierOnePACid3r.asp", // the actual path
-    },
-  })
-);
-// Also proxy static assets
-app.use(
-  "/css",
-  createProxyMiddleware({
-    target: "https://app.periodicalservices.com",
-    changeOrigin: true,
-  })
-);
+    selfHandleResponse: true, // we’ll intercept HTML
+    pathRewrite: (path, req) => path.replace(/^\/mi-form/, ""), // strip /mi-form prefix
 
-app.use(
-  "/js",
-  createProxyMiddleware({
-    target: "https://app.periodicalservices.com",
-    changeOrigin: true,
+    /**
+     * 🔹 Rewrite HTML responses so absolute links also route through proxy
+     */
+    onProxyRes: responseInterceptor(async (responseBuffer, proxyRes, req, res) => {
+      let response = responseBuffer.toString("utf8");
+
+      // Remove CSP & X-Frame headers
+      delete proxyRes.headers["content-security-policy"];
+      delete proxyRes.headers["x-frame-options"];
+
+      // Only rewrite HTML (not JS, CSS, images)
+      if (proxyRes.headers["content-type"]?.includes("text/html")) {
+        response = response
+          // Rewrite absolute links to pass through /mi-form
+          .replace(/https:\/\/app\.periodicalservices\.com/gi, "/mi-form")
+          // Rewrite relative links too (for safety)
+          .replace(/href="\//gi, 'href="/mi-form/')
+          .replace(/src="\//gi, 'src="/mi-form/');
+      }
+
+      return response;
+    }),
   })
 );
 

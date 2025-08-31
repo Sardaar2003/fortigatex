@@ -19,12 +19,12 @@ import {
 import { Close as CloseIcon } from '@mui/icons-material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+// import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
-import { format } from 'date-fns';
-import MuiAlert from '@mui/material/Alert';
+// import { format } from 'date-fns';
+// import MuiAlert from '@mui/material/Alert';
 
 // List of US states
 const states = [
@@ -98,7 +98,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
   const [timerActive, setTimerActive] = useState(false);
   const formRef = useRef(null);
   const [formData, setFormData] = useState({
-    orderDate: new Date(),
+    orderDate: new Date().toISOString().split("T")[0],
     firstName: '',
     lastName: '',
     address1: '',
@@ -141,12 +141,12 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
     }));
   };
 
-  const handleDateChange = (date) => {
-    setFormData(prev => ({
-      ...prev,
-      orderDate: date
-    }));
-  };
+  // const handleDateChange = (date) => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     orderDate: date
+  //   }));
+  // };
 
   const handleExpirationDateChange = (date) => {
     setFormData(prev => ({
@@ -208,9 +208,10 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
     }
 
     // Store form data before clearing
+    const [y, m, d] = formData.orderDate.split("-");
     const formDataToSubmit = {
       ...formData,
-      orderDate: format(formData.orderDate, 'MM/dd/yyyy'),
+      orderDate: `${m}/${d}/${y}`,
       creditCardExpiration: formData.creditCardExpiration
     };
 
@@ -248,7 +249,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
   };
   const handleClearForm = () => {
     setFormData({
-      orderDate: new Date(),
+      orderDate: new Date().toISOString().split("T")[0],
       firstName: '',
       lastName: '',
       address1: '',
@@ -309,7 +310,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
         <Grid container spacing={3}>
           {/* Order Date at the top */}
           <Grid item xs={12} sm={6}>
-            <DatePicker
+            {/* <DatePicker
               label="Order Date"
               value={formData.orderDate}
               onChange={handleDateChange}
@@ -325,7 +326,25 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
                   helperText={error}
                 />
               )}
-            />
+            /> */}
+            <TextField
+              type="date"
+              label="Order Date"
+              name="orderDate"
+              value={formData.orderDate} // keep YYYY-MM-DD for the input
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  orderDate: e.target.value, // still YYYY-MM-DD
+                }))
+              }
+              fullWidth
+              required
+              error={!!errors.orderDate}
+              helperText={errors.orderDate}
+/>
+
+
           </Grid>
 
           {/* Personal Information */}

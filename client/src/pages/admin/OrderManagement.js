@@ -288,114 +288,97 @@ const OrderManagement = () => {
   };
 
   const handleDownloadCSV = () => {
-    // Create CSV headers - including ALL database fields
-    const headers = [
-      'Order ID',
-      'Order Date',
-      'First Name',
-      'Last Name',
-      'Email',
-      'Phone Number',
-      'Secondary Phone Number',
-      'Address Line 1',
-      'Address Line 2',
-      'City',
-      'State',
-      'Zip Code',
-      'Source Code',
-      'SKU',
-      'Product Name',
-      'Session ID',
-      'Status',
-      'SubLytics Order ID',
-      'Credit Card Number',
-      'Credit Card Expiration',
-      'Credit Card Last 4',
-      'Credit Card CVV',
-      'Card Issuer',
-      'Voice Recording ID',
-      'Customer ID',
-      'User ID',
-      'User Name',
-      'User Email',
-      'Validation Status',
-      'Validation Message',
-      'Validation Response',
-      'Validation Date',
-      'Project',
-      'Vendor ID',
-      'Client Order Number',
-      'Client Data',
-      'Pitch ID',
-      'Transaction ID',
-      'Transaction Date',
-      'Created At',
-      'Updated At'
-    ];
+  // Define headers in fixed order
+  const headers = [
+    'Order ID', 'Order Date', 'First Name', 'Last Name', 'Email',
+    'Phone Number', 'Secondary Phone Number', 'Address Line 1', 'Address Line 2',
+    'City', 'State', 'Zip Code', 'Source Code', 'SKU', 'Product Name',
+    'Session ID', 'Status', 'SubLytics Order ID', 'Credit Card Number',
+    'Credit Card Expiration', 'Credit Card Last 4', 'Credit Card CVV', 'Card Issuer',
+    'Voice Recording ID', 'Customer ID', 'User ID', 'User Name', 'User Email',
+    'Validation Status', 'Validation Message', 'Validation Response', 'Validation Date',
+    'Project', 'Vendor ID', 'Client Order Number', 'Client Data', 'Pitch ID',
+    'Transaction ID', 'OrderID', 'Transaction Date', 'Created At', 'Updated At'
+  ];
 
-    // Create CSV rows - including ALL database fields and user info
-    const rows = orders.map(order => [
-      order._id,
-      order.orderDate || 'NULL',
-      order.firstName || 'NULL',
-      order.lastName || 'NULL',
-      order.email || 'NULL',
-      order.phoneNumber || 'NULL',
-      order.secondaryPhoneNumber || 'NULL',
-      order.address1 || 'NULL',
-      order.address2 || 'NULL',
-      order.city || 'NULL',
-      order.state || 'NULL',
-      order.zipCode || 'NULL',
-      order.sourceCode || 'NULL',
-      order.sku || 'NULL',
-      order.productName || 'NULL',
-      order.sessionId || 'NULL',
-      order.status || 'NULL',
-      order.sublyticssOrderId || 'NULL',
-      order.creditCardNumber || 'NULL',
-      order.creditCardExpiration || 'NULL',
-      order.creditCardLast4 || 'NULL',
-      order.creditCardCVV || 'NULL',
-      order.cardIssuer || 'NULL',
-      order.voiceRecordingId || 'NULL',
-      order.customerId || 'NULL',
-      order.user?._id || 'NULL',
-      order.user?.name || 'NULL',
-      order.user?.email || 'NULL',
-      order.validationStatus || 'NULL',
-      order.validationMessage || 'NULL',
-      order.validationResponse ? JSON.stringify(order.validationResponse) : 'NULL',
-      order.validationDate ? format(new Date(order.validationDate), 'yyyy-MM-dd HH:mm:ss') : 'NULL',
-      order.project || 'NULL',
-      order.vendorId || 'NULL',
-      order.clientOrderNumber || 'NULL',
-      order.clientData || 'NULL',
-      order.pitchId || 'NULL',
-      order.transactionId || 'NULL',
-      order.OrderID||'NULL',
-      order.transactionDate ? format(new Date(order.transactionDate), 'yyyy-MM-dd HH:mm:ss') : 'NULL',
-      order.createdAt ? format(new Date(order.createdAt), 'yyyy-MM-dd HH:mm:ss') : 'NULL',
-      order.updatedAt ? format(new Date(order.updatedAt), 'yyyy-MM-dd HH:mm:ss') : 'NULL'
-    ]);
+  // Utility to sanitize values
+  const sanitize = (value, options = {}) => {
+    if (value === undefined || value === null || value === '') return 'Not Available';
+    let str = String(value).trim();
 
-    // Combine headers and rows
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
+    // Truncate if maxlength specified
+    if (options.max && str.length > options.max) {
+      str = str.substring(0, options.max);
+    }
 
-    // Create and trigger download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `complete_orders_export_${format(new Date(), 'yyyy-MM-dd_HH-mm-ss')}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Escape quotes by doubling them for CSV
+    str = str.replace(/"/g, '""');
+    return str;
   };
+
+  // Build rows
+  const rows = orders.map(order => [
+    sanitize(order._id),
+    sanitize(order.orderDate),
+    sanitize(order.firstName, { max: 30 }),
+    sanitize(order.lastName, { max: 30 }),
+    sanitize(order.email),
+    sanitize(order.phoneNumber),
+    sanitize(order.secondaryPhoneNumber),
+    sanitize(order.address1, { max: 50 }),
+    sanitize(order.address2, { max: 50 }),
+    sanitize(order.city, { max: 30 }),
+    sanitize(order.state),
+    sanitize(order.zipCode),
+    sanitize(order.sourceCode, { max: 6 }),
+    sanitize(order.sku, { max: 7 }),
+    sanitize(order.productName),
+    sanitize(order.sessionId, { max: 36 }),
+    sanitize(order.status),
+    sanitize(order.sublyticssOrderId),
+    sanitize(order.creditCardNumber),
+    sanitize(order.creditCardExpiration),
+    sanitize(order.creditCardLast4, { max: 4 }),
+    sanitize(order.creditCardCVV),
+    sanitize(order.cardIssuer),
+    sanitize(order.voiceRecordingId),
+    sanitize(order.customerId),
+    sanitize(order.user?._id),
+    sanitize(order.user?.name),
+    sanitize(order.user?.email),
+    sanitize(order.validationStatus),
+    sanitize(order.validationMessage),
+    sanitize(order.validationResponse ? JSON.stringify(order.validationResponse) : null),
+    order.validationDate ? format(new Date(order.validationDate), 'yyyy-MM-dd HH:mm:ss') : 'Not Available',
+    sanitize(order.project),
+    sanitize(order.vendorId, { max: 4 }),
+    sanitize(order.clientOrderNumber, { max: 10 }),
+    sanitize(order.clientData, { max: 64 }),
+    sanitize(order.pitchId, { max: 11 }),
+    sanitize(order.transactionId),
+    sanitize(order.OrderID),
+    order.transactionDate ? format(new Date(order.transactionDate), 'yyyy-MM-dd HH:mm:ss') : 'Not Available',
+    order.createdAt ? format(new Date(order.createdAt), 'yyyy-MM-dd HH:mm:ss') : 'Not Available',
+    order.updatedAt ? format(new Date(order.updatedAt), 'yyyy-MM-dd HH:mm:ss') : 'Not Available'
+  ]);
+
+  // Join into CSV
+  const csvContent = [
+    headers.join(','), // header row
+    ...rows.map(row => row.map(cell => `"${cell}"`).join(',')) // escape commas
+  ].join('\n');
+
+  // Trigger download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', `complete_orders_export_${format(new Date(), 'yyyy-MM-dd_HH-mm-ss')}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
   if (loading) {
     return (

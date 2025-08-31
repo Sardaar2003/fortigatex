@@ -563,7 +563,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
             />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <DatePicker
+            {/* <DatePicker
               label="Date of Birth"
               value={formData.dob}
               onChange={handleDateChange('dob')}
@@ -573,7 +573,21 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
               minDate={new Date(1900, 0, 1)}
               maxDate={new Date()}
               renderInput={(params) => <TextField {...params} fullWidth />}
-            />
+            /> */}
+            <TextField
+    label="Date of Birth"
+    type="date"
+    name="dob"
+    value={formData.dob ? formData.dob.toISOString().split('T')[0] : ''}
+    onChange={(e) => setFormData(prev => ({
+      ...prev,
+      dob: e.target.value ? new Date(e.target.value) : null
+    }))}
+    InputLabelProps={{
+      shrink: true,
+    }}
+    fullWidth
+  />
           </Grid>
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>

@@ -840,7 +840,7 @@ const processMIOrder = asyncHandler(async (req, res) => {
       ...consent,
       benefitsIdTheft: Boolean(consent?.benefitsIdTheft || consent?.benefitsSavings || consent?.idTheftProtection)
     };
-
+    console.log(req.body);
     const order = await Order.create({
       user: req.user.id,
       project: 'MI Project',

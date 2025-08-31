@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { isValid } from "date-fns";
+
 import {
   Box,
   TextField,
@@ -24,12 +26,12 @@ import {
 import { Close as CloseIcon } from '@mui/icons-material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+// import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import { format } from 'date-fns';
-import MuiAlert from '@mui/material/Alert';
+// import MuiAlert from '@mui/material/Alert';
 
 // List of US states
 const states = [
@@ -101,7 +103,7 @@ const MIOrderForm = ({ onOrderSuccess }) => {
   const [timerActive, setTimerActive] = useState(false);
   const formRef = useRef(null);
   const [formData, setFormData] = useState({
-    callDate: new Date(),
+    callDate: new Date().toISOString().split("T")[0],
     firstName: '',
     lastName: '',
     address1: '',
@@ -117,7 +119,7 @@ const MIOrderForm = ({ onOrderSuccess }) => {
     authorizedSigner: 'YES',
     ageConfirmation: 'YES',
     email: '',
-    dateOfBirth: new Date(),
+    dateOfBirth: new Date().toISOString().split("T")[0],
     consent: {
       benefitsIdTheft: false,
       myTelemedicine: false
@@ -148,19 +150,19 @@ const MIOrderForm = ({ onOrderSuccess }) => {
     }));
   };
 
-  const handleDateChange = (date) => {
-    setFormData(prev => ({
-      ...prev,
-      callDate: date
-    }));
-  };
+  // const handleDateChange = (date) => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     callDate: date
+  //   }));
+  // };
 
-  const handleDateOfBirthChange = (date) => {
-    setFormData(prev => ({
-      ...prev,
-      dateOfBirth: date
-    }));
-  };
+  // const handleDateOfBirthChange = (date) => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     dateOfBirth: date
+  //   }));
+  // };
 
   const handleConsentChange = (service) => {
     setFormData(prev => ({
@@ -190,14 +192,14 @@ const MIOrderForm = ({ onOrderSuccess }) => {
     if (!formData.email) newErrors.email = 'Email is required';
 
     // Special validation for callDate
-    if (!formData.callDate || !(formData.callDate instanceof Date) || isNaN(formData.callDate.getTime())) {
-      newErrors.callDate = 'Please select a valid call date';
-    }
+    // if (!formData.callDate || !(formData.callDate instanceof Date) || isNaN(formData.callDate.getTime())) {
+    //   newErrors.callDate = 'Please select a valid call date';
+    // }
 
-    // Special validation for dateOfBirth
-    if (!formData.dateOfBirth || !(formData.dateOfBirth instanceof Date) || isNaN(formData.dateOfBirth.getTime())) {
-      newErrors.dateOfBirth = 'Please select a valid date of birth';
-    }
+    // // Special validation for dateOfBirth
+    // if (!formData.dateOfBirth || !(formData.dateOfBirth instanceof Date) || isNaN(formData.dateOfBirth.getTime())) {
+    //   newErrors.dateOfBirth = 'Please select a valid date of birth';
+    // }
 
     // Email validation
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
@@ -257,12 +259,15 @@ const MIOrderForm = ({ onOrderSuccess }) => {
       return;
     }
 
-    // Store form data before clearing
     const formDataToSubmit = {
-      ...formData,
-      callDate: format(formData.callDate, 'MM/dd/yyyy'),
-      dateOfBirth: format(formData.dateOfBirth, 'MM/dd/yyyy')
-    };
+  ...formData,
+  callDate: isValid(new Date(formData.callDate))
+    ? format(new Date(formData.callDate), "MM/dd/yyyy")
+    : "",
+  dateOfBirth: isValid(new Date(formData.dateOfBirth))
+    ? format(new Date(formData.dateOfBirth), "MM/dd/yyyy")
+    : "",
+};
 
     try {
       console.log('Starting MI order submission process...');
@@ -300,7 +305,7 @@ const MIOrderForm = ({ onOrderSuccess }) => {
 
   const handleClearForm = () => {
     setFormData({
-      callDate: new Date(),
+      callDate: new Date().toISOString().split("T")[0],
       firstName: '',
       lastName: '',
       address1: '',
@@ -316,7 +321,7 @@ const MIOrderForm = ({ onOrderSuccess }) => {
       authorizedSigner: 'YES',
       ageConfirmation: 'YES',
       email: '',
-      dateOfBirth: new Date(),
+      dateOfBirth: new Date().toISOString().split("T")[0],
       consent: {
         benefitsIdTheft: false,
         myTelemedicine: false
@@ -364,7 +369,7 @@ const MIOrderForm = ({ onOrderSuccess }) => {
 
         <Grid container spacing={3}>
           {/* Date of Call at the top */}
-          <Grid item xs={12} sm={6}>
+          {/* <Grid item xs={12} sm={6}>
             <DatePicker
               label="Date of Call"
               value={formData.callDate}
@@ -382,7 +387,33 @@ const MIOrderForm = ({ onOrderSuccess }) => {
                 />
               )}
             />
-          </Grid>
+          </Grid> */}
+          <Grid item xs={12} sm={6}>
+            {/* import { format, isValid } from "date-fns"; */}
+
+<TextField
+  label="Date of Call"
+  name="callDate"
+  value={
+    formData.callDate && isValid(new Date(formData.callDate))
+      ? format(new Date(formData.callDate), "dd-MM-yyyy")
+      : ""
+  }
+  onChange={(e) => {
+    const [day, month, year] = e.target.value.split("-");
+    const parsedDate = new Date(`${year}-${month}-${day}`);
+    setFormData((prev) => ({
+      ...prev,
+      callDate: isValid(parsedDate) ? parsedDate : null,
+    }));
+  }}
+  placeholder="DD-MM-YYYY"
+  fullWidth
+/>
+
+
+        </Grid>
+
 
           {/* Personal Information */}
           <Grid item xs={12}>
@@ -444,7 +475,7 @@ const MIOrderForm = ({ onOrderSuccess }) => {
               helperText={errors.email}
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          {/* <Grid item xs={12} sm={6}>
             <DatePicker
               label="Date of Birth"
               value={formData.dateOfBirth}
@@ -464,7 +495,24 @@ const MIOrderForm = ({ onOrderSuccess }) => {
                 />
               )}
             />
-          </Grid>
+          </Grid> */}
+          <Grid item xs={12} sm={6}>
+  <TextField
+    label="Date of Birth"
+    type="date"
+    name="dob"
+    value={formData.dob}
+    onChange={(e) => setFormData(prev => ({
+  ...prev,
+  dateOfBirth: e.target.value
+}))}
+    InputLabelProps={{
+      shrink: true,
+    }}
+    fullWidth
+  />
+</Grid>
+
 
           {/* Address Information */}
           <Grid item xs={12}>

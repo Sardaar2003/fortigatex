@@ -288,7 +288,7 @@ const OrderManagement = () => {
   };
 
   const handleDownloadCSV = () => {
-  // Define headers in fixed order
+  // CSV Headers — all fields from OrderSchema + user info
   const headers = [
     'Order ID', 'Order Date', 'First Name', 'Last Name', 'Email',
     'Phone Number', 'Secondary Phone Number', 'Address Line 1', 'Address Line 2',
@@ -298,7 +298,13 @@ const OrderManagement = () => {
     'Voice Recording ID', 'Customer ID', 'User ID', 'User Name', 'User Email',
     'Validation Status', 'Validation Message', 'Validation Response', 'Validation Date',
     'Project', 'Vendor ID', 'Client Order Number', 'Client Data', 'Pitch ID',
-    'Transaction ID', 'OrderID', 'Transaction Date', 'Created At', 'Updated At'
+    'Transaction ID', 'OrderID', 'Transaction Date', 'Created At', 'Updated At',
+
+    // MI Project specific
+    'Call Date', 'Date of Birth', 'Checking Account Name', 'Bank Name',
+    'Routing Number', 'Checking Account Number', 'Authorized Signer',
+    'Age Confirmation', 'Consent', 'Consent - Benefits Savings',
+    'Consent - ID Theft Protection', 'Consent - MyTelemedicine', 'Source'
   ];
 
   // Utility to sanitize values
@@ -311,12 +317,12 @@ const OrderManagement = () => {
       str = str.substring(0, options.max);
     }
 
-    // Escape quotes by doubling them for CSV
+    // Escape quotes for CSV
     str = str.replace(/"/g, '""');
     return str;
   };
 
-  // Build rows
+  // Rows builder
   const rows = orders.map(order => [
     sanitize(order._id),
     sanitize(order.orderDate),
@@ -359,13 +365,28 @@ const OrderManagement = () => {
     sanitize(order.OrderID),
     order.transactionDate ? format(new Date(order.transactionDate), 'yyyy-MM-dd HH:mm:ss') : 'Not Available',
     order.createdAt ? format(new Date(order.createdAt), 'yyyy-MM-dd HH:mm:ss') : 'Not Available',
-    order.updatedAt ? format(new Date(order.updatedAt), 'yyyy-MM-dd HH:mm:ss') : 'Not Available'
+    order.updatedAt ? format(new Date(order.updatedAt), 'yyyy-MM-dd HH:mm:ss') : 'Not Available',
+
+    // MI Project specific
+    sanitize(order.callDate),
+    sanitize(order.dateOfBirth),
+    sanitize(order.checkingAccountName, { max: 50 }),
+    sanitize(order.bankName, { max: 50 }),
+    sanitize(order.routingNumber),
+    sanitize(order.checkingAccountNumber),
+    sanitize(order.authorizedSigner),
+    sanitize(order.ageConfirmation),
+    sanitize(order.consent ? JSON.stringify(order.consent) : null),
+    sanitize(order.consentBenefitsSavings),
+    sanitize(order.consentIdTheftProtection),
+    sanitize(order.consentMyTelemedicine),
+    sanitize(order.source)
   ]);
 
-  // Join into CSV
+  // Create CSV
   const csvContent = [
-    headers.join(','), // header row
-    ...rows.map(row => row.map(cell => `"${cell}"`).join(',')) // escape commas
+    headers.join(','),
+    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
   ].join('\n');
 
   // Trigger download

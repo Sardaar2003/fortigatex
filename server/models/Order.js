@@ -4,12 +4,12 @@ const OrderSchema = new mongoose.Schema({
   orderDate: {
     type: String,
     required: function() {
-      return this.project !== 'SC Project' && this.project !== 'sempris' && this.project !== 'MI Project';
+      return this.project !== 'SC Project' && this.project !== 'MI Project';
     },
     validate: {
       validator: function(v) {
         // Skip validation if this is a Sempris order or MI Project
-        if (this.project === 'SC Project' || this.project === 'sempris' || this.project === 'MI Project') {
+        if (this.project === 'SC Project') {
           return true;
         }
         

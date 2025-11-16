@@ -1,19 +1,6 @@
 const axios = require('axios');
 const logger = require('../utils/logger');
 
-const binNumbers = [
-  "533248", "542418", "518941", "517805", "410040", "426937", "498563", "481582",
-  "414740", "474476", "423980", "601100", "528432", "483316", "552433", "537811",
-  "555426", "529062", "544768", "510855", "510889", "554869", "411600", "434340",
-  "411238", "414397", "546993", "555753", "545660", "522992", "549345", "554885",
-  "542543", "524913", "434257", "446542", "407221", "482812", "445170", "474165",
-  "411384", "442644", "470727", "473702", "434256", "473703", "434258", "521333",
-  "524366", "546680", "524300", "524306", "521853", "552330", "524008", "524363",
-  "524364", "444796", "470793", "525362", "511332", "510404", "539483", "532802",
-  "434769", "483312", "406032", "474472", "412197", "461046", "444296", "400022",
-  "486796", "526219"
-];
-
 class SublyticsService {
   constructor() {
     this.baseUrl = "https://globalmarketingpartners.sublytics.com/api/order/doAddProcess";
@@ -174,22 +161,8 @@ if (validationErrors.length > 0) {
   };
         }
         
-// Validate BIN reject list - check if card number starts with rejected BIN
-    console.log('Checking BIN validation...');
-    const cardNumber = payload.card_number.replace(/\s/g, '');
-    const cardBin = (cardNumber.substring(0, 6));
-    console.log('Card BIN:', cardBin);
-    if (binNumbers.includes(cardBin)) {
-      console.error('BIN rejected:', cardBin);
-      return {
-      eligible: false,
-      reason: 'BIN List Reject. Try another card',
-      rawResponse: null
-    };
-    }
-    console.log('BIN validation passed');
-        console.log('payload', payload);
-
+    // BIN list validation now occurs on the frontend order form.
+    console.log('payload', payload);
 
       // Make API call to Sempris
       const response = await axios.post(this.baseUrl, payload, {

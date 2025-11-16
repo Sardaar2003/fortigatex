@@ -56,6 +56,21 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
     severity: 'success'
   });
 
+  const getFieldErrorStyles = (hasError) =>
+    hasError
+      ? {
+          '& .MuiOutlinedInput-root': {
+            backgroundColor: 'rgba(244, 67, 54, 0.12)',
+            '& fieldset': { borderColor: 'error.main' },
+            '&:hover fieldset': { borderColor: 'error.dark' },
+            '&.Mui-focused fieldset': { borderColor: 'error.main' }
+          },
+          '& .MuiInputLabel-root': {
+            color: 'error.main !important'
+          }
+        }
+      : {};
+
   // Timer effect for notification
   useEffect(() => {
     let interval = null;
@@ -263,7 +278,6 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
     // Clear form when notification shows
-    handleClearForm();
   };
 
   return (
@@ -281,6 +295,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
             onChange={handleChange}
             error={!!validationErrors.first_name}
             helperText={validationErrors.first_name}
+            sx={getFieldErrorStyles(!!validationErrors.first_name)}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -293,6 +308,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
             onChange={handleChange}
             error={!!validationErrors.last_name}
             helperText={validationErrors.last_name}
+            sx={getFieldErrorStyles(!!validationErrors.last_name)}
           />
         </Grid>
 
@@ -307,6 +323,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
             onChange={handleChange}
             error={!!validationErrors.address1}
             helperText={validationErrors.address1}
+            sx={getFieldErrorStyles(!!validationErrors.address1)}
           />
         </Grid>
         <Grid item xs={12}>
@@ -318,6 +335,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
             onChange={handleChange}
             error={!!validationErrors.address2}
             helperText={validationErrors.address2}
+            sx={getFieldErrorStyles(!!validationErrors.address2)}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -330,6 +348,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
             onChange={handleChange}
             error={!!validationErrors.city}
             helperText={validationErrors.city}
+            sx={getFieldErrorStyles(!!validationErrors.city)}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -343,6 +362,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
             error={!!validationErrors.state}
             helperText={validationErrors.state || 'Enter 2-letter state code'}
             inputProps={{ maxLength: 2 }}
+            sx={getFieldErrorStyles(!!validationErrors.state)}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -355,6 +375,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
             onChange={handleChange}
             error={!!validationErrors.zip}
             helperText={validationErrors.zip}
+            sx={getFieldErrorStyles(!!validationErrors.zip)}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -368,6 +389,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
             error={!!validationErrors.phone}
             helperText={validationErrors.phone}
             inputProps={{ maxLength: 10 }}
+            sx={getFieldErrorStyles(!!validationErrors.phone)}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -380,6 +402,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
             error={!!validationErrors.secondary_phone}
             helperText={validationErrors.secondary_phone || "Optional secondary phone number"}
             inputProps={{ maxLength: 10 }}
+            sx={getFieldErrorStyles(!!validationErrors.secondary_phone)}
           />
         </Grid>
 
@@ -420,6 +443,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
             onChange={handleChange}
             error={!!validationErrors.card_number}
             helperText={validationErrors.card_number}
+            sx={getFieldErrorStyles(!!validationErrors.card_number)}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -433,6 +457,7 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
             error={!!validationErrors.card_expiration}
             helperText={validationErrors.card_expiration || "Format: MMYY (e.g., 1225 for December 2025)"}
             inputProps={{ maxLength: 4 }}
+            sx={getFieldErrorStyles(!!validationErrors.card_expiration)}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -446,10 +471,16 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
             error={!!validationErrors.card_cvv}
             helperText={validationErrors.card_cvv}
             inputProps={{ maxLength: 4 }}
+            sx={getFieldErrorStyles(!!validationErrors.card_cvv)}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <FormControl fullWidth required error={!!validationErrors.issuer}>
+          <FormControl
+            fullWidth
+            required
+            error={!!validationErrors.issuer}
+            sx={getFieldErrorStyles(!!validationErrors.issuer)}
+          >
             <InputLabel>Card Issuer</InputLabel>
             <Select
               name="issuer"
@@ -471,8 +502,8 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
           </FormControl>
         </Grid>
 
-        {/* Submit Button */}
-        <Grid item xs={12}>
+        {/* Actions */}
+        <Grid item xs={12} sm={6}>
           <Button
             type="submit"
             fullWidth
@@ -481,6 +512,18 @@ const SemprisOrderForm = ({ onOrderSuccess }) => {
             disabled={loading}
           >
             {loading ? 'Processing...' : 'Submit Order'}
+          </Button>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Button
+            type="button"
+            fullWidth
+            variant="outlined"
+            color="primary"
+            onClick={handleClearForm}
+            disabled={loading}
+          >
+            Clear Form
           </Button>
         </Grid>
       </Grid>

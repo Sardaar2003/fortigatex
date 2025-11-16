@@ -56,3 +56,5 @@
 [2025-08-29T15:08:08.219Z] [ERROR] Request body:
 [2025-08-31T16:18:17.899Z] [ERROR] Error creating MI order:
 [2025-08-31T16:18:17.902Z] [ERROR] Request body:
+[2025-11-12T10:41:33.920Z] [ERROR] Sublytics API error: Request failed with status code 400
+[2025-11-12T10:42:32.965Z] [ERROR] Sublytics API error: Request failed with status code 400

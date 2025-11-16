@@ -119,6 +119,41 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
   });
   const [errors, setErrors] = useState({});
 
+  const getFieldErrorStyles = (hasError) =>
+    hasError
+      ? {
+          '& .MuiOutlinedInput-root': {
+            backgroundColor: 'rgba(244, 67, 54, 0.12)',
+            '& fieldset': { borderColor: 'error.main' },
+            '&:hover fieldset': { borderColor: 'error.dark' },
+            '&.Mui-focused fieldset': { borderColor: 'error.main' }
+          },
+          '& .MuiInputLabel-root': {
+            color: 'error.main !important'
+          }
+        }
+      : {};
+
+  const clearFieldError = (field) => {
+    setErrors(prev => {
+      if (!prev[field]) {
+        return prev;
+      }
+      const updated = { ...prev };
+      delete updated[field];
+      return updated;
+    });
+  };
+
+  const getErrorProps = (field, defaultHelperText) => {
+    const hasError = !!errors[field];
+    return {
+      error: hasError,
+      helperText: hasError ? errors[field] : defaultHelperText,
+      sx: getFieldErrorStyles(hasError)
+    };
+  };
+
   // Timer effect for notification
   useEffect(() => {
     let interval = null;
@@ -139,6 +174,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
       ...prev,
       [name]: value
     }));
+    clearFieldError(name);
   };
 
   // const handleDateChange = (date) => {
@@ -153,6 +189,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
       ...prev,
       creditCardExpiration: date
     }));
+    clearFieldError('creditCardExpiration');
   };
 
   const validateForm = () => {
@@ -270,6 +307,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
     setError('');
     setSuccess(false);
     setShowMessage(false);
+    setErrors({});
   };
 
   // Replace showMessage/message with snackbar object for consistency
@@ -289,7 +327,6 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
     setTimeLeft(60);
     setTimerActive(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    handleClearForm();
   };
 
   // Replace handleCloseMessage with unified version
@@ -363,6 +400,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
               value={formData.firstName}
               onChange={handleChange}
               maxLength={30}
+              {...getErrorProps('firstName')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -374,6 +412,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
               value={formData.lastName}
               onChange={handleChange}
               maxLength={30}
+              {...getErrorProps('lastName')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -385,7 +424,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
               value={formData.phoneNumber}
               onChange={handleChange}
               inputProps={{ pattern: '[0-9]{10}' }}
-              helperText="Enter 10-digit phone number"
+              {...getErrorProps('phoneNumber', 'Enter 10-digit phone number')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -396,7 +435,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
               value={formData.secondaryPhoneNumber}
               onChange={handleChange}
               inputProps={{ pattern: '[0-9]{10}' }}
-              helperText="Optional secondary phone number"
+              {...getErrorProps('secondaryPhoneNumber', 'Optional secondary phone number')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -408,6 +447,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
               value={formData.email}
               onChange={handleChange}
               maxLength={512}
+              {...getErrorProps('email')}
             />
           </Grid>
 
@@ -427,6 +467,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
               value={formData.address1}
               onChange={handleChange}
               maxLength={50}
+              {...getErrorProps('address1')}
             />
           </Grid>
           <Grid item xs={12}>
@@ -437,6 +478,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
               value={formData.address2}
               onChange={handleChange}
               maxLength={50}
+              {...getErrorProps('address2')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -448,10 +490,15 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
               value={formData.city}
               onChange={handleChange}
               maxLength={30}
+              {...getErrorProps('city')}
             />
           </Grid>
           <Grid item xs={12} sm={3}>
-            <FormControl fullWidth error={!!errors.state}>
+            <FormControl
+              fullWidth
+              error={!!errors.state}
+              sx={getFieldErrorStyles(!!errors.state)}
+            >
               <InputLabel>State</InputLabel>
               <Select
                 value={formData.state}
@@ -484,7 +531,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
               value={formData.zipCode}
               onChange={handleChange}
               inputProps={{ pattern: '[0-9]{5}(-[0-9]{4})?' }}
-              helperText="Enter 5 or 9-digit ZIP code"
+              {...getErrorProps('zipCode', 'Enter 5 or 9-digit ZIP code')}
             />
           </Grid>
 
@@ -580,7 +627,7 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
               <Button
                 type="submit"
                 variant="contained"
@@ -596,6 +643,18 @@ const RadiusOrderForm = ({ onOrderSuccess }) => {
               >
                 {loading ? 'Submitting...' : 'Submit Order'}
               </Button>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Button
+              type="button"
+              variant="outlined"
+              fullWidth
+              size="large"
+              disabled={loading}
+              onClick={handleClearForm}
+            >
+              Clear Form
+            </Button>
           </Grid>
         </Grid>
 

@@ -1,12 +1,14 @@
 services:
   - type: web
     name: fortigatex-server
+    # env: node
     runtime: node
-    runtimeVersion: 20
-    env: node
+    plan: free # optional — can set to 'starter' or 'standard' if you want
     buildCommand: npm install
     startCommand: npm start
+    # runtimeVersion: 20.11.1 # specify a full stable Node version
     envVars:
       - key: NODE_ENV
         value: production
     autoDeploy: true
+

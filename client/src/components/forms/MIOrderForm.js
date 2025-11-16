@@ -128,6 +128,32 @@ const MIOrderForm = ({ onOrderSuccess }) => {
   });
   const [errors, setErrors] = useState({});
 
+  const getFieldErrorStyles = (hasError) =>
+    hasError
+      ? {
+          '& .MuiOutlinedInput-root': {
+            backgroundColor: 'rgba(244, 67, 54, 0.12)',
+            '& fieldset': { borderColor: 'error.main' },
+            '&:hover fieldset': { borderColor: 'error.dark' },
+            '&.Mui-focused fieldset': { borderColor: 'error.main' }
+          },
+          '& .MuiInputLabel-root': {
+            color: 'error.main !important'
+          }
+        }
+      : {};
+
+  const clearFieldError = (field) => {
+    setErrors(prev => {
+      if (!prev[field]) {
+        return prev;
+      }
+      const updated = { ...prev };
+      delete updated[field];
+      return updated;
+    });
+  };
+
   // Timer effect for notification
   useEffect(() => {
     let interval = null;
@@ -148,6 +174,7 @@ const MIOrderForm = ({ onOrderSuccess }) => {
       ...prev,
       [name]: value
     }));
+    clearFieldError(name);
   };
 
   // const handleDateChange = (date) => {
@@ -172,6 +199,7 @@ const MIOrderForm = ({ onOrderSuccess }) => {
         [service]: !prev.consent[service]
       }
     }));
+    clearFieldError('consent');
   };
 
   const validateForm = () => {

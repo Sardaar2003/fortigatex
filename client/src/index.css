@@ -123,3 +123,11 @@ code {
   padding-top: 80px;
   min-height: calc(100vh - 80px);
 }
+
+.MuiOutlinedInput-root.Mui-error {
+  background-color: rgba(244, 67, 54, 0.12);
+}
+
+.MuiFormLabel-root.Mui-error {
+  color: #f44336 !important;
+}

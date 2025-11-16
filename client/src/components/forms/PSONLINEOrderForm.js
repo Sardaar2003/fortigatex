@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useMemo } from 'react';
 import {
   Box,
   TextField,
@@ -13,13 +13,18 @@ import {
   Snackbar,
   Alert,
   IconButton,
-  LinearProgress
+  LinearProgress,
+  FormHelperText
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AuthContext } from '../../context/AuthContext';
+import {
+  PSONLINE_REJECTED_BINS,
+  PSONLINE_REJECTED_STATES
+} from '../../constants/binLists';
 
 const PSONLINEOrderForm = ({ onOrderSuccess }) => {
   const { token } = useContext(AuthContext);
@@ -51,6 +56,33 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
     message: '',
     severity: 'success'
   });
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const getFieldErrorStyles = (hasError) =>
+    hasError
+      ? {
+          '& .MuiOutlinedInput-root': {
+            backgroundColor: 'rgba(244, 67, 54, 0.12)',
+            '& fieldset': { borderColor: 'error.main' },
+            '&:hover fieldset': { borderColor: 'error.dark' },
+            '&.Mui-focused fieldset': { borderColor: 'error.main' }
+          },
+          '& .MuiInputLabel-root': {
+            color: 'error.main !important'
+          }
+        }
+      : {};
+
+  const clearFieldError = (field) => {
+    setFieldErrors(prev => {
+      if (!prev[field]) {
+        return prev;
+      }
+      const updated = { ...prev };
+      delete updated[field];
+      return updated;
+    });
+  };
 
   // Timer effect for notification
   useEffect(() => {
@@ -66,89 +98,11 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
     return () => clearInterval(interval);
   }, [timerActive, timeLeft]);
 
-  // BIN Reject List - States that are not allowed for PSOnline orders
-  const rejectedStates = ['ME', 'IA', 'UT', 'MN', 'VT', 'KS', 'WI', 'MO'];
-
-  // BIN Reject List - Card numbers starting with these BINs are not allowed
-  const rejectedBins = [
-    400022, 400167, 400218, 400344, 400799, 400898, 400899, 401532, 401543, 402018,
-    402087, 402321, 402464, 403015, 403163, 403216, 403446, 403623, 403833, 403905,
-    403995, 404657, 405037, 405496, 405960, 406018, 406032, 406042, 406049, 406095,
-    406498, 407166, 407221, 407535, 407624, 407887, 408104, 408540, 408832, 408881,
-    409311, 409451, 409589, 409758, 409970, 409975, 410039, 410040, 410064, 410793,
-    410836, 410846, 411079, 411111, 411238, 411352, 411449, 411501, 411507, 411568,
-    411573, 411770, 411771, 411773, 411774, 411776, 411810, 412055, 412185, 412421,
-    412451, 412654, 413037, 413040, 414094, 414238, 414364, 414397, 414398, 414446,
-    414512, 414709, 414718, 414720, 414724, 414734, 414740, 414776, 414778, 414794,
-    415158, 415417, 415560, 415976, 415977, 415978, 415982, 416046, 416085, 416832,
-    416860, 416993, 416994, 416995, 417021, 418940, 418953, 419002, 419047, 419423,
-    419455, 420064, 420231, 420495, 420767, 421783, 422311, 422481, 422957, 422967,
-    422968, 423223, 423766, 423817, 423821, 423910, 424030, 424067, 424631, 424840,
-    425131, 425300, 425307, 425628, 425704, 425808, 425828, 425836, 425838, 425907,
-    426191, 426290, 426428, 426576, 426684, 426690, 426937, 426938, 426939, 427082,
-    427178, 427514, 427538, 427569, 429413, 429544, 429819, 429820, 430070, 430572,
-    430665, 431196, 431307, 431503, 431732, 432630, 432672, 432825, 433077, 433177,
-    433280, 433718, 433747, 434256, 434258, 434292, 434340, 434769, 435140, 435142,
-    435541, 435544, 435545, 435546, 435603, 435643, 435716, 435836, 435880, 436127,
-    436618, 436885, 438854, 438857, 438958, 438959, 439707, 439878, 440066, 440230,
-    440393, 441104, 441105, 441297, 441839, 441840, 442347, 442505, 442644, 442657,
-    442742, 442743, 442756, 442790, 442792, 442795, 442939, 443040, 443042, 443045,
-    443046, 443047, 443051, 443057, 443113, 443161, 443264, 443512, 443585, 443589,
-    443603, 444607, 444796, 445100, 445101, 445102, 445171, 445250, 446019, 446053,
-    446317, 446539, 446542, 446601, 446613, 446614, 446705, 447227, 447581, 447669,
-    447775, 447914, 447954, 447972, 447993, 447994, 447995, 448223, 448233, 448251,
-    448261, 448774, 448825, 449209, 449210, 449435, 449449, 449465, 449553, 451002,
-    451336, 451440, 453506, 454507, 455552, 457431, 458415, 458453, 460728, 461046,
-    461100, 461608, 462161, 462661, 463153, 463405, 463829, 465345, 466189, 466992,
-    467010, 468013, 468839, 470132, 470134, 470320, 470793, 472728, 473063, 473139,
-    473310, 473336, 473690, 473702, 473703, 473931, 474165, 474166, 474472, 474473,
-    474474, 474475, 474476, 474477, 474478, 474481, 474485, 474487, 474489, 474665,
-    475056, 475869, 476546, 476970, 478200, 478433, 478975, 479126, 479213, 479841,
-    479851, 480209, 480213, 481176, 481582, 481583, 481588, 482812, 483312, 483313,
-    483314, 483316, 483365, 483492, 483950, 484718, 484722, 485320, 486732, 486742,
-    486796, 487900, 487917, 490071, 490097, 491277, 491278, 491288, 494160, 494383,
-    498503, 498563, 510250, 510277, 510349, 510404, 510599, 510624, 510774, 510796,
-    510805, 510855, 510875, 510921, 510930, 510933, 510936, 510941, 510967, 510987,
-    511020, 511058, 511089, 511118, 511184, 511271, 511308, 511317, 511332, 511350,
-    511360, 511413, 511516, 511541, 511563, 511786, 511822, 511832, 511897, 511959,
-    512106, 512107, 512174, 512230, 512333, 512474, 512876, 512992, 513547, 514021,
-    514104, 514138, 514149, 514173, 514185, 514186, 514222, 514228, 514230, 514309,
-    514348, 514377, 514380, 514401, 514441, 514491, 514518, 514616, 514735, 514736,
-    514759, 514793, 514887, 514891, 514968, 515034, 515061, 515147, 515223, 515239,
-    515241, 515254, 515307, 515554, 515557, 515574, 515599, 515645, 515676, 515678,
-    515735, 515942, 516086, 516121, 516488, 516501, 516578, 516648, 516693, 517148,
-    517278, 517479, 517542, 517545, 517546, 517572, 517800, 517805, 517862, 517872,
-    517884, 518702, 518725, 518752, 518778, 518941, 519100, 519282, 519452, 519457,
-    519835, 519836, 519985, 520266, 520278, 520299, 520524, 520602, 520711, 520943,
-    521105, 521131, 521333, 521730, 521844, 521853, 521870, 521876, 521991, 521997,
-    522094, 522561, 523081, 523568, 523652, 523668, 523782, 523957, 524038, 524300,
-    524303, 524304, 524306, 524363, 524364, 524366, 525107, 525362, 525363, 525475,
-    525691, 526188, 526226, 526227, 526264, 526291, 526449, 526484, 526534, 526924,
-    526926, 526929, 526947, 527319, 527368, 527480, 527505, 527515, 527517, 527518,
-    527519, 527520, 527521, 527523, 527690, 527845, 527854, 528072, 528217, 528432,
-    528546, 528710, 528749, 528847, 529062, 529099, 529115, 529149, 529263, 529580,
-    530046, 530654, 530964, 531105, 531106, 531108, 531257, 531258, 531259, 531260,
-    531262, 531278, 532211, 532254, 532514, 532569, 532578, 532605, 532828, 532839,
-    533362, 534303, 534456, 534756, 534774, 534859, 534860, 534869, 534901, 535456,
-    536062, 536219, 536759, 536817, 536821, 537802, 537811, 537986, 538082, 538875,
-    538923, 538976, 539186, 539225, 539226, 539483, 539556, 539610, 539634, 539655,
-    539689, 540219, 540324, 540342, 540385, 540404, 540653, 540707, 540789, 541065,
-    541071, 541111, 541413, 541433, 541505, 542179, 542217, 542418, 542432, 542442,
-    542543, 542784, 543668, 543701, 543703, 543803, 544205, 544543, 544579, 544602,
-    544632, 544722, 544768, 544927, 544928, 545212, 545236, 545313, 545436, 545443,
-    545510, 545563, 545660, 545669, 545958, 546143, 546174, 546199, 546213, 546221,
-    546268, 546325, 546356, 546379, 546533, 546540, 546604, 546616, 546617, 546626,
-    546630, 546632, 546633, 546638, 546641, 546645, 547182, 547415, 547519, 548029,
-    548030, 548042, 548043, 549035, 549110, 549113, 549170, 549429, 549460, 549686,
-    549769, 549806, 550442, 550779, 550806, 550807, 550860, 550905, 550934, 551046,
-    551050, 551056, 551076, 551128, 551149, 551164, 551165, 551195, 551292, 551336,
-    551338, 551571, 551627, 551733, 551738, 551791, 551814, 551820, 551938, 552225,
-    552285, 552318, 552319, 552321, 552322, 552330, 552342, 552356, 552393, 552433,
-    552465, 552486, 552499, 552712, 552736, 552851, 552869, 553453, 553732, 553734,
-    553811, 553907, 553968, 553981, 554085, 554869, 555440, 557567, 557619, 557621,
-    558158, 558650, 558962, 559034, 559330, 559427, 559460, 559551, 559591, 559758,
-    559920
-  ];
+  const rejectedStates = PSONLINE_REJECTED_STATES;
+  const rejectedBinSet = useMemo(
+    () => new Set(PSONLINE_REJECTED_BINS),
+    []
+  );
 
   // All US states for dropdown
   const allStates = [
@@ -175,6 +129,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       selectedProducts: selectedValues,
       amount: totalAmount
     }));
+    clearFieldError('selectedProducts');
   };
 
   const handleChange = (event) => {
@@ -183,6 +138,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       ...prev,
       [name]: value
     }));
+    clearFieldError(name);
   };
 
   const handleDateChange = (name) => (date) => {
@@ -190,6 +146,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       ...prev,
       [name]: date
     }));
+    clearFieldError(name);
   };
 
   const handleCloseSnackbar = () => {
@@ -209,9 +166,6 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
     
     // Scroll to top smoothly
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    // Clear form when notification shows
-    handleClearForm();
   };
 
   const handleClearForm = () => {
@@ -235,6 +189,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       expiryYear: '',
       cvv: ''
     });
+    setFieldErrors({});
   };
 
   // Generate month and year options
@@ -256,9 +211,135 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 20 }, (_, i) => currentYear + i);
 
+  const validateForm = () => {
+    const errors = {};
+    const trimmedFirstName = formData.firstName.trim();
+    const trimmedLastName = formData.lastName.trim();
+    const trimmedStreet = formData.streetAddress.trim();
+    const trimmedApt = formData.apt.trim();
+    const trimmedCity = formData.city.trim();
+    const trimmedState = formData.state.trim().toUpperCase();
+    const trimmedZip = formData.zipCode.trim();
+    const trimmedEmail = formData.email.trim();
+    const primaryPhoneDigits = formData.phone.replace(/\D/g, '');
+    const secondaryPhoneDigits = formData.secondaryPhone.replace(/\D/g, '');
+    const sanitizedCardNumber = formData.cardNumber.replace(/\s/g, '');
+
+    if (!formData.selectedProducts.length) {
+      errors.selectedProducts = 'Select at least one product';
+    }
+
+    if (!trimmedFirstName) {
+      errors.firstName = 'First name is required';
+    } else if (trimmedFirstName.length > 30) {
+      errors.firstName = 'First name must be 30 characters or fewer';
+    }
+
+    if (!trimmedLastName) {
+      errors.lastName = 'Last name is required';
+    } else if (trimmedLastName.length > 30) {
+      errors.lastName = 'Last name must be 30 characters or fewer';
+    }
+
+    if (!trimmedStreet) {
+      errors.streetAddress = 'Street address is required';
+    } else if (trimmedStreet.length > 50) {
+      errors.streetAddress = 'Street address must be 50 characters or fewer';
+    }
+
+    if (trimmedApt && trimmedApt.length > 50) {
+      errors.apt = 'Apt/Suite must be 50 characters or fewer';
+    }
+
+    if (!trimmedCity) {
+      errors.city = 'City is required';
+    } else if (trimmedCity.length > 30) {
+      errors.city = 'City must be 30 characters or fewer';
+    }
+
+    if (!trimmedState) {
+      errors.state = 'State is required';
+    } else if (trimmedState.length !== 2) {
+      errors.state = 'State must be exactly 2 characters';
+    } else if (rejectedStates.includes(trimmedState)) {
+      errors.state = `Orders from ${trimmedState} are not currently accepted. Please contact support for assistance.`;
+    }
+
+    if (!trimmedZip) {
+      errors.zipCode = 'ZIP code is required';
+    } else if (!/^\d{5}(\d{4})?$/.test(trimmedZip)) {
+      errors.zipCode = 'ZIP code must be 5 or 9 digits';
+    }
+
+    if (!primaryPhoneDigits) {
+      errors.phone = 'Phone number is required';
+    } else if (!/^\d{10}$/.test(primaryPhoneDigits)) {
+      errors.phone = 'Phone number must be exactly 10 digits';
+    }
+
+    if (formData.secondaryPhone && !/^\d{10}$/.test(secondaryPhoneDigits)) {
+      errors.secondaryPhone = 'Secondary phone must be exactly 10 digits';
+    }
+
+    if (!trimmedEmail) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      errors.email = 'Invalid email format';
+    }
+
+    if (formData.dob) {
+      const dobDate = new Date(formData.dob);
+      if (Number.isNaN(dobDate.getTime())) {
+        errors.dob = 'Date of birth must be valid';
+      }
+    }
+
+    if (formData.gender && !['M', 'F'].includes(formData.gender)) {
+      errors.gender = 'Gender must be M or F';
+    }
+
+    if (!sanitizedCardNumber) {
+      errors.cardNumber = 'Card number is required';
+    } else if (!/^\d{15,16}$/.test(sanitizedCardNumber)) {
+      errors.cardNumber = 'Card number must be 15 or 16 digits';
+    } else if (rejectedBinSet.has(sanitizedCardNumber.substring(0, 6))) {
+      errors.cardNumber = 'This card type is not currently accepted. Please use a different payment method.';
+    }
+
+    if (!formData.expiryMonth) {
+      errors.expiryMonth = 'Expiry month is required';
+    }
+
+    if (!formData.expiryYear) {
+      errors.expiryYear = 'Expiry year is required';
+    }
+
+    if (!formData.cvv) {
+      errors.cvv = 'CVV is required';
+    } else if (!/^\d{3,4}$/.test(formData.cvv)) {
+      errors.cvv = 'CVV must be 3 or 4 digits';
+    }
+
+    if (!formData.amount || Number(formData.amount) <= 0) {
+      errors.selectedProducts = errors.selectedProducts || 'Select at least one product';
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
+    const validationErrors = validateForm();
+
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
+      showNotification('error', 'Please fix the highlighted fields before submitting.');
+      setLoading(false);
+      return;
+    }
+
+    setFieldErrors({});
     
     console.log('=== PSOnline Order Form Submission Started ===');
     console.log('Form data before processing:', formData);
@@ -281,6 +362,14 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       const selectedProductObjects = products.filter(p => formData.selectedProducts.includes(p.id));
       console.log('Selected product objects:', selectedProductObjects);
       
+      const trimmedFirstName = formData.firstName.trim();
+      const trimmedLastName = formData.lastName.trim();
+      const trimmedStreet = formData.streetAddress.trim();
+      const trimmedApt = formData.apt.trim();
+      const trimmedCity = formData.city.trim();
+      const trimmedZip = formData.zipCode.trim();
+      const trimmedEmail = formData.email.trim();
+
       const orderData = {
         domain: 'fortigatex.onrender.com', // Domain without https://
         buildorder: 1, // Set to 0 for preauthorization only
@@ -289,14 +378,14 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
         card_expm: formData.expiryMonth,
         card_expy: formData.expiryYear,
         card_cvv: formData.cvv,
-        CustomerFirstName: formData.firstName,
-        CustomerLastName: formData.lastName,
-        BillingStreetAddress: formData.streetAddress,
-        BillingApt: formData.apt,
-        BillingCity: formData.city,
-        BillingState: formData.state,
-        BillingZipCode: formData.zipCode,
-        Email: formData.email,
+        CustomerFirstName: trimmedFirstName,
+        CustomerLastName: trimmedLastName,
+        BillingStreetAddress: trimmedStreet,
+        BillingApt: trimmedApt,
+        BillingCity: trimmedCity,
+        BillingState: formData.state.toUpperCase(),
+        BillingZipCode: trimmedZip,
+        Email: trimmedEmail,
         BillingHomePhone: formData.phone.replace(/\D/g, '').slice(0, 10), // Ensure 10 digits
         amount: formData.amount,
         ProductCount: selectedProductObjects.length,
@@ -317,79 +406,6 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       //   card_num: orderData.card_num ? `${orderData.card_num.substring(0, 4)}****${orderData.card_num.substring(-4)}` : 'Missing',
       //   card_cvv: orderData.card_cvv ? '***' : 'Missing'
       // });
-
-      // Validate required fields
-      const requiredFields = {
-        card_num: 'Card number',
-        card_expm: 'Card expiration month',
-        card_expy: 'Card expiration year',
-        card_cvv: 'CVV',
-        CustomerFirstName: 'First name',
-        CustomerLastName: 'Last name',
-        BillingStreetAddress: 'Street address',
-        BillingCity: 'City',
-        BillingState: 'State',
-        BillingZipCode: 'ZIP code',
-        Email: 'Email',
-        BillingHomePhone: 'Phone number',
-        amount: 'Amount'
-      };
-
-      const missingFields = Object.entries(requiredFields)
-        .filter(([key]) => !orderData[key])
-        .map(([_, label]) => label);
-
-      if (missingFields.length > 0) {
-        throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
-      }
-
-      // Validate card number format (15-16 digits)
-      if (!/^\d{15,16}$/.test(orderData.card_num)) {
-        throw new Error('Card number must be 15 or 16 digits');
-      }
-
-      // Validate CVV format (3-4 digits)
-      if (!/^\d{3,4}$/.test(orderData.card_cvv)) {
-        throw new Error('CVV must be 3 or 4 digits');
-      }
-
-      // Validate phone number format (10 digits)
-      if (!/^\d{10}$/.test(orderData.BillingHomePhone)) {
-        throw new Error('Phone number must be 10 digits');
-      }
-
-      // Validate email format
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderData.Email)) {
-        throw new Error('Invalid email format');
-      }
-
-      // Validate DOB format if provided (MM/DD/YYYY)
-      if (orderData.DOB && !/^\d{2}\/\d{2}\/\d{4}$/.test(orderData.DOB)) {
-        throw new Error('Date of birth must be in MM/DD/YYYY format');
-      }
-
-      // Validate Gender if provided
-      if (orderData.Gender && !['M', 'F'].includes(orderData.Gender)) {
-        throw new Error('Gender must be M or F');
-      }
-
-      // Validate expiry month and year
-      if (!orderData.card_expm || !orderData.card_expy) {
-        throw new Error('Card expiration month and year are required');
-      }
-
-      // Validate BIN reject list - check if state is in rejected states
-      if (rejectedStates.includes(orderData.BillingState.toUpperCase())) {
-        throw new Error(`Orders from ${orderData.BillingState} are not currently accepted. Please contact support for assistance.`);
-      }
-
-      // Validate BIN reject list - check if card number starts with rejected BIN
-      const cardNumber = orderData.card_num.replace(/\s/g, '');
-      const cardBin = parseInt(cardNumber.substring(0, 6));
-      console.log('Card BIN check:', { cardBin, isRejected: rejectedBins.includes(cardBin) });
-      if (rejectedBins.includes(cardBin)) {
-        throw new Error(`This card type is not currently accepted. Please use a different payment method.`);
-      }
 
       console.log('All validations passed, sending request to backend...');
       console.log('Request URL:', '/api/orders/psonline');
@@ -479,7 +495,12 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
             <Divider sx={{ mb: 2 }} />
           </Grid>
           <Grid item xs={12}>
-            <FormControl fullWidth>
+            <FormControl
+              fullWidth
+              required
+              error={!!fieldErrors.selectedProducts}
+              sx={getFieldErrorStyles(!!fieldErrors.selectedProducts)}
+            >
               <InputLabel>Select Products</InputLabel>
               <Select
                 multiple
@@ -501,6 +522,9 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
                   </MenuItem>
                 ))}
               </Select>
+              {fieldErrors.selectedProducts && (
+                <FormHelperText>{fieldErrors.selectedProducts}</FormHelperText>
+              )}
             </FormControl>
           </Grid>
 
@@ -519,6 +543,9 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
               name="firstName"
               value={formData.firstName}
               onChange={handleChange}
+            error={!!fieldErrors.firstName}
+            helperText={fieldErrors.firstName}
+            sx={getFieldErrorStyles(!!fieldErrors.firstName)}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -529,6 +556,9 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
               name="lastName"
               value={formData.lastName}
               onChange={handleChange}
+            error={!!fieldErrors.lastName}
+            helperText={fieldErrors.lastName}
+            sx={getFieldErrorStyles(!!fieldErrors.lastName)}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -540,6 +570,9 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
               type="email"
               value={formData.email}
               onChange={handleChange}
+            error={!!fieldErrors.email}
+            helperText={fieldErrors.email}
+            sx={getFieldErrorStyles(!!fieldErrors.email)}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -550,6 +583,9 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
+            error={!!fieldErrors.phone}
+            helperText={fieldErrors.phone}
+            sx={getFieldErrorStyles(!!fieldErrors.phone)}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -559,7 +595,9 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
               name="secondaryPhone"
               value={formData.secondaryPhone}
               onChange={handleChange}
-              helperText="Optional secondary phone number"
+            error={!!fieldErrors.secondaryPhone}
+            helperText={fieldErrors.secondaryPhone || 'Optional secondary phone number'}
+            sx={getFieldErrorStyles(!!fieldErrors.secondaryPhone)}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -575,22 +613,33 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
               renderInput={(params) => <TextField {...params} fullWidth />}
             /> */}
             <TextField
-    label="Date of Birth"
-    type="date"
-    name="dob"
-    value={formData.dob ? formData.dob.toISOString().split('T')[0] : ''}
-    onChange={(e) => setFormData(prev => ({
-      ...prev,
-      dob: e.target.value ? new Date(e.target.value) : null
-    }))}
-    InputLabelProps={{
-      shrink: true,
-    }}
-    fullWidth
-  />
+              label="Date of Birth"
+              type="date"
+              name="dob"
+              value={formData.dob ? formData.dob.toISOString().split('T')[0] : ''}
+              onChange={(e) => {
+                const value = e.target.value ? new Date(e.target.value) : null;
+                setFormData(prev => ({
+                  ...prev,
+                  dob: value
+                }));
+                clearFieldError('dob');
+              }}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              fullWidth
+              error={!!fieldErrors.dob}
+              helperText={fieldErrors.dob}
+              sx={getFieldErrorStyles(!!fieldErrors.dob)}
+            />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
+            <FormControl
+              fullWidth
+              error={!!fieldErrors.gender}
+              sx={getFieldErrorStyles(!!fieldErrors.gender)}
+            >
               <InputLabel>Gender</InputLabel>
               <Select
                 value={formData.gender}
@@ -601,6 +650,9 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
                 <MenuItem value="M">Male</MenuItem>
                 <MenuItem value="F">Female</MenuItem>
               </Select>
+              {fieldErrors.gender && (
+                <FormHelperText>{fieldErrors.gender}</FormHelperText>
+              )}
             </FormControl>
           </Grid>
 
@@ -622,6 +674,9 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
               name="streetAddress"
               value={formData.streetAddress}
               onChange={handleChange}
+              error={!!fieldErrors.streetAddress}
+              helperText={fieldErrors.streetAddress}
+              sx={getFieldErrorStyles(!!fieldErrors.streetAddress)}
             />
           </Grid>
           <Grid item xs={12}>
@@ -631,6 +686,9 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
               name="apt"
               value={formData.apt}
               onChange={handleChange}
+              error={!!fieldErrors.apt}
+              helperText={fieldErrors.apt}
+              sx={getFieldErrorStyles(!!fieldErrors.apt)}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -641,10 +699,18 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
               name="city"
               value={formData.city}
               onChange={handleChange}
+              error={!!fieldErrors.city}
+              helperText={fieldErrors.city}
+              sx={getFieldErrorStyles(!!fieldErrors.city)}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth required>
+            <FormControl
+              fullWidth
+              required
+              error={!!fieldErrors.state}
+              sx={getFieldErrorStyles(!!fieldErrors.state)}
+            >
               <InputLabel>State</InputLabel>
               <Select
                 value={formData.state}
@@ -666,6 +732,9 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
                   </MenuItem>
                 ))}
               </Select>
+              {fieldErrors.state && (
+                <FormHelperText>{fieldErrors.state}</FormHelperText>
+              )}
             </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -676,6 +745,9 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
               name="zipCode"
               value={formData.zipCode}
               onChange={handleChange}
+              error={!!fieldErrors.zipCode}
+              helperText={fieldErrors.zipCode}
+              sx={getFieldErrorStyles(!!fieldErrors.zipCode)}
             />
           </Grid>
 
@@ -697,10 +769,18 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
               name="cardNumber"
               value={formData.cardNumber}
               onChange={handleChange}
+              error={!!fieldErrors.cardNumber}
+              helperText={fieldErrors.cardNumber}
+              sx={getFieldErrorStyles(!!fieldErrors.cardNumber)}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth required>
+            <FormControl
+              fullWidth
+              required
+              error={!!fieldErrors.expiryMonth}
+              sx={getFieldErrorStyles(!!fieldErrors.expiryMonth)}
+            >
               <InputLabel>Expiry Month</InputLabel>
               <Select
                 value={formData.expiryMonth}
@@ -714,10 +794,18 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
                   </MenuItem>
                 ))}
               </Select>
+              {fieldErrors.expiryMonth && (
+                <FormHelperText>{fieldErrors.expiryMonth}</FormHelperText>
+              )}
             </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth required>
+            <FormControl
+              fullWidth
+              required
+              error={!!fieldErrors.expiryYear}
+              sx={getFieldErrorStyles(!!fieldErrors.expiryYear)}
+            >
               <InputLabel>Expiry Year</InputLabel>
               <Select
                 value={formData.expiryYear}
@@ -731,6 +819,9 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
                   </MenuItem>
                 ))}
               </Select>
+              {fieldErrors.expiryYear && (
+                <FormHelperText>{fieldErrors.expiryYear}</FormHelperText>
+              )}
             </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -741,11 +832,14 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
               name="cvv"
               value={formData.cvv}
               onChange={handleChange}
+              error={!!fieldErrors.cvv}
+              helperText={fieldErrors.cvv}
+              sx={getFieldErrorStyles(!!fieldErrors.cvv)}
             />
           </Grid>
 
           {/* Submit Button */}
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
             <Button
               type="submit"
               variant="contained"
@@ -760,6 +854,18 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
               }}
             >
               {loading ? 'Submitting...' : 'Submit Order'}
+            </Button>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Button
+              type="button"
+              variant="outlined"
+              fullWidth
+              size="large"
+              disabled={loading}
+              onClick={handleClearForm}
+            >
+              Clear Form
             </Button>
           </Grid>
         </Grid>

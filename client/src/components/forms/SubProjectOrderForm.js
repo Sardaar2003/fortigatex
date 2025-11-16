@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Box,
   TextField,
@@ -26,6 +26,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
+import { SUBLYTICS_REJECTED_BINS } from '../../constants/binLists';
 import { format } from 'date-fns';
 import MuiAlert from '@mui/material/Alert';
 
@@ -83,20 +84,6 @@ const states = [
   { value: 'DC', label: 'District of Columbia' }
 ];
 
-const binNumbers = [
-  "533248", "542418", "518941", "517805", "410040", "426937", "498563", "481582",
-  "414740", "474476", "423980", "601100", "528432", "483316", "552433", "537811",
-  "555426", "529062", "544768", "510855", "510889", "554869", "411600", "434340",
-  "411238", "414397", "546993", "555753", "545660", "522992", "549345", "554885",
-  "542543", "524913", "434257", "446542", "407221", "482812", "445170", "474165",
-  "411384", "442644", "470727", "473702", "434256", "473703", "434258", "521333",
-  "524366", "546680", "524300", "524306", "521853", "552330", "524008", "524363",
-  "524364", "444796", "470793", "525362", "511332", "510404", "539483", "532802",
-  "434769", "483312", "406032", "474472", "412197", "461046", "444296", "400022",
-  "486796", "526219"
-];
-
-
 const SubProjectOrderForm = ({ onOrderSuccess }) => {
   const navigate = useNavigate();
   const { token } = React.useContext(AuthContext);
@@ -149,6 +136,35 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
   });
     const [errors, setErrors] = useState({});
     const restrictedStates = ['IA', 'OH', 'AK', 'HI', 'ME', 'MN', 'UT', 'VT', 'WI'];
+  const getFieldErrorStyles = (hasError) =>
+    hasError
+      ? {
+          '& .MuiOutlinedInput-root': {
+            backgroundColor: 'rgba(244, 67, 54, 0.12)',
+            '& fieldset': { borderColor: 'error.main' },
+            '&:hover fieldset': { borderColor: 'error.dark' },
+            '&.Mui-focused fieldset': { borderColor: 'error.main' }
+          },
+          '& .MuiInputLabel-root': {
+            color: 'error.main !important'
+          }
+        }
+      : {};
+
+  const clearFieldError = (field) => {
+    setErrors(prev => {
+      if (!prev[field]) {
+        return prev;
+      }
+      const updated = { ...prev };
+      delete updated[field];
+      return updated;
+    });
+  };
+  const rejectedBinSet = useMemo(
+    () => new Set(SUBLYTICS_REJECTED_BINS),
+    []
+  );
 
   // Timer effect for notification
   useEffect(() => {
@@ -170,6 +186,7 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
       ...prev,
       [name]: value
     }));
+    clearFieldError(name);
   };
 
   const handleDateChange = (date) => {
@@ -209,6 +226,15 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
     // Card number validation
     if (formData.card_number && !/^\d{13,16}$/.test(formData.card_number)) {
       newErrors.card_number = 'Please enter a valid card number';
+    }
+    if (formData.card_number) {
+      const sanitizedCard = formData.card_number.replace(/\s/g, '');
+      if (sanitizedCard.length >= 6) {
+        const bin = sanitizedCard.substring(0, 6);
+        if (rejectedBinSet.has(bin)) {
+          newErrors.card_number = 'This card type is not currently accepted. Please use a different payment method.';
+        }
+      }
     }
     // Card expiration month
     if (formData.card_exp_month && !/^(0[1-9]|1[0-2])$/.test(formData.card_exp_month)) {
@@ -359,6 +385,7 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
     setError('');
     setSuccess(false);
     setShowMessage(false);
+    setErrors({});
   };
     
     // Replace showMessage/message with snackbar object for consistency
@@ -385,7 +412,6 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
     setTimeLeft(60);
     setTimerActive(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    handleClearForm();
   };
 
   const months = [
@@ -411,8 +437,9 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                 name="bill_fname"
                 value={formData.bill_fname}
                 onChange={handleChange}
-                // error={!!errors.bill_fname}
-                // helperText={errors.bill_fname}
+                error={!!errors.bill_fname}
+                helperText={errors.bill_fname}
+                sx={getFieldErrorStyles(!!errors.bill_fname)}
                 maxLength={30}
             />
             </Grid>
@@ -424,8 +451,9 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                 name="bill_lname"
                 value={formData.bill_lname}
                 onChange={handleChange}
-                // error={!!errors.bill_lname}
-                // helperText={errors.bill_lname}
+                error={!!errors.bill_lname}
+                helperText={errors.bill_lname}
+                sx={getFieldErrorStyles(!!errors.bill_lname)}
                 maxLength={30}
             />
             </Grid>
@@ -438,7 +466,9 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                 value={formData.phone}
                 onChange={handleChange}
                 inputProps={{ pattern: '[0-9]{10}' }}
-                helperText="Enter 10-digit phone number"
+                helperText={errors.phone || 'Enter 10-digit phone number'}
+                error={!!errors.phone}
+                sx={getFieldErrorStyles(!!errors.phone)}
             />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -450,6 +480,9 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                 value={formData.email}
                 onChange={handleChange}
                 maxLength={512}
+                error={!!errors.email}
+                helperText={errors.email}
+                sx={getFieldErrorStyles(!!errors.email)}
             />
             </Grid>
             {/* Remove User Password field from the form UI */}
@@ -467,8 +500,9 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                 name="bill_country"
                 value={formData.bill_country}
                 onChange={handleChange}
-                // error={!!errors.bill_country}
-                // helperText={errors.bill_country}
+                error={!!errors.bill_country}
+                helperText={errors.bill_country}
+                sx={getFieldErrorStyles(!!errors.bill_country)}
                 maxLength={50}
             />
             </Grid>
@@ -480,6 +514,9 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                 value={formData.bill_organization}
                 onChange={handleChange}
                 maxLength={56}
+                error={!!errors.bill_organization}
+                helperText={errors.bill_organization}
+                sx={getFieldErrorStyles(!!errors.bill_organization)}
             />
             </Grid>
             <Grid item xs={12}>
@@ -491,6 +528,9 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                 value={formData.bill_address1}
                 onChange={handleChange}
                 maxLength={50}
+                error={!!errors.bill_address1}
+                helperText={errors.bill_address1}
+                sx={getFieldErrorStyles(!!errors.bill_address1)}
             />
             </Grid>
             <Grid item xs={12}>
@@ -501,6 +541,9 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                 value={formData.bill_address2}
                 onChange={handleChange}
                 maxLength={50}
+                error={!!errors.bill_address2}
+                helperText={errors.bill_address2}
+                sx={getFieldErrorStyles(!!errors.bill_address2)}
             />
             </Grid>
             <Grid item xs={12} sm={4}>
@@ -512,10 +555,17 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                 value={formData.bill_city}
                 onChange={handleChange}
                 maxLength={30}
+                error={!!errors.bill_city}
+                helperText={errors.bill_city}
+                sx={getFieldErrorStyles(!!errors.bill_city)}
             />
             </Grid>
             <Grid item xs={12} sm={4}>
-            <FormControl fullWidth error={!!errors.state}>
+            <FormControl
+              fullWidth
+              error={!!errors.bill_state}
+              sx={getFieldErrorStyles(!!errors.bill_state)}
+            >
               <InputLabel>State</InputLabel>
               <Select
                 value={formData.bill_state}
@@ -534,8 +584,8 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                   </MenuItem>
                 ))}
               </Select>
-              {errors.state && (
-                <FormHelperText>{errors.state}</FormHelperText>
+              {errors.bill_state && (
+                <FormHelperText>{errors.bill_state}</FormHelperText>
               )}
             </FormControl>
             </Grid>
@@ -547,8 +597,9 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                 name="bill_zipcode"
                 value={formData.bill_zipcode}
                 onChange={handleChange}
-                // error={!!errors.bill_zipcode}
-                // helperText={errors.bill_zipcode}
+                error={!!errors.bill_zipcode}
+                helperText={errors.bill_zipcode}
+                sx={getFieldErrorStyles(!!errors.bill_zipcode)}
                 maxLength={10}
             />
             </Grid>
@@ -568,8 +619,9 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                     name="ship_fname"
                     value={formData.ship_fname}
                     onChange={handleChange}
-                    // error={!!errors.ship_fname}
-                    // helperText={errors.ship_fname}
+                    error={!!errors.ship_fname}
+                    helperText={errors.ship_fname}
+                    sx={getFieldErrorStyles(!!errors.ship_fname)}
                     maxLength={30}
                 />
                 </Grid>
@@ -581,8 +633,9 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                     name="ship_lname"
                     value={formData.ship_lname}
                     onChange={handleChange}
-                    // error={!!errors.ship_lname}
-                    // helperText={errors.ship_lname}
+                    error={!!errors.ship_lname}
+                    helperText={errors.ship_lname}
+                    sx={getFieldErrorStyles(!!errors.ship_lname)}
                     imaxLength={30}
                 />
                 </Grid>
@@ -594,6 +647,9 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                     value={formData.ship_organization}
                     onChange={handleChange}
                     maxLength={56}
+                    error={!!errors.ship_organization}
+                    helperText={errors.ship_organization}
+                    sx={getFieldErrorStyles(!!errors.ship_organization)}
                 />
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -604,8 +660,9 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                     name="ship_country"
                     value={formData.ship_country}
                     onChange={handleChange}
-                    // error={!!errors.ship_country}
-                    // helperText={errors.ship_country}
+                    error={!!errors.ship_country}
+                    helperText={errors.ship_country}
+                    sx={getFieldErrorStyles(!!errors.ship_country)}
                     maxLength={56}
                 />
                 </Grid>
@@ -618,6 +675,9 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                     value={formData.ship_address1}
                     onChange={handleChange}
                     maxLength={50}
+                    error={!!errors.ship_address1}
+                    helperText={errors.ship_address1}
+                    sx={getFieldErrorStyles(!!errors.ship_address1)}
                 />
                 </Grid>
                 <Grid item xs={12}>
@@ -628,6 +688,9 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                     value={formData.ship_address2}
                     onChange={handleChange}
                     maxLength={50}
+                    error={!!errors.ship_address2}
+                    helperText={errors.ship_address2}
+                    sx={getFieldErrorStyles(!!errors.ship_address2)}
                 />
                 </Grid>
                 <Grid item xs={12} sm={4}>
@@ -639,10 +702,17 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                     value={formData.ship_city}
                     onChange={handleChange}
                     maxLength={30}
+                    error={!!errors.ship_city}
+                    helperText={errors.ship_city}
+                    sx={getFieldErrorStyles(!!errors.ship_city)}
                 />
                 </Grid>
                 <Grid item xs={12} sm={4}>
-                <FormControl fullWidth error={!!errors.state}>
+                <FormControl
+              fullWidth
+              error={!!errors.ship_state}
+              sx={getFieldErrorStyles(!!errors.ship_state)}
+            >
               <InputLabel>State</InputLabel>
               <Select
                 value={formData.ship_state}
@@ -661,8 +731,8 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                   </MenuItem>
                 ))}
               </Select>
-              {errors.state && (
-                <FormHelperText>{errors.state}</FormHelperText>
+              {errors.ship_state && (
+                <FormHelperText>{errors.ship_state}</FormHelperText>
               )}
             </FormControl>
                 </Grid>
@@ -674,6 +744,9 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                     name="ship_zipcode"
                     value={formData.ship_zipcode}
                     onChange={handleChange}
+                    error={!!errors.ship_zipcode}
+                    helperText={errors.ship_zipcode}
+                    sx={getFieldErrorStyles(!!errors.ship_zipcode)}
                     maxLength={10}
                 />
                 </Grid>
@@ -688,10 +761,16 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                         <Switch
                         checked={formData.shipping_same}
                         onChange={(e) =>
+                            {
+                            const isSame = e.target.checked;
                             setFormData((prev) => ({
                             ...prev,
-                            shipping_same: e.target.checked,
-                            }))
+                            shipping_same: isSame,
+                            }));
+                            if (isSame) {
+                              ['ship_fname', 'ship_lname', 'ship_country', 'ship_address1', 'ship_address2', 'ship_city', 'ship_state', 'ship_zipcode', 'ship_organization'].forEach(clearFieldError);
+                            }
+                            }
                         }
                         name="shipping_same"
                         color="primary"
@@ -711,7 +790,12 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
             {formData.payment_method_id === '1' && (
             <>
                 <Grid item xs={12} sm={6}>
-                <FormControl fullWidth required error={!!errors.card_type_id}>
+                <FormControl
+                  fullWidth
+                  required
+                  error={!!errors.card_type_id}
+                  sx={getFieldErrorStyles(!!errors.card_type_id)}
+                >
                     <InputLabel>Card Type</InputLabel>
                     <Select
                     name="card_type_id"
@@ -725,9 +809,7 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                     <MenuItem value="4">American Express</MenuItem>
                     </Select>
                     {errors.card_type_id && (
-                    <Typography color="error" variant="caption">
-                        {errors.card_type_id}
-                    </Typography>
+                    <FormHelperText>{errors.card_type_id}</FormHelperText>
                     )}
                 </FormControl>
                 </Grid>
@@ -741,6 +823,7 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                     onChange={handleChange}
                     error={!!errors.card_number}
                     helperText={errors.card_number}
+                    sx={getFieldErrorStyles(!!errors.card_number)}
                     // inputProps={{ maxLength: 16 }}
                 />
                 </Grid>
@@ -755,10 +838,16 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                     error={!!errors.card_cvv}
                     helperText={errors.card_cvv}
                     inputProps={{ maxLength: 4 }}
+                    sx={getFieldErrorStyles(!!errors.card_cvv)}
                 />
                 </Grid>
                 <Grid item xs={12} sm={4}>
-                <FormControl fullWidth required error={!!errors.card_exp_month}>
+                <FormControl
+                  fullWidth
+                  required
+                  error={!!errors.card_exp_month}
+                  sx={getFieldErrorStyles(!!errors.card_exp_month)}
+                >
                     <InputLabel>Exp Month</InputLabel>
                     <Select
                     name="card_exp_month"
@@ -771,9 +860,7 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                     ))}
                     </Select>
                     {errors.card_exp_month && (
-                    <Typography color="error" variant="caption">
-                        {errors.card_exp_month}
-                    </Typography>
+                    <FormHelperText>{errors.card_exp_month}</FormHelperText>
                     )}
                 </FormControl>
                 </Grid>
@@ -785,18 +872,19 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                     name="card_exp_year"
                     value={formData.card_exp_year}
                     onChange={handleChange}
-                    error={!!errors.creditCardExpiration}
-                    helperText={errors.creditCardExpiration || "Format: YYYY (2025)"}
+                    error={!!errors.card_exp_year}
+                    helperText={errors.card_exp_year || "Format: YYYY (2025)"}
                     inputProps={{
                         maxLength: 4,
                         pattern: "[0-9]*"
               }}
+              sx={getFieldErrorStyles(!!errors.card_exp_year)}
             />
                 </Grid>
             </>
             )}
 
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
                 <Button
                     type="submit"
                     variant="contained"
@@ -811,6 +899,18 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
                     }}
                 >
                     {loading ? 'Submitting...' : 'Submit Order'}
+                </Button>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+                <Button
+                    type="button"
+                    variant="outlined"
+                    fullWidth
+                    size="large"
+                    disabled={loading}
+                    onClick={handleClearForm}
+                >
+                    Clear Form
                 </Button>
             </Grid>
             </Grid>

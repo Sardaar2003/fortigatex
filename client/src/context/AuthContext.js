@@ -16,10 +16,17 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+  if (typeof window !== "undefined") {
+    const storedToken = localStorage.getItem("token");
+    setToken(storedToken);
+  }
+}, []);
 
   // Set auth token in header
   const setAuthToken = (token) => {

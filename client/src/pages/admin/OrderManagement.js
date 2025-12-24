@@ -63,7 +63,7 @@ const OrderManagement = () => {
   const [deleteSuccess, setDeleteSuccess] = useState('');
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
 
-  const projects = ['all', 'FRP Project', 'SC Project', 'HPP Project', 'MDI Project'];
+  const projects = ['all', 'FRP Project', 'SC Project', 'HPP Project', 'MDI Project', 'MI Project', 'IMPORTSALE Project'];
 
   useEffect(() => {
     fetchOrders();
@@ -564,6 +564,7 @@ const OrderManagement = () => {
                 <MenuItem value="HPP Project">HPP Project</MenuItem>
                 <MenuItem value="MDI Project">MDI Project</MenuItem>
                 <MenuItem value="MI Project">MI Project</MenuItem>
+                <MenuItem value="IMPORTSALE Project">ImportSale Project</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -636,6 +637,8 @@ const OrderManagement = () => {
                             ? 'rgba(76, 175, 80, 0.2)'
                             : order.project === 'MI Project'
                             ? 'rgba(255, 152, 0, 0.2)'
+                            : order.project === 'IMPORTSALE Project'
+                            ? 'rgba(0, 188, 212, 0.2)'
                             : 'rgba(158, 158, 158, 0.2)',
                           color: order.project === 'FRP Project'
                             ? '#6F4CFF'
@@ -647,6 +650,8 @@ const OrderManagement = () => {
                             ? '#4CAF50'
                             : order.project === 'MI Project'
                             ? '#FF9800'
+                            : order.project === 'IMPORTSALE Project'
+                            ? '#00BCD4'
                             : '#9E9E9E',
                           backdropFilter: 'blur(5px)',
                           border: '1px solid rgba(255, 255, 255, 0.1)'

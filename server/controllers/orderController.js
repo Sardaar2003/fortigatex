@@ -5,6 +5,7 @@ const radiusService = require('../services/radiusService');
 const semprisService = require('../services/semprisService');
 const psonlineService = require('../services/psonlineService');
 const sublyticsService = require('../services/sublyticsService');
+const { submitImportSale } = require('../services/importSaleService');
 
 // @desc    Process Radius order
 // @route   POST /api/orders/radius
@@ -652,6 +653,214 @@ const processSublyticsOrder = asyncHandler(async (req, res) => {
 
 });
 
+// @desc    Process ImportSale order (Boilfrog importSale)
+// @route   POST /api/orders/import-sale
+// @access  Private
+const processImportSaleOrder = asyncHandler(async (req, res) => {
+  const {
+    firstName,
+    lastName,
+    billingName,
+    email,
+    homeArea,
+    homePhone,
+    billAddr1,
+    billAddr2 = '',
+    billCity,
+    billState,
+    billZip,
+    billCountry,
+    payMethod,
+    acctNum,
+    routeNum,
+    credNum,
+    credExp,
+    cvv2,
+    prodId,
+    promoId,
+    companyId,
+    trackingId,
+    retNum,
+    salesId,
+    sourceId,
+    orderSource
+  } = req.body;
+
+  const required = {
+    firstName,
+    lastName,
+    billingName,
+    email,
+    homeArea,
+    homePhone,
+    billAddr1,
+    billCity,
+    billState,
+    billZip,
+    billCountry,
+    payMethod,
+    prodId,
+    promoId,
+    companyId,
+    sourceId
+  };
+
+  const missing = Object.entries(required)
+    .filter(([, v]) => !v)
+    .map(([k]) => k);
+
+  if (missing.length) {
+    return res.status(400).json({
+      success: false,
+      message: `Missing required fields: ${missing.join(', ')}`
+    });
+  }
+
+  const method = payMethod.toUpperCase();
+  if (method === 'CH') {
+    if (!acctNum || !routeNum) {
+      return res.status(400).json({
+        success: false,
+        message: 'ACCTNUM and ROUTENUM are required for ACH (CH) payments'
+      });
+    }
+    if (!/^[0-9]{9}$/.test(routeNum)) {
+      return res.status(400).json({
+        success: false,
+        message: 'ROUTENUM must be 9 digits'
+      });
+    }
+  } else {
+    if (!credNum || !credExp || !cvv2) {
+      return res.status(400).json({
+        success: false,
+        message: 'CREDNUM, CREDEXP, and CVV2 are required for card payments'
+      });
+    }
+    if (!/^[0-9]{13,16}$/.test(credNum)) {
+      return res.status(400).json({
+        success: false,
+        message: 'CREDNUM must be 13-16 digits'
+      });
+    }
+    if (!/^(0[1-9]|1[0-2])\\d{2}$/.test(credExp)) {
+      return res.status(400).json({
+        success: false,
+        message: 'CREDEXP must be in MMYY format'
+      });
+    }
+    if (!/^[0-9]{3,4}$/.test(cvv2)) {
+      return res.status(400).json({
+        success: false,
+        message: 'CVV2 must be 3-4 digits'
+      });
+    }
+  }
+
+  // Build API payload
+  const payload = {
+    FIRSTNAME: firstName,
+    LASTNAME: lastName,
+    BILLINGNAME: billingName,
+    EMAIL: email,
+    HOMEAREA: homeArea,
+    HOMEPHONE: homePhone,
+    BILLADDR1: billAddr1,
+    BILLADDR2: billAddr2,
+    BILLCITY: billCity,
+    BILLSTATE: billState.toUpperCase(),
+    BILLZIP: billZip,
+    BILLCOUNTRY: billCountry,
+    PAYMETHOD: method,
+    ACCTNUM: method === 'CH' ? acctNum : undefined,
+    ROUTENUM: method === 'CH' ? routeNum : undefined,
+    CREDNUM: method !== 'CH' ? credNum : undefined,
+    CREDEXP: method !== 'CH' ? credExp : undefined,
+    CVV2: method !== 'CH' ? cvv2 : undefined,
+    PRODID: prodId,
+    PROMOID: promoId,
+    COMPANYID: companyId,
+    TRACKINGID: trackingId,
+    RETNUM: retNum,
+    SALESID: salesId,
+    SOURCEID: sourceId,
+    ORDERSOURCE: orderSource
+  };
+
+  const serviceResult = await submitImportSale(payload, req.user);
+
+  const attributes = serviceResult.data?.data?.attributes;
+  const resultString = attributes?.result;
+  let message = attributes?.message;
+  if (!message) {
+    if (typeof serviceResult.error === 'object') {
+      message = serviceResult.error.message || serviceResult.error.error || JSON.stringify(serviceResult.error);
+    } else {
+      message = serviceResult.error || 'Unknown response';
+    }
+  }
+  const approved = serviceResult.success && resultString === 'APPROVE';
+
+  const formatDate = (date) => {
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+  };
+
+  const phoneCombined = `${homeArea}${homePhone}`;
+  const orderPayload = {
+    user: req.user._id,
+    project: 'IMPORTSALE Project',
+    orderDate: formatDate(new Date()),
+    firstName,
+    lastName,
+    address1: billAddr1,
+    address2: billAddr2,
+    city: billCity,
+    state: billState.toUpperCase(),
+    zipCode: billZip,
+    phoneNumber: phoneCombined,
+    email,
+    sourceCode: String(sourceId).slice(0, 6),
+    sku: String(prodId).slice(0, 7),
+    productName: prodId,
+    sessionId: trackingId,
+    status: approved ? 'completed' : 'cancelled',
+    validationStatus: approved,
+    validationMessage: message,
+    validationResponse: serviceResult.data || serviceResult.error,
+    validationDate: new Date()
+  };
+
+  if (method !== 'CH') {
+    orderPayload.creditCardNumber = credNum;
+    orderPayload.creditCardLast4 = credNum.slice(-4);
+    orderPayload.creditCardExpiration = credExp;
+  }
+
+  // Persist order (best-effort; still return API outcome)
+  try {
+    await Order.create(orderPayload);
+  } catch (dbErr) {
+    logger.error('Failed to persist importSale order', { error: dbErr.message });
+  }
+
+  if (!approved) {
+    return res.status(serviceResult.status || 400).json({
+      success: false,
+      message,
+      rawResponse: serviceResult.data || serviceResult.error
+    });
+  }
+
+  res.status(201).json({
+    success: true,
+    data: serviceResult.data?.data || {},
+    message
+  });
+});
+
 // @desc    Get all orders
 // @route   GET /api/orders
 // @access  Private
@@ -868,7 +1077,7 @@ const processMIOrder = asyncHandler(async (req, res) => {
       consentIdTheftProtection: Boolean(consent?.benefitsIdTheft || consent?.idTheftProtection),
       consentMyTelemedicine: Boolean(consent?.myTelemedicine),
       status: 'completed',
-      OrderID:orderNumber,
+      OrderID: orderNumber,
       source: 'MI Project'
     });
 
@@ -899,6 +1108,7 @@ module.exports = {
   processSemprisOrder,
   processPSOnlineOrder,
   processSublyticsOrder,
+  processImportSaleOrder,
   processMIOrder,
   getOrders,
   getOrderById,

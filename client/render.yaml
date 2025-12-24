@@ -5,9 +5,11 @@ services:
     buildCommand: npm install && npm run build
     startCommand: npx serve -s build
     envVars:
+      - key: NODE_VERSION
+        value: 20
       - key: REACT_APP_API_URL
         value: https://fortigatex-server.onrender.com
       - key: REACT_APP_SEMPRIS_API_KEY
         value: 6295e1bfd5e540c1b512d24f47ff6e9b
     healthCheckPath: /
-    autoDeploy: true 
+    autoDeploy: true

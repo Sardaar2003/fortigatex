@@ -67,7 +67,7 @@ const Dashboard = () => {
 
   const renderProjectSelection = () => {
     return (
-      <Box sx={{ mt: 2}}>
+      <Box sx={{ mt: 2 }}>
         <Typography
           variant="h5"
           sx={{
@@ -188,6 +188,26 @@ const Dashboard = () => {
               </Typography>
             </GlassCard>
           </Grid>
+          <Grid item xs={12} md={4}>
+            <GlassCard
+              onClick={() => handleProjectSelect('import-sale')}
+              sx={{
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-5px)'
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <FolderSpecial sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
+                <Typography variant="h6">Import Sale</Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Submit orders for Import Sale Project
+              </Typography>
+            </GlassCard>
+          </Grid>
         </Grid>
       </Box>
     );
@@ -250,13 +270,18 @@ const Dashboard = () => {
                 <AccountBalanceIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />
                 MI API Order Form
               </>
+            ) : selectedProject === 'import-sale' ? (
+              <>
+                <FolderSpecial sx={{ fontSize: 32, color: '#6F4CFF' }} />
+                Import Sale Order Form
+              </>
             ) : null
-            // ) : (
-            //   <>
-            //     <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />
-            //     PSONLINE Order Form
-            //   </>
-            // )
+              // ) : (
+              //   <>
+              //     <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />
+              //     PSONLINE Order Form
+              //   </>
+              // )
             }
           </Typography>
           <Button
@@ -288,8 +313,8 @@ const Dashboard = () => {
   </Box>
 ) : ( */}
         <OrderForm project={selectedProject} onOrderSuccess={handleOrderSuccess} />
-      {/* )} */}
-    </Box>);
+        {/* )} */}
+      </Box>);
   };
 
   return (

@@ -58,3 +58,15 @@
 [2025-08-31T16:18:17.902Z] [ERROR] Request body:
 [2025-11-12T10:41:33.920Z] [ERROR] Sublytics API error: Request failed with status code 400
 [2025-11-12T10:42:32.965Z] [ERROR] Sublytics API error: Request failed with status code 400
+[2025-11-16T16:14:40.551Z] [ERROR] Sublytics API error: Request failed with status code 400
+[2025-11-16T16:15:09.182Z] [ERROR] Sublytics API error: Request failed with status code 400
+[2025-12-23T18:05:38.195Z] [ERROR] importSale API error: Request failed with status code 403
+[2025-12-23T18:05:38.201Z] [ERROR] Failed to persist importSale order
+[2025-12-24T10:21:49.211Z] [ERROR] importSale API error: Request failed with status code 403
+[2025-12-24T10:21:49.219Z] [ERROR] Failed to persist importSale order
+[2025-12-24T10:25:02.846Z] [ERROR] importSale API error: Request failed with status code 403
+[2025-12-24T10:25:02.855Z] [ERROR] Failed to persist importSale order
+[2025-12-24T10:26:15.694Z] [ERROR] importSale API error: Request failed with status code 403
+[2025-12-24T10:26:15.697Z] [ERROR] Failed to persist importSale order
+[2025-12-24T10:28:35.478Z] [ERROR] importSale API error: Request failed with status code 403
+[2025-12-24T10:28:35.485Z] [ERROR] Failed to persist importSale order

@@ -80,3 +80,8 @@
 [2025-11-16T04:42:39.876Z] [INFO] Radius API structured response for user 686d3a939ac027007907826f: {"status":1,"message":"true"}
 [2025-11-16T04:43:28.954Z] [USER_ACTION] SEMPRIS_API_CALL - {"tracking_number":"ed1a0712-0ca5-4042-a8c7-4bf4b87f0254","vendor_id":"STAR"}
 [2025-11-16T04:43:30.560Z] [USER_ACTION] SEMPRIS_API_RESPONSE - {"tracking_number":"ed1a0712-0ca5-4042-a8c7-4bf4b87f0254","status":200,"transaction_id":"34461a74-f827-484b-8a1a-1b139036a4d0"}
+[2025-12-23T18:05:37.253Z] [INFO] importSale: submitting order for user 686d3a939ac027007907826f
+[2025-12-24T10:21:48.172Z] [INFO] importSale: submitting order for user 686d3a939ac027007907826f
+[2025-12-24T10:25:01.818Z] [INFO] importSale: submitting order for user 686d3a939ac027007907826f
+[2025-12-24T10:26:14.808Z] [INFO] importSale: submitting order for user 686d3a939ac027007907826f
+[2025-12-24T10:28:34.602Z] [INFO] importSale: submitting order for user 686d3a939ac027007907826f

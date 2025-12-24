@@ -24,9 +24,12 @@ import {
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import OrderDetailDialog from './OrderDetailDialog';
+import { useNavigate } from 'react-router-dom';
+import { Add as AddIcon } from '@mui/icons-material';
 
 const OrderManagement = () => {
   const { token } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [projectType, setProjectType] = useState('all');
   const [orders, setOrders] = useState([]);
@@ -73,15 +76,17 @@ const OrderManagement = () => {
     if (projectType !== 'all') {
       filtered = filtered.filter(order => {
         if (!order.project) return false;
-        
+
         // Map filter values to actual project names
         const projectMapping = {
           'frp': 'FRP Project',
-          'sc': 'SC Project', 
+          'sc': 'SC Project',
           'hpp': 'HPP Project',
-          'mdi': 'MDI Project'
+          'mdi': 'MDI Project',
+          'mi': 'MI Project',
+          'importsale': 'IMPORTSALE Project'
         };
-        
+
         const expectedProject = projectMapping[projectType];
         return order.project === expectedProject;
       });
@@ -124,6 +129,10 @@ const OrderManagement = () => {
 
   const handlePageChange = (event, newPage) => {
     setCurrentPage(newPage);
+  };
+
+  const handleImportSale = () => {
+    navigate('/create-order', { state: { project: 'IMPORTSALE Project' } });
   };
 
   const handleDeleteOrder = async (id) => {
@@ -170,10 +179,19 @@ const OrderManagement = () => {
 
   return (
     <Box sx={{ width: '100%', p: 3 }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-        Order Management ({filteredOrders.length} orders)
-      </Typography>
-      
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" sx={{ mb: 0 }}>
+          Order Management ({filteredOrders.length} orders)
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleImportSale}
+        >
+          Import Sale
+        </Button>
+      </Box>
+
       {filteredOrders.length > 0 && (
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           Showing {startIndex}-{endIndex} of {filteredOrders.length} orders
@@ -200,6 +218,8 @@ const OrderManagement = () => {
             <MenuItem value="sc">SC Project</MenuItem>
             <MenuItem value="hpp">HPP Project</MenuItem>
             <MenuItem value="mdi">MDI Project</MenuItem>
+            <MenuItem value="mi">MI Project</MenuItem>
+            <MenuItem value="importsale">ImportSale Project</MenuItem>
           </Select>
         </FormControl>
       </Box>
@@ -230,45 +250,45 @@ const OrderManagement = () => {
                 </TableRow>
               ) : (
                 paginatedOrders.map((order) => (
-                <TableRow key={order._id}>
-                  <TableCell>{order._id}</TableCell>
-                  <TableCell>{order.project}</TableCell>
-                  <TableCell>{`${order.firstName} ${order.lastName}`}</TableCell>
-                  <TableCell>{order.email}</TableCell>
-                  <TableCell>{order.phoneNumber}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={order.status}
-                      color={
-                        order.status === 'completed' ? 'success' :
-                        order.status === 'pending' ? 'warning' :
-                        order.status === 'failed' ? 'error' : 'default'
-                      }
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {new Date(order.createdAt).toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleViewOrder(order)}
-                      sx={{ mr: 1 }}
-                    >
-                      View
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      size="small"
-                      onClick={() => handleDeleteOrder(order._id)}
-                    >
-                      Delete
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+                  <TableRow key={order._id}>
+                    <TableCell>{order._id}</TableCell>
+                    <TableCell>{order.project}</TableCell>
+                    <TableCell>{`${order.firstName} ${order.lastName}`}</TableCell>
+                    <TableCell>{order.email}</TableCell>
+                    <TableCell>{order.phoneNumber}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={order.status}
+                        color={
+                          order.status === 'completed' ? 'success' :
+                            order.status === 'pending' ? 'warning' :
+                              order.status === 'failed' ? 'error' : 'default'
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {new Date(order.createdAt).toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => handleViewOrder(order)}
+                        sx={{ mr: 1 }}
+                      >
+                        View
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        onClick={() => handleDeleteOrder(order._id)}
+                      >
+                        Delete
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>
@@ -289,7 +309,7 @@ const OrderManagement = () => {
           />
         </Stack>
       )}
-      
+
       {/* Order Detail Dialog */}
       <OrderDetailDialog
         open={detailDialogOpen}

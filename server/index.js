@@ -4,7 +4,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 const seedRoles = require('./config/db-seeder');
-const { createProxyMiddleware,responseInterceptor } =require("http-proxy-middleware");
+const { createProxyMiddleware, responseInterceptor } = require("http-proxy-middleware");
 
 
 
@@ -15,6 +15,7 @@ dotenv.config();
 console.log('Environment variables loaded:');
 console.log('PSONLINE_API_KEY:', process.env.PSONLINE_API_KEY ? 'Present' : 'Missing');
 console.log('PSONLINE_MERCHANT_ID:', process.env.PSONLINE_MERCHANT_ID ? 'Present' : 'Missing');
+console.log('IMPORTSALE_API_TOKEN:', process.env.IMPORTSALE_API_TOKEN ? 'Present' : 'Missing');
 console.log('Current working directory:', process.cwd());
 console.log('Environment file path:', path.resolve('.env'));
 

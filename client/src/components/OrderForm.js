@@ -5,6 +5,7 @@ import SemprisOrderForm from './forms/SemprisOrderForm';
 import PSONLINEOrderForm from './forms/PSONLINEOrderForm';
 import SubProjectOrderForm from './forms/SubProjectOrderForm';
 import MIOrderForm from './forms/MIOrderForm';
+import ImportSaleOrderForm from './forms/ImportSaleOrderForm';
 
 const OrderForm = ({ project, onOrderSuccess }) => {
   return (
@@ -19,6 +20,8 @@ const OrderForm = ({ project, onOrderSuccess }) => {
         <SubProjectOrderForm onOrderSuccess={onOrderSuccess} />
       ) : project === 'mi' ? (
         <MIOrderForm onOrderSuccess={onOrderSuccess} />
+      ) : project === 'import-sale' ? (
+        <ImportSaleOrderForm onOrderSuccess={onOrderSuccess} />
       ) : null
       }
     </Box>

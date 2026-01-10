@@ -30,32 +30,32 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
   const { token } = useContext(AuthContext);
 
   const initialData = useMemo(() => ({
-    firstName: '',
-    lastName: '',
-    billingName: '',
-    email: '',
-    homeArea: '',
-    homePhone: '',
-    billAddr1: '',
-    billAddr2: '',
-    billCity: '',
-    billState: '',
-    billZip: '',
-    billCountry: 'US',
-    payMethod: 'VS',
-    acctNum: '',
-    routeNum: '',
-    credNum: '',
-    credExp: '',
-    cvv2: '',
-    prodId: '',
-    promoId: '',
-    companyId: '',
-    trackingId: crypto.randomUUID(),
-    retNum: '',
-    salesId: '',
-    sourceId: '',
-    orderSource: 'WEB'
+    FIRSTNAME: '',
+    LASTNAME: '',
+    BILLINGNAME: '',
+    EMAIL: '',
+    HOMEAREA: '',
+    HOMEPHONE: '',
+    BILLADDR1: '',
+    BILLADDR2: '',
+    BILLCITY: '',
+    BILLSTATE: '',
+    BILLZIP: '',
+    BILLCOUNTRY: 'US',
+    PAYMETHOD: 'VS',
+    ACCTNUM: '',
+    ROUTENUM: '',
+    CREDNUM: '',
+    CREDEXP: '',
+    CVV2: '',
+    PRODID: '',
+    PROMOID: '',
+    COMPANYID: '',
+    TRACKINGID: crypto.randomUUID(),
+    RETNUM: '',
+    SALESID: '',
+    SOURCEID: '',
+    ORDERSOURCE: 'WEB'
   }), []);
 
   const [formData, setFormData] = useState(initialData);
@@ -129,45 +129,45 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
   const validate = () => {
     const e = {};
     const required = [
-      'firstName', 'lastName', 'billingName', 'email', 'homeArea', 'homePhone',
-      'billAddr1', 'billCity', 'billState', 'billZip', 'billCountry', 'payMethod',
-      'prodId', 'promoId', 'companyId', 'sourceId'
+      'FIRSTNAME', 'LASTNAME', 'BILLINGNAME', 'EMAIL', 'HOMEAREA', 'HOMEPHONE',
+      'BILLADDR1', 'BILLCITY', 'BILLSTATE', 'BILLZIP', 'BILLCOUNTRY', 'PAYMETHOD',
+      'PRODID', 'PROMOID', 'COMPANYID', 'SOURCEID'
     ];
     required.forEach(f => {
       if (!formData[f]) e[f] = 'Required';
     });
 
-    if (formData.homeArea && !/^[0-9]{3}$/.test(formData.homeArea)) {
-      e.homeArea = 'Area code must be 3 digits';
+    if (formData.HOMEAREA && !/^[0-9]{3}$/.test(formData.HOMEAREA)) {
+      e.HOMEAREA = 'Area code must be 3 digits';
     }
-    if (formData.homePhone && !/^[0-9]{7}$/.test(formData.homePhone)) {
-      e.homePhone = 'Phone must be 7 digits (no area code)';
+    if (formData.HOMEPHONE && !/^[0-9]{7}$/.test(formData.HOMEPHONE)) {
+      e.HOMEPHONE = 'Phone must be 7 digits (no area code)';
     }
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      e.email = 'Invalid email';
+    if (formData.EMAIL && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.EMAIL)) {
+      e.EMAIL = 'Invalid email';
     }
-    if (formData.billZip && !/^\d{5}(\d{4})?$/.test(formData.billZip)) {
-      e.billZip = 'ZIP must be 5 or 9 digits';
+    if (formData.BILLZIP && !/^\d{5}(\d{4})?$/.test(formData.BILLZIP)) {
+      e.BILLZIP = 'ZIP must be 5 or 9 digits';
     }
-    const method = formData.payMethod?.toUpperCase();
+    const method = formData.PAYMETHOD?.toUpperCase();
     if (method === 'CH') {
-      if (!formData.acctNum) e.acctNum = 'Account number required';
-      if (!formData.routeNum) e.routeNum = 'Routing number required';
-      if (formData.routeNum && !/^\d{9}$/.test(formData.routeNum)) {
-        e.routeNum = 'Routing must be 9 digits';
+      if (!formData.ACCTNUM) e.ACCTNUM = 'Account number required';
+      if (!formData.ROUTENUM) e.ROUTENUM = 'Routing number required';
+      if (formData.ROUTENUM && !/^\d{9}$/.test(formData.ROUTENUM)) {
+        e.ROUTENUM = 'Routing must be 9 digits';
       }
     } else {
-      if (!formData.credNum) e.credNum = 'Card number required';
-      if (!formData.credExp) e.credExp = 'Exp required';
-      if (!formData.cvv2) e.cvv2 = 'CVV required';
-      if (formData.credNum && !/^\d{13,16}$/.test(formData.credNum)) {
-        e.credNum = '13-16 digits';
+      if (!formData.CREDNUM) e.CREDNUM = 'Card number required';
+      if (!formData.CREDEXP) e.CREDEXP = 'Exp required';
+      if (!formData.CVV2) e.CVV2 = 'CVV required';
+      if (formData.CREDNUM && !/^\d{13,16}$/.test(formData.CREDNUM)) {
+        e.CREDNUM = '13-16 digits';
       }
-      if (formData.credExp && !/^(0[1-9]|1[0-2])\d{2}$/.test(formData.credExp)) {
-        e.credExp = 'MMYY';
+      if (formData.CREDEXP && !/^(0[1-9]|1[0-2])\d{2}$/.test(formData.CREDEXP)) {
+        e.CREDEXP = 'MMYY';
       }
-      if (formData.cvv2 && !/^\d{3,4}$/.test(formData.cvv2)) {
-        e.cvv2 = '3-4 digits';
+      if (formData.CVV2 && !/^\d{3,4}$/.test(formData.CVV2)) {
+        e.CVV2 = '3-4 digits';
       }
     }
     return e;
@@ -185,8 +185,8 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
     try {
       const payload = {
         ...formData,
-        billState: formData.billState.toUpperCase(),
-        payMethod: formData.payMethod.toUpperCase()
+        BILLSTATE: formData.BILLSTATE.toUpperCase(),
+        PAYMETHOD: formData.PAYMETHOD.toUpperCase()
       };
       const res = await fetch(`${process.env.REACT_APP_API_URL}/api/orders/import-sale`, {
         method: 'POST',
@@ -243,35 +243,35 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
           <Typography variant="h6" gutterBottom>Customer Info</Typography>
           <Divider sx={{ mb: 2 }} />
         </Grid>
-        <Grid item xs={12} sm={6}>{textField('firstName', 'First Name')}</Grid>
-        <Grid item xs={12} sm={6}>{textField('lastName', 'Last Name')}</Grid>
-        <Grid item xs={12}>{textField('billingName', 'Billing Name')}</Grid>
-        <Grid item xs={12} sm={6}>{textField('email', 'Email')}</Grid>
-        <Grid item xs={6} sm={3}>{textField('homeArea', 'Area Code')}</Grid>
-        <Grid item xs={6} sm={3}>{textField('homePhone', 'Phone (7 digits)')}</Grid>
+        <Grid item xs={12} sm={6}>{textField('FIRSTNAME', 'First Name')}</Grid>
+        <Grid item xs={12} sm={6}>{textField('LASTNAME', 'Last Name')}</Grid>
+        <Grid item xs={12}>{textField('BILLINGNAME', 'Billing Name')}</Grid>
+        <Grid item xs={12} sm={6}>{textField('EMAIL', 'Email')}</Grid>
+        <Grid item xs={6} sm={3}>{textField('HOMEAREA', 'Area Code')}</Grid>
+        <Grid item xs={6} sm={3}>{textField('HOMEPHONE', 'Phone (7 digits)')}</Grid>
 
         <Grid item xs={12}>
           <Typography variant="h6" gutterBottom>Billing Address</Typography>
           <Divider sx={{ mb: 2 }} />
         </Grid>
-        <Grid item xs={12}>{textField('billAddr1', 'Address Line 1')}</Grid>
-        <Grid item xs={12}>{textField('billAddr2', 'Address Line 2 (Optional)')}</Grid>
-        <Grid item xs={12} sm={4}>{textField('billCity', 'City')}</Grid>
-        <Grid item xs={12} sm={4}>{textField('billState', 'State')}</Grid>
-        <Grid item xs={12} sm={4}>{textField('billZip', 'ZIP')}</Grid>
-        <Grid item xs={12} sm={4}>{textField('billCountry', 'Country')}</Grid>
+        <Grid item xs={12}>{textField('BILLADDR1', 'Address Line 1')}</Grid>
+        <Grid item xs={12}>{textField('BILLADDR2', 'Address Line 2 (Optional)')}</Grid>
+        <Grid item xs={12} sm={4}>{textField('BILLCITY', 'City')}</Grid>
+        <Grid item xs={12} sm={4}>{textField('BILLSTATE', 'State')}</Grid>
+        <Grid item xs={12} sm={4}>{textField('BILLZIP', 'ZIP')}</Grid>
+        <Grid item xs={12} sm={4}>{textField('BILLCOUNTRY', 'Country')}</Grid>
 
         <Grid item xs={12}>
           <Typography variant="h6" gutterBottom>Payment</Typography>
           <Divider sx={{ mb: 2 }} />
         </Grid>
         <Grid item xs={12} sm={4}>
-          <FormControl fullWidth sx={getFieldErrorStyles(!!errors.payMethod)}>
+          <FormControl fullWidth sx={getFieldErrorStyles(!!errors.PAYMETHOD)}>
             <InputLabel>Payment Method</InputLabel>
             <Select
               label="Payment Method"
-              name="payMethod"
-              value={formData.payMethod}
+              name="PAYMETHOD"
+              value={formData.PAYMETHOD}
               onChange={handleChange}
             >
               {payMethods.map(m => (
@@ -281,16 +281,16 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
           </FormControl>
         </Grid>
 
-        {formData.payMethod === 'CH' ? (
+        {formData.PAYMETHOD === 'CH' ? (
           <>
-            <Grid item xs={12} sm={4}>{textField('acctNum', 'Account Number')}</Grid>
-            <Grid item xs={12} sm={4}>{textField('routeNum', 'Routing Number')}</Grid>
+            <Grid item xs={12} sm={4}>{textField('ACCTNUM', 'Account Number')}</Grid>
+            <Grid item xs={12} sm={4}>{textField('ROUTENUM', 'Routing Number')}</Grid>
           </>
         ) : (
           <>
-            <Grid item xs={12} sm={4}>{textField('credNum', 'Card Number')}</Grid>
-            <Grid item xs={6} sm={2}>{textField('credExp', 'Exp (MMYY)')}</Grid>
-            <Grid item xs={6} sm={2}>{textField('cvv2', 'CVV')}</Grid>
+            <Grid item xs={12} sm={4}>{textField('CREDNUM', 'Card Number')}</Grid>
+            <Grid item xs={6} sm={2}>{textField('CREDEXP', 'Exp (MMYY)')}</Grid>
+            <Grid item xs={6} sm={2}>{textField('CVV2', 'CVV')}</Grid>
           </>
         )}
 
@@ -298,14 +298,14 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
           <Typography variant="h6" gutterBottom>Product & Tracking</Typography>
           <Divider sx={{ mb: 2 }} />
         </Grid>
-        <Grid item xs={12} sm={4}>{textField('prodId', 'Product ID')}</Grid>
-        <Grid item xs={12} sm={4}>{textField('promoId', 'Promo ID')}</Grid>
-        <Grid item xs={12} sm={4}>{textField('companyId', 'Company ID')}</Grid>
-        <Grid item xs={12} sm={6}>{textField('sourceId', 'Source ID')}</Grid>
-        <Grid item xs={12} sm={6}>{textField('orderSource', 'Order Source')}</Grid>
-        <Grid item xs={12} sm={6}>{textField('trackingId', 'Tracking ID')}</Grid>
-        <Grid item xs={12} sm={3}>{textField('retNum', 'RetNum (optional)')}</Grid>
-        <Grid item xs={12} sm={3}>{textField('salesId', 'Sales ID (optional)')}</Grid>
+        <Grid item xs={12} sm={4}>{textField('PRODID', 'Product ID')}</Grid>
+        <Grid item xs={12} sm={4}>{textField('PROMOID', 'Promo ID')}</Grid>
+        <Grid item xs={12} sm={4}>{textField('COMPANYID', 'Company ID')}</Grid>
+        <Grid item xs={12} sm={6}>{textField('SOURCEID', 'Source ID')}</Grid>
+        <Grid item xs={12} sm={6}>{textField('ORDERSOURCE', 'Order Source')}</Grid>
+        <Grid item xs={12} sm={6}>{textField('TRACKINGID', 'Tracking ID')}</Grid>
+        <Grid item xs={12} sm={3}>{textField('RETNUM', 'RetNum (optional)')}</Grid>
+        <Grid item xs={12} sm={3}>{textField('SALESID', 'Sales ID (optional)')}</Grid>
 
         <Grid item xs={12} sm={6}>
           <Button

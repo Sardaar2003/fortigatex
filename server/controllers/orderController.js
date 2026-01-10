@@ -658,51 +658,51 @@ const processSublyticsOrder = asyncHandler(async (req, res) => {
 // @access  Private
 const processImportSaleOrder = asyncHandler(async (req, res) => {
   const {
-    firstName,
-    lastName,
-    billingName,
-    email,
-    homeArea,
-    homePhone,
-    billAddr1,
-    billAddr2 = '',
-    billCity,
-    billState,
-    billZip,
-    billCountry,
-    payMethod,
-    acctNum,
-    routeNum,
-    credNum,
-    credExp,
-    cvv2,
-    prodId,
-    promoId,
-    companyId,
-    trackingId,
-    retNum,
-    salesId,
-    sourceId,
-    orderSource
+    FIRSTNAME,
+    LASTNAME,
+    BILLINGNAME,
+    EMAIL,
+    HOMEAREA,
+    HOMEPHONE,
+    BILLADDR1,
+    BILLADDR2 = '',
+    BILLCITY,
+    BILLSTATE,
+    BILLZIP,
+    BILLCOUNTRY,
+    PAYMETHOD,
+    ACCTNUM,
+    ROUTENUM,
+    CREDNUM,
+    CREDEXP,
+    CVV2,
+    PRODID,
+    PROMOID,
+    COMPANYID,
+    TRACKINGID,
+    RETNUM,
+    SALESID,
+    SOURCEID,
+    ORDERSOURCE
   } = req.body;
 
   const required = {
-    firstName,
-    lastName,
-    billingName,
-    email,
-    homeArea,
-    homePhone,
-    billAddr1,
-    billCity,
-    billState,
-    billZip,
-    billCountry,
-    payMethod,
-    prodId,
-    promoId,
-    companyId,
-    sourceId
+    FIRSTNAME,
+    LASTNAME,
+    BILLINGNAME,
+    EMAIL,
+    HOMEAREA,
+    HOMEPHONE,
+    BILLADDR1,
+    BILLCITY,
+    BILLSTATE,
+    BILLZIP,
+    BILLCOUNTRY,
+    PAYMETHOD,
+    PRODID,
+    PROMOID,
+    COMPANYID,
+    SOURCEID
   };
 
   const missing = Object.entries(required)
@@ -716,40 +716,40 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
     });
   }
 
-  const method = payMethod.toUpperCase();
+  const method = PAYMETHOD.toUpperCase();
   if (method === 'CH') {
-    if (!acctNum || !routeNum) {
+    if (!ACCTNUM || !ROUTENUM) {
       return res.status(400).json({
         success: false,
         message: 'ACCTNUM and ROUTENUM are required for ACH (CH) payments'
       });
     }
-    if (!/^[0-9]{9}$/.test(routeNum)) {
+    if (!/^[0-9]{9}$/.test(ROUTENUM)) {
       return res.status(400).json({
         success: false,
         message: 'ROUTENUM must be 9 digits'
       });
     }
   } else {
-    if (!credNum || !credExp || !cvv2) {
+    if (!CREDNUM || !CREDEXP || !CVV2) {
       return res.status(400).json({
         success: false,
         message: 'CREDNUM, CREDEXP, and CVV2 are required for card payments'
       });
     }
-    if (!/^[0-9]{13,16}$/.test(credNum)) {
+    if (!/^[0-9]{13,16}$/.test(CREDNUM)) {
       return res.status(400).json({
         success: false,
         message: 'CREDNUM must be 13-16 digits'
       });
     }
-    if (!/^(0[1-9]|1[0-2])\\d{2}$/.test(credExp)) {
+    if (!/^(0[1-9]|1[0-2])\d{2}$/.test(CREDEXP)) {
       return res.status(400).json({
         success: false,
         message: 'CREDEXP must be in MMYY format'
       });
     }
-    if (!/^[0-9]{3,4}$/.test(cvv2)) {
+    if (!/^[0-9]{3,4}$/.test(CVV2)) {
       return res.status(400).json({
         success: false,
         message: 'CVV2 must be 3-4 digits'
@@ -757,34 +757,34 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
     }
   }
 
-  // Build API payload
+  // Build API payload - direct pass-through of uppercase keys
   const payload = {
-    FIRSTNAME: firstName,
-    LASTNAME: lastName,
-    BILLINGNAME: billingName,
-    EMAIL: email,
-    HOMEAREA: homeArea,
-    HOMEPHONE: homePhone,
-    BILLADDR1: billAddr1,
-    BILLADDR2: billAddr2,
-    BILLCITY: billCity,
-    BILLSTATE: billState.toUpperCase(),
-    BILLZIP: billZip,
-    BILLCOUNTRY: billCountry,
+    FIRSTNAME,
+    LASTNAME,
+    BILLINGNAME,
+    EMAIL,
+    HOMEAREA,
+    HOMEPHONE,
+    BILLADDR1,
+    BILLADDR2,
+    BILLCITY,
+    BILLSTATE: BILLSTATE.toUpperCase(),
+    BILLZIP,
+    BILLCOUNTRY,
     PAYMETHOD: method,
-    ACCTNUM: method === 'CH' ? acctNum : undefined,
-    ROUTENUM: method === 'CH' ? routeNum : undefined,
-    CREDNUM: method !== 'CH' ? credNum : undefined,
-    CREDEXP: method !== 'CH' ? credExp : undefined,
-    CVV2: method !== 'CH' ? cvv2 : undefined,
-    PRODID: prodId,
-    PROMOID: promoId,
-    COMPANYID: companyId,
-    TRACKINGID: trackingId,
-    RETNUM: retNum,
-    SALESID: salesId,
-    SOURCEID: sourceId,
-    ORDERSOURCE: orderSource
+    ACCTNUM: method === 'CH' ? ACCTNUM : undefined,
+    ROUTENUM: method === 'CH' ? ROUTENUM : undefined,
+    CREDNUM: method !== 'CH' ? CREDNUM : undefined,
+    CREDEXP: method !== 'CH' ? CREDEXP : undefined,
+    CVV2: method !== 'CH' ? CVV2 : undefined,
+    PRODID,
+    PROMOID,
+    COMPANYID,
+    TRACKINGID,
+    RETNUM,
+    SALESID,
+    SOURCEID,
+    ORDERSOURCE
   };
 
   const serviceResult = await submitImportSale(payload, req.user);
@@ -817,24 +817,27 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
     return `${month}/${day}/${year}`;
   };
 
-  const phoneCombined = `${homeArea}${homePhone}`;
+  const phoneCombined = `${HOMEAREA}${HOMEPHONE}`;
   const orderPayload = {
     user: req.user._id,
     project: 'IMPORTSALE Project',
     orderDate: formatDate(new Date()),
-    firstName,
-    lastName,
-    address1: billAddr1,
-    address2: billAddr2,
-    city: billCity,
-    state: billState.toUpperCase(),
-    zipCode: billZip,
+    firstName: FIRSTNAME,
+    lastName: LASTNAME,
+    billingName: BILLINGNAME,
+    email: EMAIL,
+    homeArea: HOMEAREA,
+    homePhone: HOMEPHONE,
+    address1: BILLADDR1,
+    address2: BILLADDR2,
+    city: BILLCITY,
+    state: BILLSTATE.toUpperCase(),
+    zipCode: BILLZIP,
     phoneNumber: phoneCombined,
-    email,
-    sourceCode: String(sourceId).slice(0, 6),
-    sku: String(prodId).slice(0, 7),
-    productName: prodId,
-    sessionId: trackingId,
+    sourceCode: String(SOURCEID).slice(0, 6),
+    sku: String(PRODID).slice(0, 7),
+    productName: PRODID,
+    sessionId: TRACKINGID,
     status: approved ? 'completed' : 'cancelled',
     validationStatus: approved,
     validationMessage: message,
@@ -843,10 +846,12 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
     OrderID: upstreamOrderId ? String(upstreamOrderId) : undefined
   };
 
+  if (EMAIL) orderPayload.email = EMAIL;
+
   if (method !== 'CH') {
-    orderPayload.creditCardNumber = credNum;
-    orderPayload.creditCardLast4 = credNum.slice(-4);
-    orderPayload.creditCardExpiration = credExp;
+    orderPayload.creditCardNumber = CREDNUM;
+    orderPayload.creditCardLast4 = CREDNUM.slice(-4);
+    orderPayload.creditCardExpiration = CREDEXP;
   }
 
   // Persist order (best-effort; still return API outcome)

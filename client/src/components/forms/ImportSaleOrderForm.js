@@ -198,12 +198,18 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
       });
       const data = await res.json();
       if (!res.ok || data.success === false) {
+        // Server already formats the upstream error as "Title: Detail"
         let msg = data.message || 'Order failed';
         if (typeof msg === 'object') msg = msg.message || msg.error || JSON.stringify(msg);
         showNotification('error', msg);
         return;
       }
-      showNotification('success', data.message || 'Order created');
+
+      const successMsg = data.orderId
+        ? `Success! Order ID: ${data.orderId}`
+        : (data.message || 'Order created');
+
+      showNotification('success', successMsg);
       if (onOrderSuccess) onOrderSuccess(data);
     } catch (err) {
       showNotification('error', err.message || 'Request failed');

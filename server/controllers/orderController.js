@@ -792,14 +792,23 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
   const attributes = serviceResult.data?.data?.attributes;
   const resultString = attributes?.result;
   let message = attributes?.message;
-  if (!message) {
+  let validationResponse = serviceResult.data || serviceResult.error;
+
+  // Handle upstream error format: { errors: [{ title, detail }] }
+  if (!serviceResult.success && serviceResult.error?.errors?.length > 0) {
+    const errObj = serviceResult.error.errors[0];
+    message = `${errObj.title}: ${errObj.detail}`;
+    validationResponse = serviceResult.error;
+  } else if (!message) {
     if (typeof serviceResult.error === 'object') {
       message = serviceResult.error.message || serviceResult.error.error || JSON.stringify(serviceResult.error);
     } else {
       message = serviceResult.error || 'Unknown response';
     }
   }
+
   const approved = serviceResult.success && resultString === 'APPROVE';
+  const upstreamOrderId = attributes?.orderid;
 
   const formatDate = (date) => {
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -829,8 +838,9 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
     status: approved ? 'completed' : 'cancelled',
     validationStatus: approved,
     validationMessage: message,
-    validationResponse: serviceResult.data || serviceResult.error,
-    validationDate: new Date()
+    validationResponse: validationResponse,
+    validationDate: new Date(),
+    OrderID: upstreamOrderId ? String(upstreamOrderId) : undefined
   };
 
   if (method !== 'CH') {
@@ -850,13 +860,14 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
     return res.status(serviceResult.status || 400).json({
       success: false,
       message,
-      rawResponse: serviceResult.data || serviceResult.error
+      rawResponse: validationResponse
     });
   }
 
   res.status(201).json({
     success: true,
     data: serviceResult.data?.data || {},
+    orderId: upstreamOrderId,
     message
   });
 });

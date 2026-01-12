@@ -716,6 +716,30 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
     });
   }
 
+  // Validate Email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(EMAIL)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid email format'
+    });
+  }
+
+  // Check for duplicate order
+  const existingOrder = await Order.findOne({
+    email: EMAIL.toLowerCase(),
+    productName: PRODID,
+    status: 'completed',
+    project: 'IMPORTSALE Project'
+  });
+
+  if (existingOrder) {
+    return res.status(400).json({
+      success: false,
+      message: 'Duplicate order: An order for this product with this email already exists.'
+    });
+  }
+
   const method = PAYMETHOD.toUpperCase();
   if (method === 'CH') {
     if (!ACCTNUM || !ROUTENUM) {

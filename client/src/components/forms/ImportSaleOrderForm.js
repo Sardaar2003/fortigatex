@@ -19,15 +19,38 @@ import { Close as CloseIcon } from '@mui/icons-material';
 import { AuthContext } from '../../context/AuthContext';
 
 const payMethods = [
-  { value: 'CH', label: 'ACH / Checking' },
-  { value: 'VS', label: 'Visa' },
-  { value: 'MC', label: 'Mastercard' },
-  { value: 'DS', label: 'Discover' },
-  { value: 'AX', label: 'American Express' }
+  { value: 'CH', label: 'ACH / Checking' }
+  // Temporarily disabled other methods
+  // { value: 'VS', label: 'Visa' },
+  // { value: 'MC', label: 'Mastercard' },
+  // { value: 'DS', label: 'Discover' },
+  // { value: 'AX', label: 'American Express' }
 ];
+
+const PRODUCT_CONFIGS = {
+  HLTH: {
+    PRODID: 'HLTH',
+    PROMOID: 'HLTH790',
+    COMPANYID: '233',
+    SOURCEID: 'SMA',
+    SALESID: 'SMA',
+    ORDERSOURCE: 'SMA'
+  },
+  PROT: {
+    PRODID: 'PROT',
+    PROMOID: 'PROT995',
+    COMPANYID: '233',
+    SOURCEID: 'SMA',
+    SALESID: 'SMA',
+    ORDERSOURCE: 'SMA'
+  }
+};
 
 const ImportSaleOrderForm = ({ onOrderSuccess }) => {
   const { token } = useContext(AuthContext);
+
+  // Default to HLTH
+  const [selectedProduct, setSelectedProduct] = useState('HLTH');
 
   const initialData = useMemo(() => ({
     FIRSTNAME: '',
@@ -42,20 +65,15 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
     BILLSTATE: '',
     BILLZIP: '',
     BILLCOUNTRY: 'US',
-    PAYMETHOD: 'VS',
+    PAYMETHOD: 'CH', // Default to Checking since it's the only one
     ACCTNUM: '',
     ROUTENUM: '',
     CREDNUM: '',
     CREDEXP: '',
     CVV2: '',
-    PRODID: '',
-    PROMOID: '',
-    COMPANYID: '',
+    ...PRODUCT_CONFIGS.HLTH, // Spread default config
     TRACKINGID: crypto.randomUUID(),
-    RETNUM: '',
-    SALESID: '',
-    SOURCEID: '',
-    ORDERSOURCE: 'WEB'
+    RETNUM: ''
   }), []);
 
   const [formData, setFormData] = useState(initialData);
@@ -110,6 +128,18 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
     clearFieldError(name);
   };
 
+  const handleProductChange = (e) => {
+    const newProduct = e.target.value;
+    setSelectedProduct(newProduct);
+    const config = PRODUCT_CONFIGS[newProduct];
+    if (config) {
+      setFormData(prev => ({
+        ...prev,
+        ...config
+      }));
+    }
+  };
+
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
     setTimeLeft(60);
@@ -122,7 +152,11 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
   };
 
   const handleClearForm = () => {
-    setFormData(initialData);
+    setFormData({
+      ...initialData,
+      TRACKINGID: crypto.randomUUID() // Regen tracking ID on clear
+    });
+    setSelectedProduct('HLTH'); // Reset product selection
     setErrors({});
   };
 
@@ -295,17 +329,56 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
         )}
 
         <Grid item xs={12}>
-          <Typography variant="h6" gutterBottom>Product & Tracking</Typography>
+          <Typography variant="h6" gutterBottom>Product Configuration</Typography>
           <Divider sx={{ mb: 2 }} />
         </Grid>
-        <Grid item xs={12} sm={4}>{textField('PRODID', 'Product ID')}</Grid>
-        <Grid item xs={12} sm={4}>{textField('PROMOID', 'Promo ID')}</Grid>
-        <Grid item xs={12} sm={4}>{textField('COMPANYID', 'Company ID')}</Grid>
-        <Grid item xs={12} sm={6}>{textField('SOURCEID', 'Source ID')}</Grid>
-        <Grid item xs={12} sm={6}>{textField('ORDERSOURCE', 'Order Source')}</Grid>
+
+        <Grid item xs={12} sm={6}>
+          <FormControl fullWidth>
+            <InputLabel>Product Selection</InputLabel>
+            <Select
+              label="Product Selection"
+              value={selectedProduct}
+              onChange={handleProductChange}
+            >
+              <MenuItem value="HLTH">HLTH (Health)</MenuItem>
+              <MenuItem value="PROT">PROT (Protein)</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+
+        {/* Read-only displays for confirmation if needed, or just hidden. 
+            Showing a few key ones as disabled inputs so user knows what's being sent. */}
+        <Grid item xs={6} sm={3}>
+          <TextField
+            fullWidth
+            label="Company ID"
+            value={formData.COMPANYID}
+            disabled
+            variant="filled"
+          />
+        </Grid>
+        <Grid item xs={6} sm={3}>
+          <TextField
+            fullWidth
+            label="Product ID"
+            value={formData.PRODID}
+            disabled
+            variant="filled"
+          />
+        </Grid>
+        <Grid item xs={6} sm={3}>
+          <TextField
+            fullWidth
+            label="Promo ID"
+            value={formData.PROMOID}
+            disabled
+            variant="filled"
+          />
+        </Grid>
+
         <Grid item xs={12} sm={6}>{textField('TRACKINGID', 'Tracking ID')}</Grid>
         <Grid item xs={12} sm={3}>{textField('RETNUM', 'RetNum (optional)')}</Grid>
-        <Grid item xs={12} sm={3}>{textField('SALESID', 'Sales ID (optional)')}</Grid>
 
         <Grid item xs={12} sm={6}>
           <Button

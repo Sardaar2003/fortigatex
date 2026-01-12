@@ -237,7 +237,8 @@ const OrderManagement = () => {
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.firstName.toLowerCase().includes(filters.search.toLowerCase()) ||
       order.lastName.toLowerCase().includes(filters.search.toLowerCase()) ||
-      order.email.toLowerCase().includes(filters.search.toLowerCase());
+      order.email.toLowerCase().includes(filters.search.toLowerCase()) ||
+      (order.phoneNumber && order.phoneNumber.includes(filters.search));
     const matchesStatus = filters.status === '' || order.status === filters.status;
     const matchesValidation = filters.validation === '' || getValidationText(order.validationStatus) === filters.validation;
     const matchesProject = filters.project === 'all' || order.project === filters.project;
@@ -263,7 +264,7 @@ const OrderManagement = () => {
             'Authorization': `Bearer ${token}`
           }
         });
-        
+
         if (response.data.success) {
           const { updates, totalUpdated } = response.data.data;
           let message = `✅ Successfully updated ${totalUpdated} orders:\n\n`;
@@ -272,9 +273,9 @@ const OrderManagement = () => {
               message += `• ${update.from} → ${update.to}: ${update.count} orders\n`;
             }
           });
-          
+
           alert(message);
-          
+
           // Refresh the orders to show updated data
           await fetchOrders();
         }
@@ -288,118 +289,118 @@ const OrderManagement = () => {
   };
 
   const handleDownloadCSV = () => {
-  // CSV Headers — all fields from OrderSchema + user info
-  const headers = [
-    'Order ID', 'Order Date', 'First Name', 'Last Name', 'Email',
-    'Phone Number', 'Secondary Phone Number', 'Address Line 1', 'Address Line 2',
-    'City', 'State', 'Zip Code', 'Source Code', 'SKU', 'Product Name',
-    'Session ID', 'Status', 'SubLytics Order ID', 'Credit Card Number',
-    'Credit Card Expiration', 'Credit Card Last 4', 'Credit Card CVV', 'Card Issuer',
-    'Voice Recording ID', 'Customer ID', 'User ID', 'User Name', 'User Email',
-    'Validation Status', 'Validation Message', 'Validation Response', 'Validation Date',
-    'Project', 'Vendor ID', 'Client Order Number', 'Client Data', 'Pitch ID',
-    'Transaction ID', 'OrderID', 'Transaction Date', 'Created At', 'Updated At',
+    // CSV Headers — all fields from OrderSchema + user info
+    const headers = [
+      'Order ID', 'Order Date', 'First Name', 'Last Name', 'Email',
+      'Phone Number', 'Secondary Phone Number', 'Address Line 1', 'Address Line 2',
+      'City', 'State', 'Zip Code', 'Source Code', 'SKU', 'Product Name',
+      'Session ID', 'Status', 'SubLytics Order ID', 'Credit Card Number',
+      'Credit Card Expiration', 'Credit Card Last 4', 'Credit Card CVV', 'Card Issuer',
+      'Voice Recording ID', 'Customer ID', 'User ID', 'User Name', 'User Email',
+      'Validation Status', 'Validation Message', 'Validation Response', 'Validation Date',
+      'Project', 'Vendor ID', 'Client Order Number', 'Client Data', 'Pitch ID',
+      'Transaction ID', 'OrderID', 'Transaction Date', 'Created At', 'Updated At',
 
-    // MI Project specific
-    'Call Date', 'Date of Birth', 'Checking Account Name', 'Bank Name',
-    'Routing Number', 'Checking Account Number', 'Authorized Signer',
-    'Age Confirmation', 'Consent', 'Consent - Benefits Savings',
-    'Consent - ID Theft Protection', 'Consent - MyTelemedicine', 'Source'
-  ];
+      // MI Project specific
+      'Call Date', 'Date of Birth', 'Checking Account Name', 'Bank Name',
+      'Routing Number', 'Checking Account Number', 'Authorized Signer',
+      'Age Confirmation', 'Consent', 'Consent - Benefits Savings',
+      'Consent - ID Theft Protection', 'Consent - MyTelemedicine', 'Source'
+    ];
 
-  // Utility to sanitize values
-  const sanitize = (value, options = {}) => {
-    if (value === undefined || value === null || value === '') return 'Not Available';
-    let str = String(value).trim();
+    // Utility to sanitize values
+    const sanitize = (value, options = {}) => {
+      if (value === undefined || value === null || value === '') return 'Not Available';
+      let str = String(value).trim();
 
-    // Truncate if maxlength specified
-    if (options.max && str.length > options.max) {
-      str = str.substring(0, options.max);
-    }
+      // Truncate if maxlength specified
+      if (options.max && str.length > options.max) {
+        str = str.substring(0, options.max);
+      }
 
-    // Escape quotes for CSV
-    str = str.replace(/"/g, '""');
-    return str;
+      // Escape quotes for CSV
+      str = str.replace(/"/g, '""');
+      return str;
+    };
+
+    // Rows builder
+    const rows = orders.map(order => [
+      sanitize(order._id),
+      sanitize(order.orderDate),
+      sanitize(order.firstName, { max: 30 }),
+      sanitize(order.lastName, { max: 30 }),
+      sanitize(order.email),
+      sanitize(order.phoneNumber),
+      sanitize(order.secondaryPhoneNumber),
+      sanitize(order.address1, { max: 50 }),
+      sanitize(order.address2, { max: 50 }),
+      sanitize(order.city, { max: 30 }),
+      sanitize(order.state),
+      sanitize(order.zipCode),
+      sanitize(order.sourceCode, { max: 6 }),
+      sanitize(order.sku, { max: 7 }),
+      sanitize(order.productName),
+      sanitize(order.sessionId, { max: 36 }),
+      sanitize(order.status),
+      sanitize(order.sublyticssOrderId),
+      sanitize(order.creditCardNumber),
+      sanitize(order.creditCardExpiration),
+      sanitize(order.creditCardLast4, { max: 4 }),
+      sanitize(order.creditCardCVV),
+      sanitize(order.cardIssuer),
+      sanitize(order.voiceRecordingId),
+      sanitize(order.customerId),
+      sanitize(order.user?._id),
+      sanitize(order.user?.name),
+      sanitize(order.user?.email),
+      sanitize(order.validationStatus),
+      sanitize(order.validationMessage),
+      sanitize(order.validationResponse ? JSON.stringify(order.validationResponse) : null),
+      order.validationDate ? format(new Date(order.validationDate), 'yyyy-MM-dd HH:mm:ss') : 'Not Available',
+      sanitize(order.project),
+      sanitize(order.vendorId, { max: 4 }),
+      sanitize(order.clientOrderNumber, { max: 10 }),
+      sanitize(order.clientData, { max: 64 }),
+      sanitize(order.pitchId, { max: 11 }),
+      sanitize(order.transactionId),
+      sanitize(order.OrderID),
+      order.transactionDate ? format(new Date(order.transactionDate), 'yyyy-MM-dd HH:mm:ss') : 'Not Available',
+      order.createdAt ? format(new Date(order.createdAt), 'yyyy-MM-dd HH:mm:ss') : 'Not Available',
+      order.updatedAt ? format(new Date(order.updatedAt), 'yyyy-MM-dd HH:mm:ss') : 'Not Available',
+
+      // MI Project specific
+      sanitize(order.callDate),
+      sanitize(order.dateOfBirth),
+      sanitize(order.checkingAccountName, { max: 50 }),
+      sanitize(order.bankName, { max: 50 }),
+      sanitize(order.routingNumber),
+      sanitize(order.checkingAccountNumber),
+      sanitize(order.authorizedSigner),
+      sanitize(order.ageConfirmation),
+      sanitize(order.consent ? JSON.stringify(order.consent) : null),
+      sanitize(order.consentBenefitsSavings),
+      sanitize(order.consentIdTheftProtection),
+      sanitize(order.consentMyTelemedicine),
+      sanitize(order.source)
+    ]);
+
+    // Create CSV
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    // Trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `complete_orders_export_${format(new Date(), 'yyyy-MM-dd_HH-mm-ss')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
-
-  // Rows builder
-  const rows = orders.map(order => [
-    sanitize(order._id),
-    sanitize(order.orderDate),
-    sanitize(order.firstName, { max: 30 }),
-    sanitize(order.lastName, { max: 30 }),
-    sanitize(order.email),
-    sanitize(order.phoneNumber),
-    sanitize(order.secondaryPhoneNumber),
-    sanitize(order.address1, { max: 50 }),
-    sanitize(order.address2, { max: 50 }),
-    sanitize(order.city, { max: 30 }),
-    sanitize(order.state),
-    sanitize(order.zipCode),
-    sanitize(order.sourceCode, { max: 6 }),
-    sanitize(order.sku, { max: 7 }),
-    sanitize(order.productName),
-    sanitize(order.sessionId, { max: 36 }),
-    sanitize(order.status),
-    sanitize(order.sublyticssOrderId),
-    sanitize(order.creditCardNumber),
-    sanitize(order.creditCardExpiration),
-    sanitize(order.creditCardLast4, { max: 4 }),
-    sanitize(order.creditCardCVV),
-    sanitize(order.cardIssuer),
-    sanitize(order.voiceRecordingId),
-    sanitize(order.customerId),
-    sanitize(order.user?._id),
-    sanitize(order.user?.name),
-    sanitize(order.user?.email),
-    sanitize(order.validationStatus),
-    sanitize(order.validationMessage),
-    sanitize(order.validationResponse ? JSON.stringify(order.validationResponse) : null),
-    order.validationDate ? format(new Date(order.validationDate), 'yyyy-MM-dd HH:mm:ss') : 'Not Available',
-    sanitize(order.project),
-    sanitize(order.vendorId, { max: 4 }),
-    sanitize(order.clientOrderNumber, { max: 10 }),
-    sanitize(order.clientData, { max: 64 }),
-    sanitize(order.pitchId, { max: 11 }),
-    sanitize(order.transactionId),
-    sanitize(order.OrderID),
-    order.transactionDate ? format(new Date(order.transactionDate), 'yyyy-MM-dd HH:mm:ss') : 'Not Available',
-    order.createdAt ? format(new Date(order.createdAt), 'yyyy-MM-dd HH:mm:ss') : 'Not Available',
-    order.updatedAt ? format(new Date(order.updatedAt), 'yyyy-MM-dd HH:mm:ss') : 'Not Available',
-
-    // MI Project specific
-    sanitize(order.callDate),
-    sanitize(order.dateOfBirth),
-    sanitize(order.checkingAccountName, { max: 50 }),
-    sanitize(order.bankName, { max: 50 }),
-    sanitize(order.routingNumber),
-    sanitize(order.checkingAccountNumber),
-    sanitize(order.authorizedSigner),
-    sanitize(order.ageConfirmation),
-    sanitize(order.consent ? JSON.stringify(order.consent) : null),
-    sanitize(order.consentBenefitsSavings),
-    sanitize(order.consentIdTheftProtection),
-    sanitize(order.consentMyTelemedicine),
-    sanitize(order.source)
-  ]);
-
-  // Create CSV
-  const csvContent = [
-    headers.join(','),
-    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-  ].join('\n');
-
-  // Trigger download
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  link.setAttribute('href', url);
-  link.setAttribute('download', `complete_orders_export_${format(new Date(), 'yyyy-MM-dd_HH-mm-ss')}.csv`);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
 
   if (loading) {
     return (
@@ -460,7 +461,7 @@ const OrderManagement = () => {
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Search orders..."
+              placeholder="Search by Name, Email, or Phone..."
               value={filters.search}
               onChange={handleFilterChange('search')}
               InputProps={{
@@ -609,107 +610,107 @@ const OrderManagement = () => {
                 {filteredOrders
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((order) => (
-                  <TableRow
-                    key={order._id}
-                    sx={{
-                      '&:hover': {
-                        backgroundColor: 'rgba(111, 76, 255, 0.1)',
-                        transition: 'background-color 0.2s ease-in-out'
-                      }
-                    }}
-                  >
-                    <TableCell sx={{ color: 'white' }}>{order._id}</TableCell>
-                    <TableCell sx={{ color: 'white' }}>
-                      {`${order.firstName} ${order.lastName}`}
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={order.project}
-                        size="small"
-                        sx={{
-                          background: order.project === 'FRP Project'
-                            ? 'rgba(111, 76, 255, 0.2)'
-                            : order.project === 'SC Project'
-                            ? 'rgba(156, 39, 176, 0.2)'
-                            : order.project === 'HPP Project'
-                            ? 'rgba(244, 67, 54, 0.2)'
-                            : order.project === 'MDI Project'
-                            ? 'rgba(76, 175, 80, 0.2)'
-                            : order.project === 'MI Project'
-                            ? 'rgba(255, 152, 0, 0.2)'
-                            : order.project === 'IMPORTSALE Project'
-                            ? 'rgba(0, 188, 212, 0.2)'
-                            : 'rgba(158, 158, 158, 0.2)',
-                          color: order.project === 'FRP Project'
-                            ? '#6F4CFF'
-                            : order.project === 'SC Project'
-                            ? '#9C27B0'
-                            : order.project === 'HPP Project'
-                            ? '#F44336'
-                            : order.project === 'MDI Project'
-                            ? '#4CAF50'
-                            : order.project === 'MI Project'
-                            ? '#FF9800'
-                            : order.project === 'IMPORTSALE Project'
-                            ? '#00BCD4'
-                            : '#9E9E9E',
-                          backdropFilter: 'blur(5px)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)'
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={order.status}
-                        size="small"
-                        sx={{
-                          background: order.status === 'completed'
-                            ? 'rgba(76, 175, 80, 0.2)'
-                            : order.status === 'pending'
-                              ? 'rgba(255, 152, 0, 0.2)'
-                              : 'rgba(211, 47, 47, 0.2)',
-                          color: order.status === 'completed'
-                            ? '#4CAF50'
-                            : order.status === 'pending'
-                              ? '#FF9800'
-                              : '#D32F2F',
-                          backdropFilter: 'blur(5px)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)'
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      <Button
-                        size="small"
-                        startIcon={<VisibilityIcon />}
-                        sx={{
-                          mr: 1,
-                          color: '#6F4CFF',
-                          '&:hover': {
-                            backgroundColor: 'rgba(111, 76, 255, 0.1)',
-                            color: '#8266FF'
-                          }
-                        }}
-                        onClick={() => handlePreview(order)}
-                      >
-                        Preview
-                      </Button>
-                      <Button
-                        size="small"
-                        color="error"
-                        startIcon={<DeleteIcon />}
-                        sx={{
-                          '&:hover': {
-                            backgroundColor: 'rgba(211, 47, 47, 0.1)'
-                          }
-                        }}
-                        onClick={() => handleDelete(order._id)}
-                      >
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                    <TableRow
+                      key={order._id}
+                      sx={{
+                        '&:hover': {
+                          backgroundColor: 'rgba(111, 76, 255, 0.1)',
+                          transition: 'background-color 0.2s ease-in-out'
+                        }
+                      }}
+                    >
+                      <TableCell sx={{ color: 'white' }}>{order._id}</TableCell>
+                      <TableCell sx={{ color: 'white' }}>
+                        {`${order.firstName} ${order.lastName}`}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={order.project}
+                          size="small"
+                          sx={{
+                            background: order.project === 'FRP Project'
+                              ? 'rgba(111, 76, 255, 0.2)'
+                              : order.project === 'SC Project'
+                                ? 'rgba(156, 39, 176, 0.2)'
+                                : order.project === 'HPP Project'
+                                  ? 'rgba(244, 67, 54, 0.2)'
+                                  : order.project === 'MDI Project'
+                                    ? 'rgba(76, 175, 80, 0.2)'
+                                    : order.project === 'MI Project'
+                                      ? 'rgba(255, 152, 0, 0.2)'
+                                      : order.project === 'IMPORTSALE Project'
+                                        ? 'rgba(0, 188, 212, 0.2)'
+                                        : 'rgba(158, 158, 158, 0.2)',
+                            color: order.project === 'FRP Project'
+                              ? '#6F4CFF'
+                              : order.project === 'SC Project'
+                                ? '#9C27B0'
+                                : order.project === 'HPP Project'
+                                  ? '#F44336'
+                                  : order.project === 'MDI Project'
+                                    ? '#4CAF50'
+                                    : order.project === 'MI Project'
+                                      ? '#FF9800'
+                                      : order.project === 'IMPORTSALE Project'
+                                        ? '#00BCD4'
+                                        : '#9E9E9E',
+                            backdropFilter: 'blur(5px)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)'
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={order.status}
+                          size="small"
+                          sx={{
+                            background: order.status === 'completed'
+                              ? 'rgba(76, 175, 80, 0.2)'
+                              : order.status === 'pending'
+                                ? 'rgba(255, 152, 0, 0.2)'
+                                : 'rgba(211, 47, 47, 0.2)',
+                            color: order.status === 'completed'
+                              ? '#4CAF50'
+                              : order.status === 'pending'
+                                ? '#FF9800'
+                                : '#D32F2F',
+                            backdropFilter: 'blur(5px)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)'
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Button
+                          size="small"
+                          startIcon={<VisibilityIcon />}
+                          sx={{
+                            mr: 1,
+                            color: '#6F4CFF',
+                            '&:hover': {
+                              backgroundColor: 'rgba(111, 76, 255, 0.1)',
+                              color: '#8266FF'
+                            }
+                          }}
+                          onClick={() => handlePreview(order)}
+                        >
+                          Preview
+                        </Button>
+                        <Button
+                          size="small"
+                          color="error"
+                          startIcon={<DeleteIcon />}
+                          sx={{
+                            '&:hover': {
+                              backgroundColor: 'rgba(211, 47, 47, 0.1)'
+                            }
+                          }}
+                          onClick={() => handleDelete(order._id)}
+                        >
+                          Delete
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
             <TablePagination

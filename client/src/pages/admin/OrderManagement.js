@@ -601,6 +601,7 @@ const OrderManagement = () => {
                 <TableRow>
                   <TableCell sx={{ color: 'white' }}>Order ID</TableCell>
                   <TableCell sx={{ color: 'white' }}>Customer</TableCell>
+                  <TableCell sx={{ color: 'white' }}>Phone</TableCell>
                   <TableCell sx={{ color: 'white' }}>Project</TableCell>
                   <TableCell sx={{ color: 'white' }}>Status</TableCell>
                   <TableCell align="right" sx={{ color: 'white' }}>Actions</TableCell>
@@ -622,6 +623,9 @@ const OrderManagement = () => {
                       <TableCell sx={{ color: 'white' }}>{order._id}</TableCell>
                       <TableCell sx={{ color: 'white' }}>
                         {`${order.firstName} ${order.lastName}`}
+                      </TableCell>
+                      <TableCell sx={{ color: 'white' }}>
+                        {order.phoneNumber || 'N/A'}
                       </TableCell>
                       <TableCell>
                         <Chip

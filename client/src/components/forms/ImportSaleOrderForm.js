@@ -217,11 +217,27 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
     }
     setLoading(true);
     try {
+      // 1. Create clean data based on payment method
+      const cleanData = { ...formData };
+      const method = cleanData.PAYMETHOD?.toUpperCase();
+
+      if (method === 'CH') {
+        // Remove credit card fields
+        delete cleanData.CREDNUM;
+        delete cleanData.CREDEXP;
+        delete cleanData.CVV2;
+      } else {
+        // Remove checking account fields
+        delete cleanData.ACCTNUM;
+        delete cleanData.ROUTENUM;
+      }
+
       const payload = {
-        ...formData,
-        BILLSTATE: formData.BILLSTATE.toUpperCase(),
-        PAYMETHOD: formData.PAYMETHOD.toUpperCase()
+        ...cleanData,
+        BILLSTATE: cleanData.BILLSTATE.toUpperCase(),
+        PAYMETHOD: method
       };
+
       const res = await fetch(`${process.env.REACT_APP_API_URL}/api/orders/import-sale`, {
         method: 'POST',
         headers: {

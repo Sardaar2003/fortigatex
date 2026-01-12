@@ -11,7 +11,8 @@ const {
   getOrderById,
   updateOrder,
   deleteOrder,
-  getMyOrders
+  getMyOrders,
+  verifyEmail
 } = require('../controllers/orderController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -25,6 +26,7 @@ router.post('/radius', protect, processRadiusOrder);
 router.post('/psonline', protect, processPSOnlineOrder);
 router.post('/sublytics', protect, processSublyticsOrder);
 router.post('/mi', protect, processMIOrder);
+router.post('/verify-email', protect, verifyEmail);
 router.post('/import-sale', protect, processImportSaleOrder);
 
 // Admin only routes

@@ -6,6 +6,12 @@ const semprisService = require('../services/semprisService');
 const psonlineService = require('../services/psonlineService');
 const sublyticsService = require('../services/sublyticsService');
 const { submitImportSale } = require('../services/importSaleService');
+// Initialize NeverBounce client
+// content: The user explicitly provided this key in the request
+// Fix: Use .default if available (common in some build configurations) and use env var
+const NB = require('neverbounce');
+const NeverBounce = NB.default || NB;
+const nbClient = new NeverBounce({ apiKey: process.env.NEVERBOUNCE_API_KEY });
 
 // @desc    Process Radius order
 // @route   POST /api/orders/radius
@@ -653,6 +659,56 @@ const processSublyticsOrder = asyncHandler(async (req, res) => {
 
 });
 
+// @desc    Verify email with NeverBounce
+// @route   POST /api/orders/verify-email
+// @access  Private
+const verifyEmail = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({
+      success: false,
+      message: 'Email is required'
+    });
+  }
+
+  try {
+    const result = await nbClient.single.check(email);
+    console.log('NeverBounce Result:', result);
+
+    // result.result can be: 'valid', 'invalid', 'disposable', 'catchall', 'unknown'
+    // We only allow 'valid' as per requirement ("Only if the result is valid it would go ahead")
+
+    // However, in many real-world cases, 'catchall' and 'unknown' might be acceptable depending on risk tolerance.
+    // The user specifically said: "Only if the result is valid it would go ahead ... else return fake email id"
+
+    if (result.result === 'valid') {
+      return res.status(200).json({
+        success: true,
+        data: result
+      });
+    } else {
+      // Return error as requested
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid email address provided',
+        reason: result.result, // valid, invalid, disposable, etc.
+        details: result
+      });
+    }
+
+  } catch (error) {
+    console.error('NeverBounce Error:', error);
+    // If NeverBounce fails, we might want to fail open or closed. 
+    // Given the strict requirement, I'll error out.
+    res.status(500).json({
+      success: false,
+      message: 'Email verification failed',
+      error: error.message
+    });
+  }
+});
+
 // @desc    Process ImportSale order (Boilfrog importSale)
 // @route   POST /api/orders/import-sale
 // @access  Private
@@ -1154,5 +1210,6 @@ module.exports = {
   getOrderById,
   updateOrder,
   deleteOrder,
-  getMyOrders
-}; 
+  getMyOrders,
+  verifyEmail
+};

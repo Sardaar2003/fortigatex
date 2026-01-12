@@ -46,8 +46,8 @@ const OrderDetailDialog = ({ open, handleClose, order }) => {
   };
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={handleClose}
       maxWidth="lg"
       fullWidth
@@ -61,7 +61,7 @@ const OrderDetailDialog = ({ open, handleClose, order }) => {
         }
       }}
     >
-      <DialogTitle sx={{ 
+      <DialogTitle sx={{
         color: 'white',
         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         display: 'flex',
@@ -76,13 +76,13 @@ const OrderDetailDialog = ({ open, handleClose, order }) => {
           <CloseIcon />
         </Button>
       </DialogTitle>
-      
+
       <DialogContent sx={{ mt: 2, color: 'white' }}>
         <Grid container spacing={3}>
           {/* Order Header Information */}
           <Grid item xs={12}>
-            <Paper sx={{ 
-              p: 2, 
+            <Paper sx={{
+              p: 2,
               background: 'rgba(255, 255, 255, 0.05)',
               border: '1px solid rgba(255, 255, 255, 0.1)'
             }}>
@@ -111,8 +111,8 @@ const OrderDetailDialog = ({ open, handleClose, order }) => {
 
           {/* Customer Information */}
           <Grid item xs={12} md={6}>
-            <Paper sx={{ 
-              p: 2, 
+            <Paper sx={{
+              p: 2,
               background: 'rgba(255, 255, 255, 0.05)',
               border: '1px solid rgba(255, 255, 255, 0.1)'
             }}>
@@ -162,8 +162,8 @@ const OrderDetailDialog = ({ open, handleClose, order }) => {
 
           {/* Address Information */}
           <Grid item xs={12} md={6}>
-            <Paper sx={{ 
-              p: 2, 
+            <Paper sx={{
+              p: 2,
               background: 'rgba(255, 255, 255, 0.05)',
               border: '1px solid rgba(255, 255, 255, 0.1)'
             }}>
@@ -223,8 +223,8 @@ const OrderDetailDialog = ({ open, handleClose, order }) => {
 
           {/* Credit Card Information */}
           <Grid item xs={12}>
-            <Paper sx={{ 
-              p: 2, 
+            <Paper sx={{
+              p: 2,
               background: 'rgba(255, 255, 255, 0.05)',
               border: '1px solid rgba(255, 255, 255, 0.1)'
             }}>
@@ -286,8 +286,8 @@ const OrderDetailDialog = ({ open, handleClose, order }) => {
 
           {/* Order Details */}
           <Grid item xs={12} md={6}>
-            <Paper sx={{ 
-              p: 2, 
+            <Paper sx={{
+              p: 2,
               background: 'rgba(255, 255, 255, 0.05)',
               border: '1px solid rgba(255, 255, 255, 0.1)'
             }}>
@@ -337,8 +337,8 @@ const OrderDetailDialog = ({ open, handleClose, order }) => {
 
           {/* Validation Information */}
           <Grid item xs={12} md={6}>
-            <Paper sx={{ 
-              p: 2, 
+            <Paper sx={{
+              p: 2,
               background: 'rgba(255, 255, 255, 0.05)',
               border: '1px solid rgba(255, 255, 255, 0.1)'
             }}>
@@ -391,15 +391,15 @@ const OrderDetailDialog = ({ open, handleClose, order }) => {
           </Grid>
         </Grid>
       </DialogContent>
-      
-      <DialogActions sx={{ 
+
+      <DialogActions sx={{
         borderTop: '1px solid rgba(255, 255, 255, 0.1)',
         p: 2
       }}>
-        <Button 
+        <Button
           onClick={handleClose}
           variant="outlined"
-          sx={{ 
+          sx={{
             color: 'white',
             borderColor: 'rgba(255, 255, 255, 0.3)',
             '&:hover': {

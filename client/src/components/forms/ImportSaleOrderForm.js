@@ -217,6 +217,39 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
     }
     setLoading(true);
     try {
+      // 0. Verify Email first
+      try {
+        const verifyRes = await fetch(`${process.env.REACT_APP_API_URL}/api/orders/verify-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ email: formData.EMAIL })
+        });
+
+        const verifyData = await verifyRes.json();
+
+        if (!verifyRes.ok || !verifyData.success) {
+          // If verification failed or returned invalid
+          // "Only if the result is valid it would go ahead else it would return fake email id"
+          // We'll show the error message.
+          showNotification('error', verifyData.message || 'Email verification failed');
+          if (verifyData.reason) {
+            // Maybe set specific field error for email
+            setErrors(prev => ({ ...prev, EMAIL: `Email is ${verifyData.reason}` }));
+          }
+          setLoading(false);
+          return;
+        }
+
+      } catch (verifyErr) {
+        console.error("Verification error", verifyErr);
+        showNotification('error', 'Email verification request failed');
+        setLoading(false);
+        return;
+      }
+
       // 1. Create clean data based on payment method
       const cleanData = { ...formData };
       const method = cleanData.PAYMETHOD?.toUpperCase();

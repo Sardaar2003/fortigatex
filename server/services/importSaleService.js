@@ -17,6 +17,8 @@ async function submitImportSale(payload, user) {
 
   try {
     logger.info(`importSale: submitting order for user ${user?._id || 'unknown'}`);
+    console.log('ImportSale Request:', JSON.stringify(payload, null, 2));
+
     const response = await axios.post(IMPORT_SALE_URL, payload, {
       headers: {
         'Content-Type': 'application/json',
@@ -24,6 +26,8 @@ async function submitImportSale(payload, user) {
       },
       timeout: 15000
     });
+
+    console.log('ImportSale Response:', JSON.stringify(response.data, null, 2));
 
     const data = response.data;
     return {

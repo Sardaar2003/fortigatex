@@ -74,3 +74,5 @@
 [2026-01-10T04:38:03.478Z] [ERROR] Failed to persist importSale order
 [2026-01-12T15:07:23.668Z] [ERROR] importSale API error: Request failed with status code 403
 [2026-01-12T15:07:23.675Z] [ERROR] Failed to persist importSale order
+[2026-01-13T02:14:56.597Z] [ERROR] importSale API error: Request failed with status code 403
+[2026-01-13T02:14:56.604Z] [ERROR] Failed to persist importSale order

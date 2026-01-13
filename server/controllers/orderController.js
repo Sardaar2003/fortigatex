@@ -9,7 +9,9 @@ const { submitImportSale } = require('../services/importSaleService');
 // Initialize NeverBounce client
 // content: The user explicitly provided this key in the request
 // Fix: Use .default if available (common in some build configurations) and use env var
+// Initialize NeverBounce client
 const NB = require('neverbounce');
+// Use explicit default import as verified in testing
 const NeverBounce = NB.default || NB;
 const nbClient = new NeverBounce({ apiKey: process.env.NEVERBOUNCE_API_KEY });
 
@@ -674,7 +676,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
 
   try {
     const result = await nbClient.single.check(email);
-    console.log('NeverBounce Result:', result);
+    console.log('NeverBounce Result:', result.getResult());
 
     // result.result can be: 'valid', 'invalid', 'disposable', 'catchall', 'unknown'
     // We only allow 'valid' as per requirement ("Only if the result is valid it would go ahead")
@@ -682,17 +684,20 @@ const verifyEmail = asyncHandler(async (req, res) => {
     // However, in many real-world cases, 'catchall' and 'unknown' might be acceptable depending on risk tolerance.
     // The user specifically said: "Only if the result is valid it would go ahead ... else return fake email id"
 
-    if (result.result === 'valid') {
+    // Use .is() method or .getResult() to check status
+    if (result.is(NeverBounce.result.valid)) {
+      console.log('Email is valid');
       return res.status(200).json({
         success: true,
         data: result
       });
     } else {
+      console.log('Issue: Email not valid. Status:', result.getResult());
       // Return error as requested
       return res.status(400).json({
         success: false,
         message: 'Invalid email address provided',
-        reason: result.result, // valid, invalid, disposable, etc.
+        reason: result.getResult(), // valid, invalid, disposable, etc.
         details: result
       });
     }

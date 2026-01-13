@@ -718,6 +718,9 @@ const verifyEmail = asyncHandler(async (req, res) => {
 // @route   POST /api/orders/import-sale
 // @access  Private
 const processImportSaleOrder = asyncHandler(async (req, res) => {
+  console.log('=== Starting ImportSale Order Processing ===');
+  console.log('Incoming Body keys:', Object.keys(req.body));
+
   const {
     FIRSTNAME,
     LASTNAME,
@@ -771,20 +774,24 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
     .map(([k]) => k);
 
   if (missing.length) {
+    console.log('Validation Failed. Missing fields:', missing);
     return res.status(400).json({
       success: false,
       message: `Missing required fields: ${missing.join(', ')}`
     });
   }
+  console.log('Basic validation passed.');
 
   // Validate Email
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(EMAIL)) {
+    console.log('Validation Failed. Invalid Email:', EMAIL);
     return res.status(400).json({
       success: false,
       message: 'Invalid email format'
     });
   }
+  console.log('Email validation passed.');
 
   // Check for duplicate order
   const existingOrder = await Order.findOne({
@@ -795,11 +802,13 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
   });
 
   if (existingOrder) {
+    console.log('Duplicate order found:', existingOrder._id);
     return res.status(400).json({
       success: false,
       message: 'Duplicate order: An order for this product with this email already exists.'
     });
   }
+  console.log('Duplicate check passed. No existing order.');
 
   const method = PAYMETHOD.toUpperCase();
   if (method === 'CH') {
@@ -872,7 +881,12 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
     ORDERSOURCE
   };
 
+  console.log('Payload prepared for service:', JSON.stringify(payload, null, 2));
+
+  console.log('Calling submitImportSale...');
+
   const serviceResult = await submitImportSale(payload, req.user);
+  console.log('submitImportSale returned:', JSON.stringify(serviceResult, null, 2));
 
   const attributes = serviceResult.data?.data?.attributes;
   const resultString = attributes?.result;
@@ -886,7 +900,8 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
     validationResponse = serviceResult.error;
   } else if (!message) {
     if (typeof serviceResult.error === 'object') {
-      message = serviceResult.error.message || serviceResult.error.error || JSON.stringify(serviceResult.error);
+      // Force stringify to ensure full error details are captured
+      message = JSON.stringify(serviceResult.error, null, 2);
     } else {
       message = serviceResult.error || 'Unknown response';
     }

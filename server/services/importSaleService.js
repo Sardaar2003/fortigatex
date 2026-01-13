@@ -36,6 +36,7 @@ async function submitImportSale(payload, user) {
       status: response.status
     };
   } catch (error) {
+    console.log('ImportSale Error Response:', JSON.stringify(error.response?.data || error.message, null, 2));
     logger.error(`importSale API error: ${error.message}`, {
       status: error.response?.status,
       data: error.response?.data

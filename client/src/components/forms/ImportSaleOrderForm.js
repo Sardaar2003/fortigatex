@@ -29,7 +29,7 @@ const payMethods = [
 
 const PRODUCT_CONFIGS = {
   HLTH: {
-    PRODID: 'HLTH',
+    PRODID: 'HLTH790',
     PROMOID: 'HLTH790',
     COMPANYID: '233',
     SOURCEID: 'SMA',

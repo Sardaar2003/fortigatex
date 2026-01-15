@@ -37,7 +37,7 @@ const PRODUCT_CONFIGS = {
     ORDERSOURCE: 'SMA'
   },
   PROT: {
-    PRODID: 'PROT',
+    PRODID: 'PROT995',
     PROMOID: 'PROT995',
     COMPANYID: '233',
     SOURCEID: 'SMA',

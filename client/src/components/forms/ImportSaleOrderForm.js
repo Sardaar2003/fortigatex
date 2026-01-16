@@ -86,6 +86,11 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
   });
   const [timeLeft, setTimeLeft] = useState(60);
 
+  // New state for email verification step
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [emailToVerify, setEmailToVerify] = useState('');
+  const [verificationLoading, setVerificationLoading] = useState(false);
+
   useEffect(() => {
     let timer;
     if (snackbar.open && timeLeft > 0) {
@@ -158,6 +163,51 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
     });
     setSelectedProduct('HLTH'); // Reset product selection
     setErrors({});
+    setIsEmailVerified(false); // Reset verification to start over
+    setEmailToVerify('');
+  };
+
+  const handleVerifyEmail = async (e) => {
+    e.preventDefault();
+    if (!emailToVerify || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailToVerify)) {
+      showNotification('error', 'Please enter a valid email address');
+      return;
+    }
+
+    setVerificationLoading(true);
+    try {
+      const verifyRes = await fetch(`${process.env.REACT_APP_API_URL}/api/orders/verify-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ email: emailToVerify })
+      });
+
+      const verifyData = await verifyRes.json();
+
+      if (!verifyRes.ok || !verifyData.success) {
+        showNotification('error', verifyData.message || 'Email verification failed');
+        if (verifyData.reason) {
+          // Explicitly show why it failed if available
+          showNotification('error', `Email is ${verifyData.reason}`);
+        }
+        setVerificationLoading(false);
+        return;
+      }
+
+      // Success
+      setFormData(prev => ({ ...prev, EMAIL: emailToVerify }));
+      setIsEmailVerified(true);
+      showNotification('success', 'Email verified successfully!');
+
+    } catch (verifyErr) {
+      console.error("Verification error", verifyErr);
+      showNotification('error', 'Email verification request failed');
+    } finally {
+      setVerificationLoading(false);
+    }
   };
 
   const validate = () => {
@@ -177,6 +227,7 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
     if (formData.HOMEPHONE && !/^[0-9]{7}$/.test(formData.HOMEPHONE)) {
       e.HOMEPHONE = 'Phone must be 7 digits (no area code)';
     }
+    // Email is already verified, but keep regex check just in case
     if (formData.EMAIL && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.EMAIL)) {
       e.EMAIL = 'Invalid email';
     }
@@ -217,38 +268,7 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
     }
     setLoading(true);
     try {
-      // 0. Verify Email first
-      try {
-        const verifyRes = await fetch(`${process.env.REACT_APP_API_URL}/api/orders/verify-email`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ email: formData.EMAIL })
-        });
-
-        const verifyData = await verifyRes.json();
-
-        if (!verifyRes.ok || !verifyData.success) {
-          // If verification failed or returned invalid
-          // "Only if the result is valid it would go ahead else it would return fake email id"
-          // We'll show the error message.
-          showNotification('error', verifyData.message || 'Email verification failed');
-          if (verifyData.reason) {
-            // Maybe set specific field error for email
-            setErrors(prev => ({ ...prev, EMAIL: `Email is ${verifyData.reason}` }));
-          }
-          setLoading(false);
-          return;
-        }
-
-      } catch (verifyErr) {
-        console.error("Verification error", verifyErr);
-        showNotification('error', 'Email verification request failed');
-        setLoading(false);
-        return;
-      }
+      // Email verification is already done in the previous step.
 
       // 1. Create clean data based on payment method
       const cleanData = { ...formData };
@@ -316,143 +336,202 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
   );
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+    <Box sx={{ mt: 3 }}>
       <Typography variant="h4" gutterBottom sx={{ mb: 4, textAlign: 'center' }}>
-        importSale Order Form
+        ImportSale Order Form
       </Typography>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Typography variant="h6" gutterBottom>Customer Info</Typography>
-          <Divider sx={{ mb: 2 }} />
-        </Grid>
-        <Grid item xs={12} sm={6}>{textField('FIRSTNAME', 'First Name')}</Grid>
-        <Grid item xs={12} sm={6}>{textField('LASTNAME', 'Last Name')}</Grid>
-        <Grid item xs={12}>{textField('BILLINGNAME', 'Billing Name')}</Grid>
-        <Grid item xs={12} sm={6}>{textField('EMAIL', 'Email')}</Grid>
-        <Grid item xs={6} sm={3}>{textField('HOMEAREA', 'Area Code')}</Grid>
-        <Grid item xs={6} sm={3}>{textField('HOMEPHONE', 'Phone (7 digits)')}</Grid>
+      {!isEmailVerified ? (
+        // Step 1: Email Verification UI
+        <Box
+          component="form"
+          onSubmit={handleVerifyEmail}
+          sx={{
+            maxWidth: 600,
+            mx: 'auto',
+            p: 4,
+            boxShadow: 3,
+            borderRadius: 2,
+            bgcolor: 'background.paper'
+          }}
+        >
+          <Typography variant="h6" gutterBottom textAlign="center">
+            Step 1: Verify Email
+          </Typography>
+          <Typography variant="body2" color="text.secondary" gutterBottom textAlign="center" sx={{ mb: 3 }}>
+            Please verify the customer's email address before proceeding with the order.
+          </Typography>
 
-        <Grid item xs={12}>
-          <Typography variant="h6" gutterBottom>Billing Address</Typography>
-          <Divider sx={{ mb: 2 }} />
-        </Grid>
-        <Grid item xs={12}>{textField('BILLADDR1', 'Address Line 1')}</Grid>
-        <Grid item xs={12}>{textField('BILLADDR2', 'Address Line 2 (Optional)')}</Grid>
-        <Grid item xs={12} sm={4}>{textField('BILLCITY', 'City')}</Grid>
-        <Grid item xs={12} sm={4}>{textField('BILLSTATE', 'State')}</Grid>
-        <Grid item xs={12} sm={4}>{textField('BILLZIP', 'ZIP')}</Grid>
-        <Grid item xs={12} sm={4}>{textField('BILLCOUNTRY', 'Country')}</Grid>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Customer Email"
+                value={emailToVerify}
+                onChange={(e) => setEmailToVerify(e.target.value)}
+                placeholder="enter@email.com"
+                disabled={verificationLoading}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                size="large"
+                disabled={verificationLoading}
+              >
+                {verificationLoading ? 'Verifying...' : 'Verify Email'}
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
+      ) : (
+        // Step 2: Main Order Form
+        <Box component="form" onSubmit={handleSubmit}>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Customer Info</Typography>
+              <Divider sx={{ mb: 2 }} />
+            </Grid>
+            <Grid item xs={12} sm={6}>{textField('FIRSTNAME', 'First Name')}</Grid>
+            <Grid item xs={12} sm={6}>{textField('LASTNAME', 'Last Name')}</Grid>
+            <Grid item xs={12}>{textField('BILLINGNAME', 'Billing Name')}</Grid>
+            <Grid item xs={12} sm={6}>
+              {/* Email field is read-only here */}
+              <TextField
+                fullWidth
+                label="Email (Verified)"
+                name="EMAIL"
+                value={formData.EMAIL}
+                disabled
+                helperText="Email verified via NeverBounce"
+              />
+            </Grid>
+            <Grid item xs={6} sm={3}>{textField('HOMEAREA', 'Area Code')}</Grid>
+            <Grid item xs={6} sm={3}>{textField('HOMEPHONE', 'Phone (7 digits)')}</Grid>
 
-        <Grid item xs={12}>
-          <Typography variant="h6" gutterBottom>Payment</Typography>
-          <Divider sx={{ mb: 2 }} />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <FormControl fullWidth sx={getFieldErrorStyles(!!errors.PAYMETHOD)}>
-            <InputLabel>Payment Method</InputLabel>
-            <Select
-              label="Payment Method"
-              name="PAYMETHOD"
-              value={formData.PAYMETHOD}
-              onChange={handleChange}
-            >
-              {payMethods.map(m => (
-                <MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Billing Address</Typography>
+              <Divider sx={{ mb: 2 }} />
+            </Grid>
+            <Grid item xs={12}>{textField('BILLADDR1', 'Address Line 1')}</Grid>
+            <Grid item xs={12}>{textField('BILLADDR2', 'Address Line 2 (Optional)')}</Grid>
+            <Grid item xs={12} sm={4}>{textField('BILLCITY', 'City')}</Grid>
+            <Grid item xs={12} sm={4}>{textField('BILLSTATE', 'State')}</Grid>
+            <Grid item xs={12} sm={4}>{textField('BILLZIP', 'ZIP')}</Grid>
+            <Grid item xs={12} sm={4}>{textField('BILLCOUNTRY', 'Country')}</Grid>
 
-        {formData.PAYMETHOD === 'CH' ? (
-          <>
-            <Grid item xs={12} sm={4}>{textField('ACCTNUM', 'Account Number')}</Grid>
-            <Grid item xs={12} sm={4}>{textField('ROUTENUM', 'Routing Number')}</Grid>
-          </>
-        ) : (
-          <>
-            <Grid item xs={12} sm={4}>{textField('CREDNUM', 'Card Number')}</Grid>
-            <Grid item xs={6} sm={2}>{textField('CREDEXP', 'Exp (MMYY)')}</Grid>
-            <Grid item xs={6} sm={2}>{textField('CVV2', 'CVV')}</Grid>
-          </>
-        )}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Payment</Typography>
+              <Divider sx={{ mb: 2 }} />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <FormControl fullWidth sx={getFieldErrorStyles(!!errors.PAYMETHOD)}>
+                <InputLabel>Payment Method</InputLabel>
+                <Select
+                  label="Payment Method"
+                  name="PAYMETHOD"
+                  value={formData.PAYMETHOD}
+                  onChange={handleChange}
+                >
+                  {payMethods.map(m => (
+                    <MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
 
-        <Grid item xs={12}>
-          <Typography variant="h6" gutterBottom>Product Configuration</Typography>
-          <Divider sx={{ mb: 2 }} />
-        </Grid>
+            {formData.PAYMETHOD === 'CH' ? (
+              <>
+                <Grid item xs={12} sm={4}>{textField('ACCTNUM', 'Account Number')}</Grid>
+                <Grid item xs={12} sm={4}>{textField('ROUTENUM', 'Routing Number')}</Grid>
+              </>
+            ) : (
+              <>
+                <Grid item xs={12} sm={4}>{textField('CREDNUM', 'Card Number')}</Grid>
+                <Grid item xs={6} sm={2}>{textField('CREDEXP', 'Exp (MMYY)')}</Grid>
+                <Grid item xs={6} sm={2}>{textField('CVV2', 'CVV')}</Grid>
+              </>
+            )}
 
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel>Product Selection</InputLabel>
-            <Select
-              label="Product Selection"
-              value={selectedProduct}
-              onChange={handleProductChange}
-            >
-              <MenuItem value="HLTH">HLTH (Health)</MenuItem>
-              <MenuItem value="PROT">PROT (Protein)</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Product Configuration</Typography>
+              <Divider sx={{ mb: 2 }} />
+            </Grid>
 
-        {/* Read-only displays for confirmation if needed, or just hidden. 
-            Showing a few key ones as disabled inputs so user knows what's being sent. */}
-        <Grid item xs={6} sm={3}>
-          <TextField
-            fullWidth
-            label="Company ID"
-            value={formData.COMPANYID}
-            disabled
-            variant="filled"
-          />
-        </Grid>
-        <Grid item xs={6} sm={3}>
-          <TextField
-            fullWidth
-            label="Product ID"
-            value={formData.PRODID}
-            disabled
-            variant="filled"
-          />
-        </Grid>
-        <Grid item xs={6} sm={3}>
-          <TextField
-            fullWidth
-            label="Promo ID"
-            value={formData.PROMOID}
-            disabled
-            variant="filled"
-          />
-        </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel>Product Selection</InputLabel>
+                <Select
+                  label="Product Selection"
+                  value={selectedProduct}
+                  onChange={handleProductChange}
+                >
+                  <MenuItem value="HLTH">HLTH (Health)</MenuItem>
+                  <MenuItem value="PROT">PROT (Protein)</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
 
-        <Grid item xs={12} sm={6}>{textField('TRACKINGID', 'Tracking ID')}</Grid>
-        <Grid item xs={12} sm={3}>{textField('RETNUM', 'RetNum (optional)')}</Grid>
+            {/* Read-only displays */}
+            <Grid item xs={6} sm={3}>
+              <TextField
+                fullWidth
+                label="Company ID"
+                value={formData.COMPANYID}
+                disabled
+                variant="filled"
+              />
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <TextField
+                fullWidth
+                label="Product ID"
+                value={formData.PRODID}
+                disabled
+                variant="filled"
+              />
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <TextField
+                fullWidth
+                label="Promo ID"
+                value={formData.PROMOID}
+                disabled
+                variant="filled"
+              />
+            </Grid>
 
-        <Grid item xs={12} sm={6}>
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            size="large"
-            disabled={loading}
-          >
-            {loading ? 'Submitting...' : 'Submit Order'}
-          </Button>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <Button
-            type="button"
-            variant="outlined"
-            fullWidth
-            size="large"
-            disabled={loading}
-            onClick={handleClearForm}
-          >
-            Clear Form
-          </Button>
-        </Grid>
-      </Grid>
+            <Grid item xs={12} sm={6}>{textField('TRACKINGID', 'Tracking ID')}</Grid>
+            <Grid item xs={12} sm={3}>{textField('RETNUM', 'RetNum (optional)')}</Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                size="large"
+                disabled={loading}
+              >
+                {loading ? 'Submitting...' : 'Submit Order'}
+              </Button>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Button
+                type="button"
+                variant="outlined"
+                fullWidth
+                size="large"
+                disabled={loading}
+                onClick={handleClearForm}
+              >
+                Clear Form
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
+      )}
 
       <Snackbar
         open={snackbar.open}

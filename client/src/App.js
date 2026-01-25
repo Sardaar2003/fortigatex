@@ -14,6 +14,8 @@ import Profile from './pages/Profile';
 import OrderManagement from './pages/admin/OrderManagement';
 import RoleManagement from './pages/admin/RoleManagement';
 import UserManagement from './pages/admin/UserManagement';
+import GroupManagement from './pages/admin/GroupManagement';
+import MyGroup from './pages/MyGroup';
 import PrivateRoute from './components/PrivateRoute';
 import { AuthProvider } from './context/AuthContext';
 import SubProjectOrderForm from './components/forms/SubProjectOrderForm';
@@ -147,9 +149,9 @@ function App() {
             }}
           >
             <BackgroundGradient />
-            <Box 
-              sx={{ 
-                position: 'relative', 
+            <Box
+              sx={{
+                position: 'relative',
                 zIndex: 1,
                 minHeight: '100vh',
                 display: 'flex',
@@ -174,7 +176,7 @@ function App() {
                   <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password/:token" element={<ResetPassword />} />
-                  
+
                   {/* Protected Routes */}
                   <Route path="/" element={
                     <PrivateRoute>
@@ -208,6 +210,20 @@ function App() {
                     <PrivateRoute>
                       <Box sx={{ p: 3 }}>
                         <UserManagement />
+                      </Box>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/admin/groups" element={
+                    <PrivateRoute>
+                      <Box sx={{ p: 3 }}>
+                        <GroupManagement />
+                      </Box>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/my-group" element={
+                    <PrivateRoute>
+                      <Box sx={{ p: 3 }}>
+                        <MyGroup />
                       </Box>
                     </PrivateRoute>
                   } />

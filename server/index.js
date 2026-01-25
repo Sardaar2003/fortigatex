@@ -123,6 +123,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/groups', require('./routes/groups'));
 app.use('/api/admin', adminRoutes);
 
 // Serve static assets in production

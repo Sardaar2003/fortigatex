@@ -67,10 +67,13 @@ const Navigation = () => {
         { label: 'User Management', path: '/admin/users' },
         { label: 'Role Management', path: '/admin/roles' },
         { label: 'Order Management', path: '/admin/orders' },
+        { label: 'Group Management', path: '/admin/groups' },
+        { label: 'My Group', path: '/my-group' },
       ];
     } else {
       return [
         { label: 'Dashboard', path: '/dashboard' },
+        { label: 'My Group', path: '/my-group' },
       ];
     }
   };
@@ -78,9 +81,9 @@ const Navigation = () => {
   const menuItems = getMenuItems();
 
   return (
-    <AppBar 
-      position="fixed" 
-      sx={{ 
+    <AppBar
+      position="fixed"
+      sx={{
         background: 'rgba(26, 32, 44, 0.95)',
         backdropFilter: 'blur(10px)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
@@ -106,8 +109,8 @@ const Navigation = () => {
             variant="h6"
             noWrap
             component="div"
-            sx={{ 
-              mr: 2, 
+            sx={{
+              mr: 2,
               display: { xs: 'none', md: 'flex' },
               fontWeight: 700,
               color: 'white',
@@ -122,9 +125,9 @@ const Navigation = () => {
               <Button
                 key={item.label}
                 onClick={() => navigate(item.path)}
-                sx={{ 
-                  my: 2, 
-                  color: 'white', 
+                sx={{
+                  my: 2,
+                  color: 'white',
                   display: 'block',
                   '&:hover': {
                     backgroundColor: 'rgba(111, 76, 255, 0.1)',
@@ -138,9 +141,9 @@ const Navigation = () => {
 
           <Box sx={{ flexGrow: 0 }}>
             <Tooltip title="Open settings">
-              <IconButton 
+              <IconButton
                 onClick={handleOpenUserMenu}
-                sx={{ 
+                sx={{
                   color: 'white',
                   '&:hover': {
                     backgroundColor: 'rgba(111, 76, 255, 0.1)',
@@ -250,7 +253,7 @@ const Navigation = () => {
         onClose={handleCloseMobileMenu}
       >
         {menuItems.map((item) => (
-          <MenuItem 
+          <MenuItem
             key={item.label}
             onClick={() => {
               handleCloseMobileMenu();

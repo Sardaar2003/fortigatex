@@ -86,8 +86,8 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
   });
   const [timeLeft, setTimeLeft] = useState(60);
 
-  // New state for email verification step
-  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  // Temporarily disabled email verification step
+  const [isEmailVerified, setIsEmailVerified] = useState(true);
   const [emailToVerify, setEmailToVerify] = useState('');
   const [verificationLoading, setVerificationLoading] = useState(false);
 
@@ -163,7 +163,7 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
     });
     setSelectedProduct('HLTH'); // Reset product selection
     setErrors({});
-    setIsEmailVerified(false); // Reset verification to start over
+    setIsEmailVerified(true); // Keep verification bypassed
     setEmailToVerify('');
   };
 
@@ -398,15 +398,8 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
             <Grid item xs={12} sm={6}>{textField('LASTNAME', 'Last Name')}</Grid>
             <Grid item xs={12}>{textField('BILLINGNAME', 'Billing Name')}</Grid>
             <Grid item xs={12} sm={6}>
-              {/* Email field is read-only here */}
-              <TextField
-                fullWidth
-                label="Email (Verified)"
-                name="EMAIL"
-                value={formData.EMAIL}
-                disabled
-                helperText="Email verified via NeverBounce"
-              />
+              {/* Temporarily made email editable and bypassed verification */}
+              {textField('EMAIL', 'Email')}
             </Grid>
             <Grid item xs={6} sm={3}>{textField('HOMEAREA', 'Area Code')}</Grid>
             <Grid item xs={6} sm={3}>{textField('HOMEPHONE', 'Phone (7 digits)')}</Grid>

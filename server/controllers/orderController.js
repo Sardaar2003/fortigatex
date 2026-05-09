@@ -675,37 +675,14 @@ const verifyEmail = asyncHandler(async (req, res) => {
   }
 
   try {
-    const result = await nbClient.single.check(email);
-    console.log('NeverBounce Result:', result.getResult());
-
-    // result.result can be: 'valid', 'invalid', 'disposable', 'catchall', 'unknown'
-    // We only allow 'valid' as per requirement ("Only if the result is valid it would go ahead")
-
-    // However, in many real-world cases, 'catchall' and 'unknown' might be acceptable depending on risk tolerance.
-    // The user specifically said: "Only if the result is valid it would go ahead ... else return fake email id"
-
-    // Use .is() method or .getResult() to check status
-    if (result.is(NeverBounce.result.valid)) {
-      console.log('Email is valid');
-      return res.status(200).json({
-        success: true,
-        data: result
-      });
-    } else {
-      console.log('Issue: Email not valid. Status:', result.getResult());
-      // Return error as requested
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid email address provided',
-        reason: result.getResult(), // valid, invalid, disposable, etc.
-        details: result
-      });
-    }
-
+    // Temporarily bypass NeverBounce verification
+    console.log('Bypassing NeverBounce verification for email:', email);
+    return res.status(200).json({
+      success: true,
+      data: { result: 'valid', bypassed: true }
+    });
   } catch (error) {
-    console.error('NeverBounce Error:', error);
-    // If NeverBounce fails, we might want to fail open or closed. 
-    // Given the strict requirement, I'll error out.
+    console.error('Email Verification Error:', error);
     res.status(500).json({
       success: false,
       message: 'Email verification failed',

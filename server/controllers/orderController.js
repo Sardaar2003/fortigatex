@@ -860,10 +860,29 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
 
   console.log('Payload prepared for service:', JSON.stringify(payload, null, 2));
 
-  console.log('Calling submitImportSale...');
+  let serviceResult;
 
-  const serviceResult = await submitImportSale(payload, req.user);
-  console.log('submitImportSale returned:', JSON.stringify(serviceResult, null, 2));
+  if (process.env.BYPASS_IMPORTSALE_API === 'true') {
+    console.log('TEMPORARY BYPASS: Skipping submitImportSale');
+    // TEMPORARY BYPASS: Fake successful API response
+    serviceResult = {
+      success: true,
+      data: {
+        data: {
+          attributes: {
+            result: 'APPROVE',
+            message: 'TEMPORARY BYPASS: Order saved to database without hitting API',
+            orderid: 'TEMP-' + Date.now()
+          }
+        }
+      }
+    };
+    console.log('submitImportSale mocked response:', JSON.stringify(serviceResult, null, 2));
+  } else {
+    console.log('Calling submitImportSale...');
+    serviceResult = await submitImportSale(payload, req.user);
+    console.log('submitImportSale returned:', JSON.stringify(serviceResult, null, 2));
+  }
 
   const attributes = serviceResult.data?.data?.attributes;
   const resultString = attributes?.result;

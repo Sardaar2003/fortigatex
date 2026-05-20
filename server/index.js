@@ -11,7 +11,7 @@ const { createProxyMiddleware, responseInterceptor } = require("http-proxy-middl
 // Load environment variables
 dotenv.config();
 
-// Debug logging for environment variables
+// Debug logging for environment variables (Reloaded)
 console.log('Environment variables loaded:');
 console.log('PSONLINE_API_KEY:', process.env.PSONLINE_API_KEY ? 'Present' : 'Missing');
 console.log('PSONLINE_MERCHANT_ID:', process.env.PSONLINE_MERCHANT_ID ? 'Present' : 'Missing');

@@ -675,14 +675,28 @@ const verifyEmail = asyncHandler(async (req, res) => {
   }
 
   try {
-    // Temporarily bypass NeverBounce verification
-    console.log('Bypassing NeverBounce verification for email:', email);
-    return res.status(200).json({
-      success: true,
-      data: { result: 'valid', bypassed: true }
-    });
+    const result = await nbClient.single.check(email);
+    console.log('NeverBounce Result:', result.getResult());
+
+    // Use .is() method or .getResult() to check status
+    if (result.is(NeverBounce.result.valid)) {
+      console.log('Email is valid');
+      return res.status(200).json({
+        success: true,
+        data: result
+      });
+    } else {
+      console.log('Issue: Email not valid. Status:', result.getResult());
+      // Return error as requested
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid email address provided',
+        reason: result.getResult(), // valid, invalid, disposable, etc.
+        details: result
+      });
+    }
   } catch (error) {
-    console.error('Email Verification Error:', error);
+    console.error('NeverBounce Error:', error);
     res.status(500).json({
       success: false,
       message: 'Email verification failed',

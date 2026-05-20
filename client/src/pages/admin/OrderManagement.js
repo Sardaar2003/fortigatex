@@ -26,7 +26,12 @@ import {
   Chip,
   CircularProgress,
   Container,
-  Divider
+  Divider,
+  Switch,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -37,7 +42,8 @@ import {
   Download as DownloadIcon,
   Refresh as RefreshIcon,
   Search,
-  FilterList
+  FilterList,
+  Settings as SettingsIcon
 } from '@mui/icons-material';
 import EditOrderDialog from '../../components/EditOrderDialog';
 import { format } from 'date-fns';
@@ -63,7 +69,50 @@ const OrderManagement = () => {
   const [deleteSuccess, setDeleteSuccess] = useState('');
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
 
+  // Project management state
+  const [manageProjectsDialogOpen, setManageProjectsDialogOpen] = useState(false);
+  const [projectConfigs, setProjectConfigs] = useState([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+
+  const fetchProjectConfigs = async () => {
+    try {
+      setProjectsLoading(true);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/projects`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setProjectConfigs(res.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch projects config:', err);
+    } finally {
+      setProjectsLoading(false);
+    }
+  };
+
+  const handleManageProjectsOpen = () => {
+    fetchProjectConfigs();
+    setManageProjectsDialogOpen(true);
+  };
+
+  const handleManageProjectsClose = () => {
+    setManageProjectsDialogOpen(false);
+  };
+
+  const toggleProjectStatus = async (projectId) => {
+    try {
+      await axios.put(`${process.env.REACT_APP_API_URL}/api/projects/${projectId}/toggle`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchProjectConfigs(); // Refresh the list
+    } catch (err) {
+      console.error('Failed to toggle project:', err);
+      alert('Failed to toggle project status.');
+    }
+  };
+
   const projects = ['all', 'FRP Project', 'SC Project', 'HPP Project', 'MDI Project', 'MI Project', 'IMPORTSALE Project'];
+
 
   useEffect(() => {
     fetchOrders();
@@ -427,6 +476,19 @@ const OrderManagement = () => {
             Order Management
           </Typography>
           <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              startIcon={<SettingsIcon />}
+              onClick={handleManageProjectsOpen}
+              sx={{
+                background: 'rgba(33, 150, 243, 0.2)',
+                color: '#2196f3',
+                '&:hover': {
+                  background: 'rgba(33, 150, 243, 0.3)',
+                },
+              }}
+            >
+              Manage Projects
+            </Button>
             <Button
               startIcon={<RefreshIcon />}
               onClick={handleFixProjectNames}
@@ -990,6 +1052,67 @@ const OrderManagement = () => {
                 }
               }}
             >
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Manage Projects Dialog */}
+        <Dialog
+          open={manageProjectsDialogOpen}
+          onClose={handleManageProjectsClose}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              background: 'rgba(26, 32, 44, 0.95)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '10px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: 'white'
+            }
+          }}
+        >
+          <DialogTitle sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            Manage Projects
+          </DialogTitle>
+          <DialogContent sx={{ mt: 2, p: 0 }}>
+            {projectsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                <CircularProgress sx={{ color: '#6F4CFF' }} />
+              </Box>
+            ) : (
+              <List>
+                {projectConfigs.map((project) => (
+                  <ListItem key={project._id} sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <ListItemText 
+                      primary={project.name} 
+                      secondary={project.isActive ? 'Active' : 'Disabled'}
+                      secondaryTypographyProps={{ style: { color: project.isActive ? '#4CAF50' : '#F44336' } }}
+                    />
+                    <ListItemSecondaryAction>
+                      <Switch
+                        edge="end"
+                        onChange={() => toggleProjectStatus(project._id)}
+                        checked={project.isActive}
+                        color="primary"
+                        sx={{
+                          '& .MuiSwitch-switchBase.Mui-checked': {
+                            color: '#4CAF50',
+                          },
+                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                            backgroundColor: '#4CAF50',
+                          },
+                        }}
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+              </List>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', p: 2 }}>
+            <Button onClick={handleManageProjectsClose} sx={{ color: 'white' }}>
               Close
             </Button>
           </DialogActions>

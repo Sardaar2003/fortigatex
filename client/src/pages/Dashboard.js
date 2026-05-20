@@ -1,6 +1,7 @@
-import React, { useState, useContext } from 'react';
-import { Typography, Box, Button, Divider, List, ListItem, ListItemText, Chip, Grid, Tabs, Tab } from '@mui/material';
+import React, { useState, useContext, useEffect } from 'react';
+import { Typography, Box, Button, Divider, List, ListItem, ListItemText, ListItemSecondaryAction, Switch, Chip, Grid, Tabs, Tab, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import GlassCard from '../components/GlassCard';
 import OrderForm from '../components/OrderForm';
@@ -30,10 +31,47 @@ function TabPanel(props) {
 }
 
 const Dashboard = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { user, token, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [tabValue, setTabValue] = useState(0);
   const [selectedProject, setSelectedProject] = useState(null);
+  
+  // Project management state
+  const [projectConfigs, setProjectConfigs] = useState([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+  const [manageProjectsDialogOpen, setManageProjectsDialogOpen] = useState(false);
+
+  useEffect(() => {
+    fetchProjectConfigs();
+  }, [user]); // fetch when user loads
+
+  const fetchProjectConfigs = async () => {
+    try {
+      setProjectsLoading(true);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/projects`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setProjectConfigs(res.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch projects config:', err);
+    } finally {
+      setProjectsLoading(false);
+    }
+  };
+
+  const toggleProjectStatus = async (projectId) => {
+    try {
+      await axios.put(`${process.env.REACT_APP_API_URL}/api/projects/${projectId}/toggle`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchProjectConfigs();
+    } catch (err) {
+      console.error('Failed to toggle project:', err);
+      alert('Failed to toggle project status.');
+    }
+  };
 
   // Check if user is admin
   const isAdmin = user?.role?.name === 'admin';
@@ -65,6 +103,11 @@ const Dashboard = () => {
     setSelectedProject(null);
   };
 
+  const isProjectActive = (projectId) => {
+    const config = projectConfigs.find(p => p.id === projectId);
+    return config ? config.isActive : true; // default to true if not found/loaded yet
+  };
+
   const renderProjectSelection = () => {
     return (
       <Box sx={{ mt: 2 }}>
@@ -84,130 +127,143 @@ const Dashboard = () => {
         </Typography>
 
         <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
-            <GlassCard
-              onClick={() => handleProjectSelect('radius')}
-              sx={{
-                cursor: 'pointer',
-                transition: 'transform 0.2s',
-                '&:hover': {
-                  transform: 'translateY(-5px)'
-                }
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <RadioIcon sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
-                <Typography variant="h6">FRP API</Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                Submit orders for XML Format API Call
-              </Typography>
-            </GlassCard>
-          </Grid>
+          {isProjectActive('radius') && (
+            <Grid item xs={12} md={4}>
+              <GlassCard
+                onClick={() => handleProjectSelect('radius')}
+                sx={{
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-5px)'
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <RadioIcon sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
+                  <Typography variant="h6">FRP API</Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  Submit orders for XML Format API Call
+                </Typography>
+              </GlassCard>
+            </Grid>
+          )}
 
-          <Grid item xs={12} md={4}>
-            <GlassCard
-              onClick={() => handleProjectSelect('sempris')}
-              sx={{
-                cursor: 'pointer',
-                transition: 'transform 0.2s',
-                '&:hover': {
-                  transform: 'translateY(-5px)'
-                }
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
-                <Typography variant="h6">SC API</Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                Submit orders for Call Center Online API
-              </Typography>
-            </GlassCard>
-          </Grid>
+          {isProjectActive('sempris') && (
+            <Grid item xs={12} md={4}>
+              <GlassCard
+                onClick={() => handleProjectSelect('sempris')}
+                sx={{
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-5px)'
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
+                  <Typography variant="h6">SC API</Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  Submit orders for Call Center Online API
+                </Typography>
+              </GlassCard>
+            </Grid>
+          )}
 
-          <Grid item xs={12} md={4}>
-            <GlassCard
-              onClick={() => handleProjectSelect('psonline')}
-              sx={{
-                cursor: 'pointer',
-                transition: 'transform 0.2s',
-                '&:hover': {
-                  transform: 'translateY(-5px)'
-                }
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
-                <Typography variant="h6">MDI API</Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                Submit orders for MDI products and services
-              </Typography>
-            </GlassCard>
-          </Grid>
+          {isProjectActive('psonline') && (
+            <Grid item xs={12} md={4}>
+              <GlassCard
+                onClick={() => handleProjectSelect('psonline')}
+                sx={{
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-5px)'
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <MemoryIcon sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
+                  <Typography variant="h6">MDI API</Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  Submit orders for MDI products and services
+                </Typography>
+              </GlassCard>
+            </Grid>
+          )}
 
-          <Grid item xs={12} md={4}>
-            <GlassCard
-              onClick={() => handleProjectSelect('sublytics')}
-              sx={{
-                cursor: 'pointer',
-                transition: 'transform 0.2s',
-                '&:hover': {
-                  transform: 'translateY(-5px)'
-                }
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <FolderSpecial sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
-                <Typography variant="h6">HPP API</Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                Submit orders for Global Marketing API
-              </Typography>
-            </GlassCard>
-          </Grid>
+          {isProjectActive('sublytics') && (
+            <Grid item xs={12} md={4}>
+              <GlassCard
+                onClick={() => handleProjectSelect('sublytics')}
+                sx={{
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-5px)'
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <FolderSpecial sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
+                  <Typography variant="h6">HPP API</Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  Submit orders for Global Marketing API
+                </Typography>
+              </GlassCard>
+            </Grid>
+          )}
 
-          <Grid item xs={12} md={4}>
-            <GlassCard
-              onClick={() => handleProjectSelect('mi')}
-              sx={{
-                cursor: 'pointer',
-                transition: 'transform 0.2s',
-                '&:hover': {
-                  transform: 'translateY(-5px)'
-                }
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <AccountBalanceIcon sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
-                <Typography variant="h6">MI API</Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                Submit orders for MI Project services
-              </Typography>
-            </GlassCard>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <GlassCard
-              onClick={() => handleProjectSelect('import-sale')}
-              sx={{
-                cursor: 'pointer',
-                transition: 'transform 0.2s',
-                '&:hover': {
-                  transform: 'translateY(-5px)'
-                }
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <FolderSpecial sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
-                <Typography variant="h6">Import Sale</Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                Submit orders for Import Sale Project
-              </Typography>
-            </GlassCard>
-          </Grid>
+          {isProjectActive('mi') && (
+            <Grid item xs={12} md={4}>
+              <GlassCard
+                onClick={() => handleProjectSelect('mi')}
+                sx={{
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-5px)'
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <AccountBalanceIcon sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
+                  <Typography variant="h6">MI API</Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  Submit orders for MI Project services
+                </Typography>
+              </GlassCard>
+            </Grid>
+          )}
+
+          {isProjectActive('import-sale') && (
+            <Grid item xs={12} md={4}>
+              <GlassCard
+                onClick={() => handleProjectSelect('import-sale')}
+                sx={{
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-5px)'
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <FolderSpecial sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
+                  <Typography variant="h6">Import Sale</Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  Submit orders for Import Sale Project
+                </Typography>
+              </GlassCard>
+            </Grid>
+          )}
         </Grid>
       </Box>
     );
@@ -600,8 +656,88 @@ const Dashboard = () => {
                     </Button>
                   </GlassCard>
                 </Grid>
+
+                <Grid item xs={12} md={4}>
+                  <GlassCard title="Project Management">
+                    <Typography variant="body2" paragraph>
+                      Enable or disable projects available for agents.
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      color="primary"
+                      onClick={() => {
+                        fetchProjectConfigs();
+                        setManageProjectsDialogOpen(true);
+                      }}
+                    >
+                      Manage Projects
+                    </Button>
+                  </GlassCard>
+                </Grid>
               </Grid>
             </Box>
+
+            {/* Manage Projects Dialog */}
+            <Dialog
+              open={manageProjectsDialogOpen}
+              onClose={() => setManageProjectsDialogOpen(false)}
+              maxWidth="sm"
+              fullWidth
+              PaperProps={{
+                sx: {
+                  background: 'rgba(26, 32, 44, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: 'white'
+                }
+              }}
+            >
+              <DialogTitle sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                Manage Projects
+              </DialogTitle>
+              <DialogContent sx={{ mt: 2, p: 0 }}>
+                {projectsLoading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                    <CircularProgress sx={{ color: '#6F4CFF' }} />
+                  </Box>
+                ) : (
+                  <List>
+                    {projectConfigs.map((project) => (
+                      <ListItem key={project._id} sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                        <ListItemText 
+                          primary={project.name} 
+                          secondary={project.isActive ? 'Active' : 'Disabled'}
+                          secondaryTypographyProps={{ style: { color: project.isActive ? '#4CAF50' : '#F44336' } }}
+                        />
+                        <ListItemSecondaryAction>
+                          <Switch
+                            edge="end"
+                            onChange={() => toggleProjectStatus(project._id)}
+                            checked={project.isActive}
+                            color="primary"
+                            sx={{
+                              '& .MuiSwitch-switchBase.Mui-checked': {
+                                color: '#4CAF50',
+                              },
+                              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                backgroundColor: '#4CAF50',
+                              },
+                            }}
+                          />
+                        </ListItemSecondaryAction>
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
+              </DialogContent>
+              <DialogActions sx={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', p: 2 }}>
+                <Button onClick={() => setManageProjectsDialogOpen(false)} sx={{ color: 'white' }}>
+                  Close
+                </Button>
+              </DialogActions>
+            </Dialog>
           </TabPanel>
         )}
 

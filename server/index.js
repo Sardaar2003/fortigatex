@@ -117,6 +117,7 @@ const userRoutes = require('./routes/users');
 const roleRoutes = require('./routes/roles');
 const orderRoutes = require('./routes/orders');
 const adminRoutes = require('./routes/admin');
+const projectRoutes = require('./routes/projects');
 
 // Mount routes
 app.use('/api/auth', authRoutes);
@@ -125,6 +126,7 @@ app.use('/api/roles', roleRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/groups', require('./routes/groups'));
 app.use('/api/admin', adminRoutes);
+app.use('/api/projects', projectRoutes);
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {

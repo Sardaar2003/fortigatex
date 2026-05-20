@@ -19,12 +19,11 @@ import { Close as CloseIcon } from '@mui/icons-material';
 import { AuthContext } from '../../context/AuthContext';
 
 const payMethods = [
-  { value: 'CH', label: 'ACH / Checking' }
-  // Temporarily disabled other methods
-  // { value: 'VS', label: 'Visa' },
-  // { value: 'MC', label: 'Mastercard' },
-  // { value: 'DS', label: 'Discover' },
-  // { value: 'AX', label: 'American Express' }
+  { value: 'CH', label: 'ACH / Checking' },
+  { value: 'VS', label: 'Visa' },
+  { value: 'MC', label: 'Mastercard' },
+  { value: 'DS', label: 'Discover' },
+  { value: 'AX', label: 'American Express' }
 ];
 
 const PRODUCT_CONFIGS = {
@@ -86,8 +85,8 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
   });
   const [timeLeft, setTimeLeft] = useState(60);
 
-  // Temporarily disabled email verification step
-  const [isEmailVerified, setIsEmailVerified] = useState(true);
+  // Re-enabled email verification step
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [emailToVerify, setEmailToVerify] = useState('');
   const [verificationLoading, setVerificationLoading] = useState(false);
 
@@ -163,7 +162,7 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
     });
     setSelectedProduct('HLTH'); // Reset product selection
     setErrors({});
-    setIsEmailVerified(true); // Keep verification bypassed
+    setIsEmailVerified(false);
     setEmailToVerify('');
   };
 
@@ -227,7 +226,6 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
     if (formData.HOMEPHONE && !/^[0-9]{7}$/.test(formData.HOMEPHONE)) {
       e.HOMEPHONE = 'Phone must be 7 digits (no area code)';
     }
-    // Email is already verified, but keep regex check just in case
     if (formData.EMAIL && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.EMAIL)) {
       e.EMAIL = 'Invalid email';
     }
@@ -398,8 +396,7 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
             <Grid item xs={12} sm={6}>{textField('LASTNAME', 'Last Name')}</Grid>
             <Grid item xs={12}>{textField('BILLINGNAME', 'Billing Name')}</Grid>
             <Grid item xs={12} sm={6}>
-              {/* Temporarily made email editable and bypassed verification */}
-              {textField('EMAIL', 'Email')}
+              {textField('EMAIL', 'Email (Verified)', { disabled: true })}
             </Grid>
             <Grid item xs={6} sm={3}>{textField('HOMEAREA', 'Area Code')}</Grid>
             <Grid item xs={6} sm={3}>{textField('HOMEPHONE', 'Phone (7 digits)')}</Grid>

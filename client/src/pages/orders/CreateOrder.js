@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Box,
   Container,
@@ -7,7 +7,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Paper
+  Paper,
+  CircularProgress
 } from '@mui/material';
 import RadiusOrderForm from '../../components/forms/RadiusOrderForm';
 import SemprisOrderForm from '../../components/forms/SemprisOrderForm';
@@ -15,10 +16,43 @@ import MIOrderForm from '../../components/forms/MIOrderForm';
 import ImportSaleOrderForm from '../../components/forms/ImportSaleOrderForm';
 
 import { useLocation } from 'react-router-dom';
+import { AuthContext } from '../../context/AuthContext';
 
 const CreateOrder = () => {
   const location = useLocation();
-  const [selectedProject, setSelectedProject] = useState(location.state?.project || 'Radius Project');
+  const { token } = useContext(AuthContext);
+  const [selectedProject, setSelectedProject] = useState(location.state?.project || '');
+  const [activeProjects, setActiveProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchActiveProjects();
+  }, []);
+
+  const fetchActiveProjects = async () => {
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/projects`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        const enabled = data.data.filter(p => p.isActive);
+        setActiveProjects(enabled);
+        
+        // Auto select first project if nothing is selected or if current selection is not active
+        const isCurrentActive = enabled.find(p => p.name === selectedProject);
+        if (!isCurrentActive && enabled.length > 0) {
+          setSelectedProject(enabled[0].name);
+        } else if (!selectedProject && enabled.length > 0) {
+          setSelectedProject(enabled[0].name);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch projects', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleProjectChange = (event) => {
     setSelectedProject(event.target.value);
@@ -32,19 +66,26 @@ const CreateOrder = () => {
         </Typography>
 
         <Paper sx={{ p: 3, mb: 4 }}>
-          <FormControl fullWidth>
-            <InputLabel>Select Project</InputLabel>
-            <Select
-              value={selectedProject}
-              onChange={handleProjectChange}
-              label="Select Project"
-            >
-              <MenuItem value="Radius Project">Radius Project</MenuItem>
-              <MenuItem value="Sempris Project">Sempris Project</MenuItem>
-              <MenuItem value="MI Project">MI Project</MenuItem>
-              <MenuItem value="IMPORTSALE Project">ImportSale Project</MenuItem>
-            </Select>
-          </FormControl>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : (
+            <FormControl fullWidth>
+              <InputLabel>Select Project</InputLabel>
+              <Select
+                value={selectedProject}
+                onChange={handleProjectChange}
+                label="Select Project"
+              >
+                {activeProjects.map((project) => (
+                  <MenuItem key={project._id} value={project.name}>
+                    {project.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
         </Paper>
 
         {selectedProject === 'Radius Project' ? (

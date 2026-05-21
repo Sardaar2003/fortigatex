@@ -28,16 +28,16 @@ const payMethods = [
 
 const PRODUCT_CONFIGS = {
   HLTH: {
-    PRODID: 'HLTH790',
-    PROMOID: 'HLTH790',
+    PRODID: 'HLTCC790',
+    PROMOID: 'HLTCC790',
     COMPANYID: '233',
     SOURCEID: 'SMA',
     SALESID: 'SMA',
     ORDERSOURCE: 'SMA'
   },
   PROT: {
-    PRODID: 'PROT995',
-    PROMOID: 'PROT995',
+    PRODID: 'PRTCC995',
+    PROMOID: 'PRTCC995',
     COMPANYID: '233',
     SOURCEID: 'SMA',
     SALESID: 'SMA',

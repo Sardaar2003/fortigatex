@@ -28,7 +28,7 @@ const payMethods = [
 
 const PRODUCT_CONFIGS = {
   HLTH: {
-    PRODID: 'HLTCC790',
+    PRODID: 'HLTH',
     PROMOID: 'HLTCC790',
     COMPANYID: '233',
     SOURCEID: 'SMA',
@@ -36,7 +36,7 @@ const PRODUCT_CONFIGS = {
     ORDERSOURCE: 'SMA'
   },
   PROT: {
-    PRODID: 'PRTCC995',
+    PRODID: 'PROT',
     PROMOID: 'PRTCC995',
     COMPANYID: '233',
     SOURCEID: 'SMA',
@@ -284,7 +284,7 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
         // Remove checking account fields
         delete cleanData.ACCTNUM;
         delete cleanData.ROUTENUM;
-        
+
         // Clean card details (remove spaces, hyphens, slashes)
         if (cleanData.CREDNUM) {
           cleanData.CREDNUM = cleanData.CREDNUM.replace(/[\s-]/g, '');

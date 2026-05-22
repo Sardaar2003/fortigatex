@@ -243,10 +243,13 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
       if (!formData.CREDNUM) e.CREDNUM = 'Card number required';
       if (!formData.CREDEXP) e.CREDEXP = 'Exp required';
       if (!formData.CVV2) e.CVV2 = 'CVV required';
-      if (formData.CREDNUM && !/^\d{13,16}$/.test(formData.CREDNUM)) {
+      const cleanCard = formData.CREDNUM ? formData.CREDNUM.replace(/[\s-]/g, '') : '';
+      const cleanExp = formData.CREDEXP ? formData.CREDEXP.replace(/[\s/]/g, '') : '';
+
+      if (formData.CREDNUM && !/^\d{13,16}$/.test(cleanCard)) {
         e.CREDNUM = '13-16 digits';
       }
-      if (formData.CREDEXP && !/^(0[1-9]|1[0-2])\d{2}$/.test(formData.CREDEXP)) {
+      if (formData.CREDEXP && !/^(0[1-9]|1[0-2])\d{2}$/.test(cleanExp)) {
         e.CREDEXP = 'MMYY';
       }
       if (formData.CVV2 && !/^\d{3,4}$/.test(formData.CVV2)) {
@@ -281,6 +284,14 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
         // Remove checking account fields
         delete cleanData.ACCTNUM;
         delete cleanData.ROUTENUM;
+        
+        // Clean card details (remove spaces, hyphens, slashes)
+        if (cleanData.CREDNUM) {
+          cleanData.CREDNUM = cleanData.CREDNUM.replace(/[\s-]/g, '');
+        }
+        if (cleanData.CREDEXP) {
+          cleanData.CREDEXP = cleanData.CREDEXP.replace(/[\s/]/g, '');
+        }
       }
 
       const payload = {

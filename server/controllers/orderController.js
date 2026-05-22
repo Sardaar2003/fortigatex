@@ -842,34 +842,36 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
     }
   }
 
+  const safeTrim = (val) => typeof val === 'string' ? val.trim() : val;
+
   // Build API payload - direct pass-through of uppercase keys
   const payload = {
-    FIRSTNAME,
-    LASTNAME,
-    BILLINGNAME,
-    EMAIL,
-    HOMEAREA,
-    HOMEPHONE,
-    BILLADDR1,
-    BILLADDR2,
-    BILLCITY,
-    BILLSTATE: BILLSTATE.toUpperCase(),
-    BILLZIP,
-    BILLCOUNTRY,
+    FIRSTNAME: safeTrim(FIRSTNAME),
+    LASTNAME: safeTrim(LASTNAME),
+    BILLINGNAME: safeTrim(BILLINGNAME),
+    EMAIL: safeTrim(EMAIL),
+    HOMEAREA: safeTrim(HOMEAREA),
+    HOMEPHONE: safeTrim(HOMEPHONE),
+    BILLADDR1: safeTrim(BILLADDR1),
+    BILLADDR2: safeTrim(BILLADDR2),
+    BILLCITY: safeTrim(BILLCITY),
+    BILLSTATE: safeTrim(BILLSTATE)?.toUpperCase(),
+    BILLZIP: safeTrim(BILLZIP),
+    BILLCOUNTRY: safeTrim(BILLCOUNTRY),
     PAYMETHOD: method,
-    ACCTNUM: method === 'CH' ? ACCTNUM : undefined,
-    ROUTENUM: method === 'CH' ? ROUTENUM : undefined,
-    CREDNUM: method !== 'CH' ? CREDNUM : undefined,
-    CREDEXP: method !== 'CH' ? CREDEXP : undefined,
-    CVV2: method !== 'CH' ? CVV2 : undefined,
-    PRODID,
-    PROMOID,
-    COMPANYID,
-    TRACKINGID,
-    RETNUM,
-    SALESID,
-    SOURCEID,
-    ORDERSOURCE
+    ACCTNUM: method === 'CH' ? safeTrim(ACCTNUM) : undefined,
+    ROUTENUM: method === 'CH' ? safeTrim(ROUTENUM) : undefined,
+    CREDNUM: method !== 'CH' ? safeTrim(CREDNUM) : undefined,
+    CREDEXP: method !== 'CH' ? safeTrim(CREDEXP) : undefined,
+    CVV2: method !== 'CH' ? safeTrim(CVV2) : undefined,
+    PRODID: safeTrim(PRODID),
+    PROMOID: safeTrim(PROMOID),
+    COMPANYID: safeTrim(COMPANYID),
+    TRACKINGID: safeTrim(TRACKINGID),
+    RETNUM: safeTrim(RETNUM),
+    SALESID: safeTrim(SALESID),
+    SOURCEID: safeTrim(SOURCEID),
+    ORDERSOURCE: safeTrim(ORDERSOURCE)
   };
 
   console.log('Payload prepared for service:', JSON.stringify(payload, null, 2));

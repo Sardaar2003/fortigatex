@@ -19,7 +19,7 @@ import { Close as CloseIcon } from '@mui/icons-material';
 import { AuthContext } from '../../context/AuthContext';
 
 const payMethods = [
-  { value: 'CH', label: 'ACH / Checking' },
+  // { value: 'CH', label: 'ACH / Checking' },
   { value: 'VS', label: 'Visa' },
   { value: 'MC', label: 'Mastercard' },
   { value: 'DS', label: 'Discover' },
@@ -64,7 +64,7 @@ const ImportSaleOrderForm = ({ onOrderSuccess }) => {
     BILLSTATE: '',
     BILLZIP: '',
     BILLCOUNTRY: 'US',
-    PAYMETHOD: 'CH', // Default to Checking since it's the only one
+    PAYMETHOD: 'VS', // Default to Visa since ACH is temporarily disabled
     ACCTNUM: '',
     ROUTENUM: '',
     CREDNUM: '',

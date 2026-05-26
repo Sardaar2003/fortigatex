@@ -19,15 +19,29 @@ const nbClient = new NeverBounce({ apiKey: process.env.NEVERBOUNCE_API_KEY });
  * Helper to check if a failed transaction exists in the database.
  * @param {string} email
  * @param {string} project
+ * @param {string} [cardOrAccNumber]
  * @returns {Promise<boolean>}
  */
-async function checkFailedTransaction(email, project) {
+async function checkFailedTransaction(email, project, cardOrAccNumber) {
   if (!email) return false;
-  const failedOrder = await Order.findOne({
+  
+  const query = {
     email: email.toLowerCase(),
     project,
     status: { $in: ['cancelled', 'failed'] }
-  });
+  };
+  
+  if (cardOrAccNumber) {
+    const cleanCardOrAcc = String(cardOrAccNumber).replace(/[\s-]/g, '');
+    if (cleanCardOrAcc) {
+      query.$or = [
+        { creditCardNumber: cleanCardOrAcc },
+        { checkingAccountNumber: cleanCardOrAcc }
+      ];
+    }
+  }
+  
+  const failedOrder = await Order.findOne(query);
   return !!failedOrder;
 }
 
@@ -84,7 +98,7 @@ const processRadiusOrder = asyncHandler(async (req, res) => {
   }
 
   // Check for failed transaction
-  if (await checkFailedTransaction(email, 'FRP Project')) {
+  if (await checkFailedTransaction(email, 'FRP Project', creditCardNumber)) {
     return res.status(400).json({
       success: false,
       message: 'Order not allowed: A previous transaction for this email has failed.'
@@ -251,7 +265,7 @@ const processSemprisOrder = asyncHandler(async (req, res) => {
 
   try {
     // Check for failed transaction
-    if (await checkFailedTransaction(req.body.email, 'SC Project')) {
+    if (await checkFailedTransaction(req.body.email, 'SC Project', req.body.card_number)) {
       return res.status(400).json({
         success: false,
         message: 'Order not allowed: A previous transaction for this email has failed.'
@@ -371,7 +385,7 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
 
   try {
     // Check for failed transaction
-    if (await checkFailedTransaction(req.body.Email, 'MDI Project')) {
+    if (await checkFailedTransaction(req.body.Email, 'MDI Project', req.body.card_num)) {
       return res.status(400).json({
         success: false,
         message: 'Order not allowed: A previous transaction for this email has failed.'
@@ -561,7 +575,7 @@ const processSublyticsOrder = asyncHandler(async (req, res) => {
   };
   try {
     // Check for failed transaction
-    if (await checkFailedTransaction(req.body.email, 'HPP Project')) {
+    if (await checkFailedTransaction(req.body.email, 'HPP Project', req.body.card_number)) {
       return res.status(400).json({
         success: false,
         message: 'Order not allowed: A previous transaction for this email has failed.'
@@ -833,7 +847,8 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
   console.log('Email validation passed.');
 
   // Check for failed transaction
-  if (await checkFailedTransaction(EMAIL, 'IMPORTSALE Project')) {
+  const cardOrAcc = (PAYMETHOD && PAYMETHOD.toUpperCase() === 'CH') ? ACCTNUM : CREDNUM;
+  if (await checkFailedTransaction(EMAIL, 'IMPORTSALE Project', cardOrAcc)) {
     return res.status(400).json({
       success: false,
       message: 'Order not allowed: A previous transaction for this email has failed.'
@@ -1228,7 +1243,7 @@ const processMIOrder = asyncHandler(async (req, res) => {
 
   try {
     // Check for failed transaction
-    if (await checkFailedTransaction(email, 'MI Project')) {
+    if (await checkFailedTransaction(email, 'MI Project', checkingAccountNumber)) {
       return res.status(400).json({
         success: false,
         message: 'Order not allowed: A previous transaction for this email has failed.'

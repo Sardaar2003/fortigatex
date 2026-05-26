@@ -15,6 +15,22 @@ const NB = require('neverbounce');
 const NeverBounce = NB.default || NB;
 const nbClient = new NeverBounce({ apiKey: process.env.NEVERBOUNCE_API_KEY });
 
+/**
+ * Helper to check if a failed transaction exists in the database.
+ * @param {string} email
+ * @param {string} project
+ * @returns {Promise<boolean>}
+ */
+async function checkFailedTransaction(email, project) {
+  if (!email) return false;
+  const failedOrder = await Order.findOne({
+    email: email.toLowerCase(),
+    project,
+    status: { $in: ['cancelled', 'failed'] }
+  });
+  return !!failedOrder;
+}
+
 // @desc    Process Radius order
 // @route   POST /api/orders/radius
 // @access  Private
@@ -64,6 +80,14 @@ const processRadiusOrder = asyncHandler(async (req, res) => {
     return res.status(400).json({
       success: false,
       message: `Missing required fields: ${missingFields.join(', ')}`
+    });
+  }
+
+  // Check for failed transaction
+  if (await checkFailedTransaction(email, 'FRP Project')) {
+    return res.status(400).json({
+      success: false,
+      message: 'Order not allowed: A previous transaction for this email has failed.'
     });
   }
 
@@ -226,6 +250,14 @@ const processSemprisOrder = asyncHandler(async (req, res) => {
   console.log('User ID:', req.user.id);
 
   try {
+    // Check for failed transaction
+    if (await checkFailedTransaction(req.body.email, 'SC Project')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Order not allowed: A previous transaction for this email has failed.'
+      });
+    }
+
     // Validate customer with Sempris service
     console.log('\n=== Sempris Service Validation ===');
     const validationResult = await semprisService.validateCustomer(req.body, req.user);
@@ -338,6 +370,14 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
   console.log('User ID:', req.user._id);
 
   try {
+    // Check for failed transaction
+    if (await checkFailedTransaction(req.body.Email, 'MDI Project')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Order not allowed: A previous transaction for this email has failed.'
+      });
+    }
+
     console.log('Validating order data...');
     // Validate order data
     psonlineService.validateOrderData(req.body);
@@ -485,7 +525,7 @@ const processPSOnlineOrder = asyncHandler(async (req, res) => {
         creditCardLast4: req.body.card_num ? req.body.card_num.slice(-4) : '',
         creditCardExpiration: req.body.card_expm && req.body.card_expy ? formatExpiration(req.body.card_expm, req.body.card_expy) : '',
         creditCardCVV: req.body.card_cvv || '',
-        project: 'PSOnline Project', // Use existing enum value
+        project: 'MDI Project', // Use existing enum value
         sessionId: Math.random().toString(36).substring(2, 15),
         user: req.user._id,
         status: 'cancelled',
@@ -520,6 +560,14 @@ const processSublyticsOrder = asyncHandler(async (req, res) => {
     return `${month}/${day}/${year}`;
   };
   try {
+    // Check for failed transaction
+    if (await checkFailedTransaction(req.body.email, 'HPP Project')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Order not allowed: A previous transaction for this email has failed.'
+      });
+    }
+
     // Validate customer with Sempris service
     console.log('\n=== Sublytics Service Validation ===');
     const validationResult = await sublyticsService.validateCustomer(req.body, req.user);
@@ -783,6 +831,14 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
     });
   }
   console.log('Email validation passed.');
+
+  // Check for failed transaction
+  if (await checkFailedTransaction(EMAIL, 'IMPORTSALE Project')) {
+    return res.status(400).json({
+      success: false,
+      message: 'Order not allowed: A previous transaction for this email has failed.'
+    });
+  }
 
   // Check for duplicate order
   const existingOrder = await Order.findOne({
@@ -1171,6 +1227,14 @@ const processMIOrder = asyncHandler(async (req, res) => {
   }
 
   try {
+    // Check for failed transaction
+    if (await checkFailedTransaction(email, 'MI Project')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Order not allowed: A previous transaction for this email has failed.'
+      });
+    }
+
     // Create the order in the database
     // Normalize consent for storage
     const normalizedConsent = {

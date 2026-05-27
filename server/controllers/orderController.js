@@ -45,6 +45,76 @@ async function checkFailedTransaction(email, project, cardOrAccNumber) {
   return !!failedOrder;
 }
 
+/**
+ * Helper to check failed transactions specifically for the ImportSale project.
+ * Enforces attempt limits based on the decline reason (validationMessage):
+ * - "do not honor": block if count > 3
+ * - "insufficient fund": block if count > 2
+ * - Other declines: block if count >= 1
+ * Match is strictly by CardNumber + Exp + CVV combination.
+ * @param {string} card
+ * @param {string} exp
+ * @param {string} cvv
+ * @returns {Promise<{ blocked: boolean, reason?: string }>}
+ */
+async function checkImportSaleFailedTransaction(card, exp, cvv) {
+  if (!card || !exp || !cvv) return { blocked: false };
+
+  const cleanCard = String(card).replace(/[\s-]/g, '');
+  const cleanExp = String(exp).replace(/[\s/]/g, '');
+  const cleanCvv = String(cvv).trim();
+
+  const failedOrders = await Order.find({
+    project: 'IMPORTSALE Project',
+    creditCardNumber: cleanCard,
+    creditCardExpiration: cleanExp,
+    creditCardCVV: cleanCvv,
+    status: { $in: ['cancelled', 'failed'] }
+  });
+
+  if (failedOrders.length === 0) {
+    return { blocked: false };
+  }
+
+  let doNotHonorCount = 0;
+  let insufficientFundsCount = 0;
+  let otherCount = 0;
+
+  for (const order of failedOrders) {
+    const msg = (order.validationMessage || '').toLowerCase();
+    if (msg.includes('do not honor')) {
+      doNotHonorCount++;
+    } else if (msg.includes('insufficient fund')) {
+      insufficientFundsCount++;
+    } else {
+      otherCount++;
+    }
+  }
+
+  if (otherCount >= 1) {
+    return {
+      blocked: true,
+      reason: 'Order not allowed: A previous transaction with this card has failed.'
+    };
+  }
+
+  if (doNotHonorCount > 3) {
+    return {
+      blocked: true,
+      reason: 'Order not allowed: Maximum attempts exceeded for Do Not Honor decline.'
+    };
+  }
+
+  if (insufficientFundsCount > 2) {
+    return {
+      blocked: true,
+      reason: 'Order not allowed: Maximum attempts exceeded for Insufficient Funds decline.'
+    };
+  }
+
+  return { blocked: false };
+}
+
 // @desc    Process Radius order
 // @route   POST /api/orders/radius
 // @access  Private
@@ -846,13 +916,15 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
   }
   console.log('Email validation passed.');
 
-  // Check for failed transaction
-  const cardOrAcc = (PAYMETHOD && PAYMETHOD.toUpperCase() === 'CH') ? ACCTNUM : CREDNUM;
-  if (await checkFailedTransaction(EMAIL, 'IMPORTSALE Project', cardOrAcc)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Order not allowed: A previous transaction for this email has failed.'
-    });
+  // Check for failed transactions (CardNumber+Exp+CVV combination limits)
+  if (PAYMETHOD && PAYMETHOD.toUpperCase() !== 'CH') {
+    const checkResult = await checkImportSaleFailedTransaction(CREDNUM, CREDEXP, CVV2);
+    if (checkResult.blocked) {
+      return res.status(400).json({
+        success: false,
+        message: checkResult.reason
+      });
+    }
   }
 
   // Check for duplicate order
@@ -1035,6 +1107,7 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
     orderPayload.creditCardNumber = CREDNUM;
     orderPayload.creditCardLast4 = CREDNUM.slice(-4);
     orderPayload.creditCardExpiration = CREDEXP;
+    orderPayload.creditCardCVV = CVV2;
   }
 
   // Persist order (best-effort; still return API outcome)

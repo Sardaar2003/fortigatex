@@ -264,6 +264,29 @@ const Dashboard = () => {
               </GlassCard>
             </Grid>
           )}
+
+          {isProjectActive('docwellness-ach') && (
+            <Grid item xs={12} md={4}>
+              <GlassCard
+                onClick={() => handleProjectSelect('docwellness-ach')}
+                sx={{
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-5px)'
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <AccountBalanceIcon sx={{ fontSize: 32, color: '#6F4CFF', mr: 2 }} />
+                  <Typography variant="h6">Docwellness ACH</Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  Submit orders for Docwellness ACH Project
+                </Typography>
+              </GlassCard>
+            </Grid>
+          )}
         </Grid>
       </Box>
     );
@@ -330,6 +353,11 @@ const Dashboard = () => {
               <>
                 <FolderSpecial sx={{ fontSize: 32, color: '#6F4CFF' }} />
                 Import Sale Order Form
+              </>
+            ) : selectedProject === 'docwellness-ach' ? (
+              <>
+                <AccountBalanceIcon sx={{ fontSize: 32, color: '#6F4CFF' }} />
+                Docwellness ACH Order Form
               </>
             ) : null
               // ) : (

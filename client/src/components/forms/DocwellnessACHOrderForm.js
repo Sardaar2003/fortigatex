@@ -1,0 +1,501 @@
+import React, { useMemo, useState, useContext, useEffect } from 'react';
+import {
+  Box,
+  Grid,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Button,
+  Typography,
+  Divider,
+  Snackbar,
+  Alert,
+  IconButton,
+  LinearProgress
+} from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
+import { AuthContext } from '../../context/AuthContext';
+
+const PRODUCT_CONFIGS = {
+  IDVPN: {
+    PRODID: 'IDV8901',
+    PROMOID: 'IDV8901',
+    COMPANYID: '234',
+    SOURCEID: 'SMA',
+    SALESID: 'SMA',
+    ORDERSOURCE: 'SMA'
+  },
+  BergainAssist: {
+    PRODID: 'BAA7901',
+    PROMOID: 'BAA7901',
+    COMPANYID: '234',
+    SOURCEID: 'SMA',
+    SALESID: 'SMA',
+    ORDERSOURCE: 'SMA'
+  }
+};
+
+const DocwellnessACHOrderForm = ({ onOrderSuccess }) => {
+  const { token } = useContext(AuthContext);
+
+  // Default to IDVPN
+  const [selectedProduct, setSelectedProduct] = useState('IDVPN');
+
+  const initialData = useMemo(() => ({
+    FIRSTNAME: '',
+    LASTNAME: '',
+    BILLINGNAME: '',
+    EMAIL: '',
+    HOMEAREA: '',
+    HOMEPHONE: '',
+    BILLADDR1: '',
+    BILLADDR2: '',
+    BILLCITY: '',
+    BILLSTATE: '',
+    BILLZIP: '',
+    BILLCOUNTRY: 'US',
+    PAYMETHOD: 'CH', // Restricted to ACH/Checking
+    ACCTNUM: '',
+    ROUTENUM: '',
+    ...PRODUCT_CONFIGS.IDVPN, // Spread default config
+    TRACKINGID: crypto.randomUUID(),
+    RETNUM: ''
+  }), []);
+
+  const [formData, setFormData] = useState(initialData);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+  const [timeLeft, setTimeLeft] = useState(60);
+
+  // Email verification step
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [emailToVerify, setEmailToVerify] = useState('');
+  const [verificationLoading, setVerificationLoading] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    if (snackbar.open && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      handleCloseSnackbar();
+    }
+    return () => clearInterval(timer);
+  }, [snackbar.open, timeLeft]);
+
+  const getFieldErrorStyles = (hasError) =>
+    hasError
+      ? {
+        '& .MuiOutlinedInput-root': {
+          backgroundColor: 'rgba(244, 67, 54, 0.12)',
+          '& fieldset': { borderColor: 'error.main' },
+          '&:hover fieldset': { borderColor: 'error.dark' },
+          '&.Mui-focused fieldset': { borderColor: 'error.main' }
+        },
+        '& .MuiInputLabel-root': {
+          color: 'error.main !important'
+        }
+      }
+      : {};
+
+  const clearFieldError = (field) => {
+    setErrors(prev => {
+      if (!prev[field]) return prev;
+      const updated = { ...prev };
+      delete updated[field];
+      return updated;
+    });
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    clearFieldError(name);
+  };
+
+  const handleProductChange = (e) => {
+    const newProduct = e.target.value;
+    setSelectedProduct(newProduct);
+    const config = PRODUCT_CONFIGS[newProduct];
+    if (config) {
+      setFormData(prev => ({
+        ...prev,
+        ...config
+      }));
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
+    setTimeLeft(60);
+  };
+
+  const showNotification = (severity, message) => {
+    setSnackbar({ open: true, severity, message });
+    setTimeLeft(60);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleClearForm = () => {
+    setFormData({
+      ...initialData,
+      TRACKINGID: crypto.randomUUID() // Regen tracking ID on clear
+    });
+    setSelectedProduct('IDVPN'); // Reset product selection
+    setErrors({});
+    setIsEmailVerified(false);
+    setEmailToVerify('');
+  };
+
+  const handleVerifyEmail = async (e) => {
+    e.preventDefault();
+    if (!emailToVerify || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailToVerify)) {
+      showNotification('error', 'Please enter a valid email address');
+      return;
+    }
+
+    setVerificationLoading(true);
+    try {
+      const verifyRes = await fetch(`${process.env.REACT_APP_API_URL}/api/orders/verify-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ email: emailToVerify })
+      });
+
+      const verifyData = await verifyRes.json();
+
+      if (!verifyRes.ok || !verifyData.success) {
+        showNotification('error', verifyData.message || 'Email verification failed');
+        if (verifyData.reason) {
+          showNotification('error', `Email is ${verifyData.reason}`);
+        }
+        setVerificationLoading(false);
+        return;
+      }
+
+      // Success
+      setFormData(prev => ({ ...prev, EMAIL: emailToVerify }));
+      setIsEmailVerified(true);
+      showNotification('success', 'Email verified successfully!');
+
+    } catch (verifyErr) {
+      console.error("Verification error", verifyErr);
+      showNotification('error', 'Email verification request failed');
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  const validate = () => {
+    const e = {};
+    const required = [
+      'FIRSTNAME', 'LASTNAME', 'BILLINGNAME', 'EMAIL', 'HOMEAREA', 'HOMEPHONE',
+      'BILLADDR1', 'BILLCITY', 'BILLSTATE', 'BILLZIP', 'BILLCOUNTRY', 'PAYMETHOD',
+      'PRODID', 'PROMOID', 'COMPANYID', 'SOURCEID', 'ACCTNUM', 'ROUTENUM'
+    ];
+    required.forEach(f => {
+      if (!formData[f]) e[f] = 'Required';
+    });
+
+    if (formData.HOMEAREA && !/^[0-9]{3}$/.test(formData.HOMEAREA)) {
+      e.HOMEAREA = 'Area code must be 3 digits';
+    }
+    if (formData.HOMEPHONE && !/^[0-9]{7}$/.test(formData.HOMEPHONE)) {
+      e.HOMEPHONE = 'Phone must be 7 digits (no area code)';
+    }
+    if (formData.EMAIL && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.EMAIL)) {
+      e.EMAIL = 'Invalid email';
+    }
+    if (formData.BILLZIP && !/^\d{5}(\d{4})?$/.test(formData.BILLZIP)) {
+      e.BILLZIP = 'ZIP must be 5 or 9 digits';
+    }
+    if (formData.ROUTENUM && !/^\d{9}$/.test(formData.ROUTENUM)) {
+      e.ROUTENUM = 'Routing must be 9 digits';
+    }
+    return e;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      showNotification('error', 'Fix the highlighted fields');
+      return;
+    }
+    setLoading(true);
+    try {
+      const cleanData = { ...formData };
+      const payload = {
+        ...cleanData,
+        BILLSTATE: cleanData.BILLSTATE.toUpperCase(),
+        PAYMETHOD: 'CH'
+      };
+
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/orders/docwellness-ach`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || data.success === false) {
+        let msg = data.message || 'Order failed';
+        if (typeof msg === 'object') msg = msg.message || msg.error || JSON.stringify(msg);
+        showNotification('error', msg);
+        return;
+      }
+
+      const successMsg = data.orderId
+        ? `Success! Order ID: ${data.orderId}`
+        : (data.message || 'Order created');
+
+      showNotification('success', successMsg);
+      if (onOrderSuccess) onOrderSuccess(data);
+    } catch (err) {
+      showNotification('error', err.message || 'Request failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const textField = (name, label, props = {}) => (
+    <TextField
+      fullWidth
+      label={label}
+      name={name}
+      value={formData[name]}
+      onChange={handleChange}
+      error={!!errors[name]}
+      helperText={errors[name]}
+      sx={getFieldErrorStyles(!!errors[name])}
+      {...props}
+    />
+  );
+
+  return (
+    <Box sx={{ mt: 3 }}>
+      <Typography variant="h4" gutterBottom sx={{ mb: 4, textAlign: 'center' }}>
+        Docwellness ACH Order Form
+      </Typography>
+
+      {!isEmailVerified ? (
+        // Step 1: Email Verification UI
+        <Box
+          component="form"
+          onSubmit={handleVerifyEmail}
+          sx={{
+            maxWidth: 600,
+            mx: 'auto',
+            p: 4,
+            boxShadow: 3,
+            borderRadius: 2,
+            bgcolor: 'background.paper'
+          }}
+        >
+          <Typography variant="h6" gutterBottom textAlign="center">
+            Step 1: Verify Email
+          </Typography>
+          <Typography variant="body2" color="text.secondary" gutterBottom textAlign="center" sx={{ mb: 3 }}>
+            Please verify the customer's email address before proceeding with the order.
+          </Typography>
+
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Customer Email"
+                value={emailToVerify}
+                onChange={(e) => setEmailToVerify(e.target.value)}
+                placeholder="enter@email.com"
+                disabled={verificationLoading}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                size="large"
+                disabled={verificationLoading}
+              >
+                {verificationLoading ? 'Verifying...' : 'Verify Email'}
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
+      ) : (
+        // Step 2: Main Order Form
+        <Box component="form" onSubmit={handleSubmit}>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Customer Info</Typography>
+              <Divider sx={{ mb: 2 }} />
+            </Grid>
+            <Grid item xs={12} sm={6}>{textField('FIRSTNAME', 'First Name')}</Grid>
+            <Grid item xs={12} sm={6}>{textField('LASTNAME', 'Last Name')}</Grid>
+            <Grid item xs={12}>{textField('BILLINGNAME', 'Billing Name')}</Grid>
+            <Grid item xs={12} sm={6}>
+              {textField('EMAIL', 'Email (Verified)', { disabled: true })}
+            </Grid>
+            <Grid item xs={6} sm={3}>{textField('HOMEAREA', 'Area Code')}</Grid>
+            <Grid item xs={6} sm={3}>{textField('HOMEPHONE', 'Phone (7 digits)')}</Grid>
+
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Billing Address</Typography>
+              <Divider sx={{ mb: 2 }} />
+            </Grid>
+            <Grid item xs={12}>{textField('BILLADDR1', 'Address Line 1')}</Grid>
+            <Grid item xs={12}>{textField('BILLADDR2', 'Address Line 2 (Optional)')}</Grid>
+            <Grid item xs={12} sm={4}>{textField('BILLCITY', 'City')}</Grid>
+            <Grid item xs={12} sm={4}>{textField('BILLSTATE', 'State')}</Grid>
+            <Grid item xs={12} sm={4}>{textField('BILLZIP', 'ZIP')}</Grid>
+            <Grid item xs={12} sm={4}>{textField('BILLCOUNTRY', 'Country')}</Grid>
+
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Payment (ACH / Checking Account Only)</Typography>
+              <Divider sx={{ mb: 2 }} />
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>{textField('ACCTNUM', 'Account Number')}</Grid>
+            <Grid item xs={12} sm={6}>{textField('ROUTENUM', 'Routing Number')}</Grid>
+
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Product Configuration</Typography>
+              <Divider sx={{ mb: 2 }} />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel>Product Selection</InputLabel>
+                <Select
+                  label="Product Selection"
+                  value={selectedProduct}
+                  onChange={handleProductChange}
+                >
+                  <MenuItem value="IDVPN">IDVPN (Identity Theft protection)</MenuItem>
+                  <MenuItem value="BergainAssist">BergainAssist (Bargain Assist)</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Read-only displays */}
+            <Grid item xs={6} sm={3}>
+              <TextField
+                fullWidth
+                label="Company ID"
+                value={formData.COMPANYID}
+                disabled
+                variant="filled"
+              />
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <TextField
+                fullWidth
+                label="Product ID"
+                value={formData.PRODID}
+                disabled
+                variant="filled"
+              />
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <TextField
+                fullWidth
+                label="Promo ID"
+                value={formData.PROMOID}
+                disabled
+                variant="filled"
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>{textField('TRACKINGID', 'Tracking ID')}</Grid>
+            <Grid item xs={12} sm={3}>{textField('RETNUM', 'RetNum (optional)')}</Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                size="large"
+                disabled={loading}
+              >
+                {loading ? 'Submitting...' : 'Submit Order'}
+              </Button>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Button
+                type="button"
+                variant="outlined"
+                fullWidth
+                size="large"
+                disabled={loading}
+                onClick={handleClearForm}
+              >
+                Clear Form
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
+      )}
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={60000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Box sx={{ width: '100%', position: 'relative' }}>
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={handleCloseSnackbar}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+          >
+            <Box sx={{ width: '100%' }}>
+              <Typography variant="body1" sx={{ mb: 1 }}>
+                {snackbar.message}
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="caption" sx={{ color: 'inherit', opacity: 0.8 }}>
+                  Auto-close in {timeLeft}s
+                </Typography>
+                <LinearProgress
+                  variant="determinate"
+                  value={((60 - timeLeft) / 60) * 100}
+                  sx={{
+                    flexGrow: 1,
+                    height: 4,
+                    borderRadius: 2
+                  }}
+                />
+              </Box>
+            </Box>
+          </Alert>
+        </Box>
+      </Snackbar>
+    </Box>
+  );
+};
+
+export default DocwellnessACHOrderForm;

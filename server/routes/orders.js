@@ -7,6 +7,7 @@ const {
   processSublyticsOrder,
   processImportSaleOrder,
   processMIOrder,
+  processDocwellnessACHOrder,
   getOrders,
   getOrderById,
   updateOrder,
@@ -28,6 +29,7 @@ router.post('/sublytics', protect, processSublyticsOrder);
 router.post('/mi', protect, processMIOrder);
 router.post('/verify-email', protect, verifyEmail);
 router.post('/import-sale', protect, processImportSaleOrder);
+router.post('/docwellness-ach', protect, processDocwellnessACHOrder);
 
 // Admin only routes
 router.get('/', protect, authorize('admin'), getOrders);

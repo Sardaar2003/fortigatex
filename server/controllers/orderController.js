@@ -6,6 +6,7 @@ const semprisService = require('../services/semprisService');
 const psonlineService = require('../services/psonlineService');
 const sublyticsService = require('../services/sublyticsService');
 const { submitImportSale } = require('../services/importSaleService');
+const { submitDocwellnessACH } = require('../services/docwellnessACHService');
 // Initialize NeverBounce client
 // content: The user explicitly provided this key in the request
 // Fix: Use .default if available (common in some build configurations) and use env var
@@ -1133,6 +1134,252 @@ const processImportSaleOrder = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Process Docwellness ACH order
+// @route   POST /api/orders/docwellness-ach
+// @access  Private
+const processDocwellnessACHOrder = asyncHandler(async (req, res) => {
+  console.log('=== Starting Docwellness ACH Order Processing ===');
+  console.log('Incoming Body keys:', Object.keys(req.body));
+
+  const {
+    FIRSTNAME,
+    LASTNAME,
+    BILLINGNAME,
+    EMAIL,
+    HOMEAREA,
+    HOMEPHONE,
+    BILLADDR1,
+    BILLADDR2 = '',
+    BILLCITY,
+    BILLSTATE,
+    BILLZIP,
+    BILLCOUNTRY,
+    PAYMETHOD,
+    ACCTNUM,
+    ROUTENUM,
+    PRODID,
+    PROMOID,
+    COMPANYID,
+    TRACKINGID,
+    RETNUM,
+    SALESID,
+    SOURCEID,
+    ORDERSOURCE
+  } = req.body;
+
+  const required = {
+    FIRSTNAME,
+    LASTNAME,
+    BILLINGNAME,
+    EMAIL,
+    HOMEAREA,
+    HOMEPHONE,
+    BILLADDR1,
+    BILLCITY,
+    BILLSTATE,
+    BILLZIP,
+    BILLCOUNTRY,
+    PAYMETHOD,
+    ACCTNUM,
+    ROUTENUM,
+    PRODID,
+    PROMOID,
+    COMPANYID,
+    SOURCEID
+  };
+
+  const missing = Object.entries(required)
+    .filter(([, v]) => !v)
+    .map(([k]) => k);
+
+  if (missing.length) {
+    console.log('Validation Failed. Missing fields:', missing);
+    return res.status(400).json({
+      success: false,
+      message: `Missing required fields: ${missing.join(', ')}`
+    });
+  }
+  console.log('Basic validation passed.');
+
+  // Validate Email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(EMAIL)) {
+    console.log('Validation Failed. Invalid Email:', EMAIL);
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid email format'
+    });
+  }
+  console.log('Email validation passed.');
+
+  // Check for duplicate order (completed check)
+  const existingOrder = await Order.findOne({
+    email: EMAIL.toLowerCase(),
+    productName: PRODID,
+    status: 'completed',
+    project: 'DOCWELLNESS ACH Project'
+  });
+
+  if (existingOrder) {
+    console.log('Duplicate order found:', existingOrder._id);
+    return res.status(400).json({
+      success: false,
+      message: 'Duplicate order: An order for this product with this email already exists.'
+    });
+  }
+  console.log('Duplicate check passed. No existing completed order.');
+
+  const method = PAYMETHOD.toUpperCase();
+  if (method !== 'CH') {
+    return res.status(400).json({
+      success: false,
+      message: 'Only ACH (CH) payment method is allowed'
+    });
+  }
+
+  if (!/^[0-9]{9}$/.test(ROUTENUM)) {
+    return res.status(400).json({
+      success: false,
+      message: 'ROUTENUM must be 9 digits'
+    });
+  }
+
+  const safeTrim = (val) => typeof val === 'string' ? val.trim() : val;
+
+  // Build API payload
+  const payload = {
+    FIRSTNAME: safeTrim(FIRSTNAME),
+    LASTNAME: safeTrim(LASTNAME),
+    BILLINGNAME: safeTrim(BILLINGNAME),
+    EMAIL: safeTrim(EMAIL),
+    HOMEAREA: safeTrim(HOMEAREA),
+    HOMEPHONE: safeTrim(HOMEPHONE),
+    BILLADDR1: safeTrim(BILLADDR1),
+    BILLADDR2: safeTrim(BILLADDR2),
+    BILLCITY: safeTrim(BILLCITY),
+    BILLSTATE: safeTrim(BILLSTATE)?.toUpperCase(),
+    BILLZIP: safeTrim(BILLZIP),
+    BILLCOUNTRY: safeTrim(BILLCOUNTRY),
+    PAYMETHOD: 'CH',
+    ACCTNUM: safeTrim(ACCTNUM),
+    ROUTENUM: safeTrim(ROUTENUM),
+    PRODID: safeTrim(PRODID),
+    PROMOID: safeTrim(PROMOID),
+    COMPANYID: safeTrim(COMPANYID),
+    TRACKINGID: safeTrim(TRACKINGID),
+    RETNUM: safeTrim(RETNUM),
+    SALESID: safeTrim(SALESID),
+    SOURCEID: safeTrim(SOURCEID),
+    ORDERSOURCE: safeTrim(ORDERSOURCE)
+  };
+
+  console.log('Payload prepared for service:', JSON.stringify(payload, null, 2));
+
+  let serviceResult;
+
+  if (process.env.BYPASS_IMPORTSALE_API === 'true') {
+    console.log('TEMPORARY BYPASS: Skipping submitDocwellnessACH');
+    serviceResult = {
+      success: true,
+      data: {
+        data: {
+          attributes: {
+            result: 'APPROVE',
+            message: 'TEMPORARY BYPASS: Order saved to database without hitting API',
+            orderid: 'TEMP-' + Date.now()
+          }
+        }
+      }
+    };
+    console.log('submitDocwellnessACH mocked response:', JSON.stringify(serviceResult, null, 2));
+  } else {
+    console.log('Calling submitDocwellnessACH...');
+    serviceResult = await submitDocwellnessACH(payload, req.user);
+    console.log('submitDocwellnessACH returned:', JSON.stringify(serviceResult, null, 2));
+  }
+
+  const attributes = serviceResult.data?.data?.attributes;
+  const resultString = attributes?.result;
+  let message = attributes?.message;
+  let validationResponse = serviceResult.data || serviceResult.error;
+
+  if (!serviceResult.success && serviceResult.error?.errors?.length > 0) {
+    const errObj = serviceResult.error.errors[0];
+    message = `${errObj.title}: ${errObj.detail}`;
+    validationResponse = serviceResult.error;
+  } else if (!message) {
+    if (typeof serviceResult.error === 'object') {
+      message = JSON.stringify(serviceResult.error, null, 2);
+    } else {
+      message = serviceResult.error || 'Unknown response';
+    }
+  }
+
+  const approved = serviceResult.success && resultString === 'APPROVE';
+  const upstreamOrderId = attributes?.orderid;
+
+  const formatDate = (date) => {
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+  };
+
+  const phoneCombined = `${HOMEAREA}${HOMEPHONE}`;
+  const orderPayload = {
+    user: req.user._id,
+    project: 'DOCWELLNESS ACH Project',
+    orderDate: formatDate(new Date()),
+    firstName: FIRSTNAME,
+    lastName: LASTNAME,
+    billingName: BILLINGNAME,
+    email: EMAIL,
+    homeArea: HOMEAREA,
+    homePhone: HOMEPHONE,
+    address1: BILLADDR1,
+    address2: BILLADDR2,
+    city: BILLCITY,
+    state: BILLSTATE.toUpperCase(),
+    zipCode: BILLZIP,
+    phoneNumber: phoneCombined,
+    sourceCode: String(SOURCEID).slice(0, 6),
+    sku: String(PRODID).slice(0, 7),
+    productName: PRODID,
+    sessionId: TRACKINGID,
+    status: approved ? 'completed' : 'cancelled',
+    validationStatus: approved,
+    validationMessage: message,
+    validationResponse: validationResponse,
+    validationDate: new Date(),
+    OrderID: upstreamOrderId ? String(upstreamOrderId) : undefined,
+    checkingAccountNumber: ACCTNUM,
+    routingNumber: ROUTENUM
+  };
+
+  if (EMAIL) orderPayload.email = EMAIL;
+
+  try {
+    await Order.create(orderPayload);
+  } catch (dbErr) {
+    logger.error('Failed to persist docwellness ACH order', { error: dbErr.message });
+  }
+
+  if (!approved) {
+    return res.status(serviceResult.status || 400).json({
+      success: false,
+      message,
+      rawResponse: validationResponse
+    });
+  }
+
+  res.status(201).json({
+    success: true,
+    data: serviceResult.data?.data || {},
+    orderId: upstreamOrderId,
+    message
+  });
+});
+
 // @desc    Get all orders
 // @route   GET /api/orders
 // @access  Private
@@ -1390,6 +1637,7 @@ module.exports = {
   processSublyticsOrder,
   processImportSaleOrder,
   processMIOrder,
+  processDocwellnessACHOrder,
   getOrders,
   getOrderById,
   updateOrder,

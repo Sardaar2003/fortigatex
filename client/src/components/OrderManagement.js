@@ -84,7 +84,8 @@ const OrderManagement = () => {
           'hpp': 'HPP Project',
           'mdi': 'MDI Project',
           'mi': 'MI Project',
-          'importsale': 'IMPORTSALE Project'
+          'importsale': 'IMPORTSALE Project',
+          'docwellness-ach': 'DOCWELLNESS ACH Project'
         };
 
         const expectedProject = projectMapping[projectType];
@@ -220,6 +221,7 @@ const OrderManagement = () => {
             <MenuItem value="mdi">MDI Project</MenuItem>
             <MenuItem value="mi">MI Project</MenuItem>
             <MenuItem value="importsale">ImportSale Project</MenuItem>
+            <MenuItem value="docwellness-ach">Docwellness ACH Project</MenuItem>
           </Select>
         </FormControl>
       </Box>

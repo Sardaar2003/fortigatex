@@ -11,7 +11,10 @@ router.get('/', protect, async (req, res) => {
     let projects = await ProjectConfig.find();
     
     // Seed default projects if none exist, or if we need to migrate to the new schema
-    if (projects.length === 0 || !projects[0].id) {
+    const hasDocwellness = projects.some(p => p.id === 'docwellness-ach');
+    const needsSeeding = projects.length === 0 || !projects[0].id;
+    
+    if (needsSeeding) {
       await ProjectConfig.deleteMany({}); // clear old schema
       const defaultProjects = [
         { id: 'radius', name: 'FRP API', isActive: true },
@@ -19,9 +22,17 @@ router.get('/', protect, async (req, res) => {
         { id: 'psonline', name: 'MDI API', isActive: true },
         { id: 'sublytics', name: 'HPP API', isActive: true },
         { id: 'mi', name: 'MI API', isActive: true },
-        { id: 'import-sale', name: 'Import Sale', isActive: true }
+        { id: 'import-sale', name: 'Import Sale', isActive: true },
+        { id: 'docwellness-ach', name: 'DOCWELLNESS (ACH) Project', isActive: true }
       ];
       projects = await ProjectConfig.insertMany(defaultProjects);
+    } else if (!hasDocwellness) {
+      const docwellnessProj = await ProjectConfig.create({
+        id: 'docwellness-ach',
+        name: 'DOCWELLNESS (ACH) Project',
+        isActive: true
+      });
+      projects.push(docwellnessProj);
     }
     
     res.status(200).json({

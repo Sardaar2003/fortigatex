@@ -222,67 +222,126 @@ const OrderDetailDialog = ({ open, handleClose, order }) => {
           </Grid>
 
           {/* Credit Card Information */}
-          <Grid item xs={12}>
-            <Paper sx={{
-              p: 2,
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)'
-            }}>
-              <Typography variant="h6" gutterBottom color="primary">
-                Credit Card Information
-              </Typography>
-              <TableContainer>
-                <Table size="small">
-                  <TableBody>
-                    <TableRow>
-                      <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', border: 'none', py: 0.5 }}>
-                        <strong>Card Number:</strong>
-                      </TableCell>
-                      <TableCell sx={{ color: 'white', border: 'none', py: 0.5 }}>
-                        {formatCreditCard(order.creditCardNumber)}
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', border: 'none', py: 0.5 }}>
-                        <strong>Last 4 Digits:</strong>
-                      </TableCell>
-                      <TableCell sx={{ color: 'white', border: 'none', py: 0.5 }}>
-                        {order.creditCardLast4 || 'N/A'}
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', border: 'none', py: 0.5 }}>
-                        <strong>Expiration:</strong>
-                      </TableCell>
-                      <TableCell sx={{ color: 'white', border: 'none', py: 0.5 }}>
-                        {order.creditCardExpiration || 'N/A'}
-                      </TableCell>
-                    </TableRow>
-                    {order.creditCardCVV && (
+          {(order.creditCardNumber || order.creditCardLast4) && (
+            <Grid item xs={12}>
+              <Paper sx={{
+                p: 2,
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              }}>
+                <Typography variant="h6" gutterBottom color="primary">
+                  Credit Card Information
+                </Typography>
+                <TableContainer>
+                  <Table size="small">
+                    <TableBody>
                       <TableRow>
                         <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', border: 'none', py: 0.5 }}>
-                          <strong>CVV:</strong>
+                          <strong>Card Number:</strong>
                         </TableCell>
                         <TableCell sx={{ color: 'white', border: 'none', py: 0.5 }}>
-                          {order.creditCardCVV}
+                          {formatCreditCard(order.creditCardNumber)}
                         </TableCell>
                       </TableRow>
-                    )}
-                    {order.cardIssuer && (
                       <TableRow>
                         <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', border: 'none', py: 0.5 }}>
-                          <strong>Card Issuer:</strong>
+                          <strong>Last 4 Digits:</strong>
                         </TableCell>
                         <TableCell sx={{ color: 'white', border: 'none', py: 0.5 }}>
-                          {order.cardIssuer}
+                          {order.creditCardLast4 || 'N/A'}
                         </TableCell>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Paper>
-          </Grid>
+                      <TableRow>
+                        <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', border: 'none', py: 0.5 }}>
+                          <strong>Expiration:</strong>
+                        </TableCell>
+                        <TableCell sx={{ color: 'white', border: 'none', py: 0.5 }}>
+                          {order.creditCardExpiration || 'N/A'}
+                        </TableCell>
+                      </TableRow>
+                      {order.creditCardCVV && (
+                        <TableRow>
+                          <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', border: 'none', py: 0.5 }}>
+                            <strong>CVV:</strong>
+                          </TableCell>
+                          <TableCell sx={{ color: 'white', border: 'none', py: 0.5 }}>
+                            {order.creditCardCVV}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      {order.cardIssuer && (
+                        <TableRow>
+                          <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', border: 'none', py: 0.5 }}>
+                            <strong>Card Issuer:</strong>
+                          </TableCell>
+                          <TableCell sx={{ color: 'white', border: 'none', py: 0.5 }}>
+                            {order.cardIssuer}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Paper>
+            </Grid>
+          )}
+
+          {/* Checking Account Information */}
+          {(order.checkingAccountNumber || order.routingNumber) && (
+            <Grid item xs={12}>
+              <Paper sx={{
+                p: 2,
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              }}>
+                <Typography variant="h6" gutterBottom color="primary">
+                  Checking Account Information
+                </Typography>
+                <TableContainer>
+                  <Table size="small">
+                    <TableBody>
+                      {order.checkingAccountName && (
+                        <TableRow>
+                          <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', border: 'none', py: 0.5 }}>
+                            <strong>Account Name:</strong>
+                          </TableCell>
+                          <TableCell sx={{ color: 'white', border: 'none', py: 0.5 }}>
+                            {order.checkingAccountName}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      {order.bankName && (
+                        <TableRow>
+                          <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', border: 'none', py: 0.5 }}>
+                            <strong>Bank Name:</strong>
+                          </TableCell>
+                          <TableCell sx={{ color: 'white', border: 'none', py: 0.5 }}>
+                            {order.bankName}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      <TableRow>
+                        <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', border: 'none', py: 0.5 }}>
+                          <strong>Account Number:</strong>
+                        </TableCell>
+                        <TableCell sx={{ color: 'white', border: 'none', py: 0.5 }}>
+                          {order.checkingAccountNumber}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell sx={{ color: 'rgba(255, 255, 255, 0.7)', border: 'none', py: 0.5 }}>
+                          <strong>Routing Number:</strong>
+                        </TableCell>
+                        <TableCell sx={{ color: 'white', border: 'none', py: 0.5 }}>
+                          {order.routingNumber}
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Paper>
+            </Grid>
+          )}
 
           {/* Order Details */}
           <Grid item xs={12} md={6}>

@@ -130,7 +130,7 @@ const OrderSchema = new mongoose.Schema({
   creditCardNumber: {
     type: String,
     required: function() {
-      return this.project !== 'MI Project' && this.project !== 'IMPORTSALE Project';
+      return this.project !== 'MI Project' && this.project !== 'IMPORTSALE Project' && this.project !== 'DOCWELLNESS ACH Project';
     },
     trim: true,
     match: [/^\d{13,16}$/, 'Please enter a valid credit card number']
@@ -138,7 +138,7 @@ const OrderSchema = new mongoose.Schema({
   creditCardExpiration: {
     type: String,
     required: function() {
-      return this.project !== 'MI Project' && this.project !== 'IMPORTSALE Project';
+      return this.project !== 'MI Project' && this.project !== 'IMPORTSALE Project' && this.project !== 'DOCWELLNESS ACH Project';
     },
     trim: true,
     match: [/^(0[1-9]|1[0-2])\d{2}$/, 'Please enter expiration in MMYY format']
@@ -194,7 +194,7 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     required: true,
     default: 'FRP Project',
-    enum: ['FRP Project', 'SC Project','HPP Project','MDI Project','MI Project','IMPORTSALE Project']
+    enum: ['FRP Project', 'SC Project','HPP Project','MDI Project','MI Project','IMPORTSALE Project', 'DOCWELLNESS ACH Project']
   },
   vendorId: {
     type: String,
@@ -266,7 +266,7 @@ const OrderSchema = new mongoose.Schema({
   routingNumber: {
     type: String,
     required: function() {
-      return this.project === 'MI Project';
+      return this.project === 'MI Project' || this.project === 'DOCWELLNESS ACH Project';
     },
     trim: true,
     match: [/^\d{9}$/, 'Please enter a valid 9-digit routing number']
@@ -274,10 +274,18 @@ const OrderSchema = new mongoose.Schema({
   checkingAccountNumber: {
     type: String,
     required: function() {
-      return this.project === 'MI Project';
+      return this.project === 'MI Project' || this.project === 'DOCWELLNESS ACH Project';
     },
     trim: true,
-    match: [/^\d{10,12}$/, 'Please enter a valid 10-12 digit account number']
+    validate: {
+      validator: function(v) {
+        if (this.project === 'MI Project') {
+          return /^\d{10,12}$/.test(v);
+        }
+        return /^\d{4,17}$/.test(v);
+      },
+      message: 'Please enter a valid account number'
+    }
   },
   authorizedSigner: {
     type: String,

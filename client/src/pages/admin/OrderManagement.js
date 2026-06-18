@@ -111,7 +111,7 @@ const OrderManagement = () => {
     }
   };
 
-  const projects = ['all', 'FRP Project', 'SC Project', 'HPP Project', 'MDI Project', 'MI Project', 'IMPORTSALE Project'];
+  const projects = ['all', 'FRP Project', 'SC Project', 'HPP Project', 'MDI Project', 'MI Project', 'IMPORTSALE Project', 'DOCWELLNESS ACH Project'];
 
 
   useEffect(() => {
@@ -628,6 +628,7 @@ const OrderManagement = () => {
                 <MenuItem value="MDI Project">MDI Project</MenuItem>
                 <MenuItem value="MI Project">MI Project</MenuItem>
                 <MenuItem value="IMPORTSALE Project">ImportSale Project</MenuItem>
+                <MenuItem value="DOCWELLNESS ACH Project">Docwellness ACH Project</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -706,7 +707,9 @@ const OrderManagement = () => {
                                       ? 'rgba(255, 152, 0, 0.2)'
                                       : order.project === 'IMPORTSALE Project'
                                         ? 'rgba(0, 188, 212, 0.2)'
-                                        : 'rgba(158, 158, 158, 0.2)',
+                                        : order.project === 'DOCWELLNESS ACH Project'
+                                          ? 'rgba(233, 30, 99, 0.2)'
+                                          : 'rgba(158, 158, 158, 0.2)',
                             color: order.project === 'FRP Project'
                               ? '#6F4CFF'
                               : order.project === 'SC Project'
@@ -719,7 +722,9 @@ const OrderManagement = () => {
                                       ? '#FF9800'
                                       : order.project === 'IMPORTSALE Project'
                                         ? '#00BCD4'
-                                        : '#9E9E9E',
+                                        : order.project === 'DOCWELLNESS ACH Project'
+                                          ? '#E91E63'
+                                          : '#9E9E9E',
                             backdropFilter: 'blur(5px)',
                             border: '1px solid rgba(255, 255, 255, 0.1)'
                           }}

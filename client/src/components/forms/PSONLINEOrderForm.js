@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useMemo } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   Box,
   TextField,
@@ -21,10 +21,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AuthContext } from '../../context/AuthContext';
-import {
-  PSONLINE_REJECTED_BINS,
-  PSONLINE_REJECTED_STATES
-} from '../../constants/binLists';
+import { PSONLINE_REJECTED_STATES } from '../../constants/binLists';
 
 const PSONLINEOrderForm = ({ onOrderSuccess }) => {
   const { token } = useContext(AuthContext);
@@ -99,10 +96,7 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
   }, [timerActive, timeLeft]);
 
   const rejectedStates = PSONLINE_REJECTED_STATES;
-  const rejectedBinSet = useMemo(
-    () => new Set(PSONLINE_REJECTED_BINS),
-    []
-  );
+
 
   // All US states for dropdown
   const allStates = [
@@ -302,8 +296,6 @@ const PSONLINEOrderForm = ({ onOrderSuccess }) => {
       errors.cardNumber = 'Card number is required';
     } else if (!/^\d{15,16}$/.test(sanitizedCardNumber)) {
       errors.cardNumber = 'Card number must be 15 or 16 digits';
-    } else if (rejectedBinSet.has(sanitizedCardNumber.substring(0, 6))) {
-      errors.cardNumber = 'This card type is not currently accepted. Please use a different payment method.';
     }
 
     if (!formData.expiryMonth) {

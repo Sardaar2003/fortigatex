@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   TextField,
@@ -26,7 +26,6 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
-import { SUBLYTICS_REJECTED_BINS } from '../../constants/binLists';
 import { format } from 'date-fns';
 import MuiAlert from '@mui/material/Alert';
 
@@ -161,11 +160,6 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
       return updated;
     });
   };
-  const rejectedBinSet = useMemo(
-    () => new Set(SUBLYTICS_REJECTED_BINS),
-    []
-  );
-
   // Timer effect for notification
   useEffect(() => {
     let interval = null;
@@ -227,15 +221,7 @@ const SubProjectOrderForm = ({ onOrderSuccess }) => {
     if (formData.card_number && !/^\d{13,16}$/.test(formData.card_number)) {
       newErrors.card_number = 'Please enter a valid card number';
     }
-    if (formData.card_number) {
-      const sanitizedCard = formData.card_number.replace(/\s/g, '');
-      if (sanitizedCard.length >= 6) {
-        const bin = sanitizedCard.substring(0, 6);
-        if (rejectedBinSet.has(bin)) {
-          newErrors.card_number = 'This card type is not currently accepted. Please use a different payment method.';
-        }
-      }
-    }
+
     // Card expiration month
     if (formData.card_exp_month && !/^(0[1-9]|1[0-2])$/.test(formData.card_exp_month)) {
       newErrors.card_exp_month = 'Enter a valid month (01-12)';
